@@ -1,6 +1,7 @@
 "use client";
 
 import Image, { StaticImageData } from "next/image";
+import Link from "next/link";
 import { useState } from "react";
 
 interface HeaderProps {
@@ -33,17 +34,17 @@ const Header: React.FC<HeaderProps> = ({ logoSrc }) => {
           </svg>
         </button>
 
-        {/* Logo */}
-        <div className="flex items-center space-x-2">
+        {/* Logo + Brand (wrapped in a link) */}
+        <Link href="/" className="flex items-center space-x-2 hover:opacity-80">
           <Image src={logoSrc} alt="FibuVerse Logo" width={40} height={40} />
           <span className="text-xl font-bold">FibuVerse</span>
-        </div>
+        </Link>
 
-        {/* Right Tabs (hidden on mobile if desired) */}
+        {/* Right Tabs */}
         <nav className="hidden md:flex space-x-6">
           <a href="/fibu" className="hover:text-gray-400">Fibu</a>
           <a href="#" className="hover:text-gray-400">Documents</a>
-          <a href="#" className="hover:text-gray-400">Log in</a>
+          <a href="/trainer" className="hover:text-gray-400">Trainer Portal</a>
         </nav>
       </header>
 
