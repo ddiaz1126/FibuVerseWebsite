@@ -1,43 +1,92 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { getTrainerChatHistory } from "@/api/trainer";
 
-interface Client {
-  id: number;
-  name: string;
+interface ChatHistory {
+  room_name: string;
+  recipient_user_id: string;
+  trainer_data: {
+    id: number;
+    name: string;
+  } | null;
+  last_message: string;
+  timestamp: string;
+}
+
+interface Message {
+  user: string;
+  text: string;
 }
 
 export default function MessagesPage() {
-  const clients: Client[] = [
-    { id: 1, name: "Alice" },
-    { id: 2, name: "Bob" },
-    { id: 3, name: "Charlie" },
-  ];
+  const [clients, setClients] = useState<ChatHistory[]>([]);
+  const [selectedClient, setSelectedClient] = useState<ChatHistory | null>(null);
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const [selectedClient, setSelectedClient] = useState<Client | null>(clients[0]);
-  const [messages, setMessages] = useState<{ user: string; text: string }[]>([]);
+  useEffect(() => {
+    async function loadHistory() {
+      try {
+        const token = localStorage.getItem("access_token");
+        if (!token) return;
+
+        const history = await getTrainerChatHistory(token);
+        setClients(history);
+        if (history.length > 0) {
+          setSelectedClient(history[0]);
+        }
+      } catch (err) {
+        console.error("Failed to load chat history:", err);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    loadHistory();
+  }, []);
 
   const sendMessage = (text: string) => {
     if (!text.trim() || !selectedClient) return;
-    setMessages(prev => [...prev, { user: "You", text }]);
+
+    // push your own message
+    setMessages((prev) => [...prev, { user: "You", text }]);
+
+    // fake client reply for now
     setTimeout(() => {
-      setMessages(prev => [...prev, { user: selectedClient.name, text: "Reply from client..." }]);
+      setMessages((prev) => [
+        ...prev,
+        {
+          user: selectedClient.trainer_data?.name || "Client",
+          text: "Reply from client...",
+        },
+      ]);
     }, 500);
   };
+
+  if (loading) return <div className="p-6">Loading chat history...</div>;
 
   return (
     <div className="flex h-full">
       {/* Clients list */}
       <div className="w-1/3 border-r border-gray-700 overflow-y-auto">
-        {clients.map(client => (
+        {clients.map((client) => (
           <button
-            key={client.id}
+            key={client.room_name}
             className={`w-full text-left px-4 py-2 hover:bg-gray-700 transition ${
-              selectedClient?.id === client.id ? "bg-gray-700" : ""
+              selectedClient?.room_name === client.room_name ? "bg-gray-700" : ""
             }`}
-            onClick={() => { setSelectedClient(client); setMessages([]); }}
+            onClick={() => {
+              setSelectedClient(client);
+              setMessages([
+                {
+                  user: client.trainer_data?.name || "Client",
+                  text: client.last_message,
+                },
+              ]);
+            }}
           >
-            {client.name}
+            {client.trainer_data?.name || "Unknown Client"}
           </button>
         ))}
       </div>
@@ -50,7 +99,9 @@ export default function MessagesPage() {
             <div
               key={idx}
               className={`p-2 rounded max-w-xs break-words ${
-                msg.user === "You" ? "bg-blue-600 self-end" : "bg-gray-700 self-start"
+                msg.user === "You"
+                  ? "bg-blue-600 self-end"
+                  : "bg-gray-700 self-start"
               }`}
             >
               <strong>{msg.user}:</strong> {msg.text}
@@ -58,7 +109,7 @@ export default function MessagesPage() {
           ))}
         </div>
 
-        <MessageInput onSend={sendMessage} />
+        {selectedClient && <MessageInput onSend={sendMessage} />}
       </div>
     </div>
   );
@@ -73,10 +124,21 @@ function MessageInput({ onSend }: { onSend: (text: string) => void }) {
         className="flex-1 p-2 rounded bg-gray-700 border border-gray-600 focus:outline-none"
         placeholder="Type a message..."
         value={input}
-        onChange={e => setInput(e.target.value)}
-        onKeyDown={e => e.key === "Enter" && (onSend(input), setInput(""))}
+        onChange={(e) => setInput(e.target.value)}
+        onKeyDown={(e) => {
+          if (e.key === "Enter") {
+            onSend(input);
+            setInput("");
+          }
+        }}
       />
-      <button className="bg-green-600 px-4 rounded" onClick={() => { onSend(input); setInput(""); }}>
+      <button
+        className="bg-green-600 px-4 rounded"
+        onClick={() => {
+          onSend(input);
+          setInput("");
+        }}
+      >
         Send
       </button>
     </div>

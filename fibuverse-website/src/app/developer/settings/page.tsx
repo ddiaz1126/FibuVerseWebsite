@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { logoutTrainer } from "@/api/trainer"; // ✅ import your centralized API call
+import { logoutTrainer } from "@/api/trainer"; // Using the same logout API call for now
 
 const sections = [
   "Profile",
@@ -13,7 +13,7 @@ const sections = [
   "Integrations",
 ];
 
-export default function SettingsPage() {
+export default function DeveloperSettingsPage() {
   const [selectedSection, setSelectedSection] = useState(sections[0]);
   const router = useRouter();
 
@@ -28,12 +28,12 @@ export default function SettingsPage() {
     } catch (err: any) {
       console.error("Logout failed", err);
     } finally {
-      // Always clear local storage and redirect
+      // Clear developer-specific storage and redirect
       localStorage.removeItem("access_token");
       localStorage.removeItem("refresh_token");
-      localStorage.removeItem("trainer_user");
+      localStorage.removeItem("developer_user");
 
-      router.push("/trainerlogin");
+      router.push("/developerlogin");
     }
   };
 
@@ -58,7 +58,6 @@ export default function SettingsPage() {
       <div className="flex-1 p-6 overflow-auto">
         <h1 className="text-2xl font-bold mb-4">{selectedSection} Settings</h1>
 
-        {/* Placeholder content for the selected section */}
         <div className="space-y-4">
           <p>
             This is a placeholder area for the <strong>{selectedSection}</strong> section.
@@ -66,10 +65,16 @@ export default function SettingsPage() {
 
           <div className="space-y-2">
             <label className="block text-gray-300">Field 1</label>
-            <input className="w-full p-2 rounded bg-gray-700 border border-gray-600 focus:outline-none" placeholder="Placeholder value" />
+            <input
+              className="w-full p-2 rounded bg-gray-700 border border-gray-600 focus:outline-none"
+              placeholder="Placeholder value"
+            />
 
             <label className="block text-gray-300">Field 2</label>
-            <input className="w-full p-2 rounded bg-gray-700 border border-gray-600 focus:outline-none" placeholder="Placeholder value" />
+            <input
+              className="w-full p-2 rounded bg-gray-700 border border-gray-600 focus:outline-none"
+              placeholder="Placeholder value"
+            />
           </div>
 
           <button className="mt-4 bg-blue-600 px-4 py-2 rounded hover:bg-blue-700">

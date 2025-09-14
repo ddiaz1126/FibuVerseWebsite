@@ -38,7 +38,7 @@ export default function TrainerLogin() {
       <div className="flex items-center justify-start py-4">
         <button
           type="button"
-          onClick={() => router.back()}
+          onClick={() => router.push("/")} // always goes to fibu/
           className="bg-gray-600 hover:bg-gray-500 transition rounded-lg px-4 py-2 font-semibold"
         >
           ← Back

@@ -1,7 +1,49 @@
 // src/app/page.tsx
+"use client";
+
 import Header from "@/components/Header";
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+
+import { fetchPublicCompositeAgents, fetchCompositeAgentCount } from "@/api/public"; // ✅ API helper
+
+interface CompositeAgent {
+  id: number;
+  name: string;
+  description: string;
+}
 
 export default function Home() {
+  const router = useRouter();
+  const [agents, setAgents] = useState<CompositeAgent[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [agentCount, setAgentCount] = useState<number>(0);
+
+  useEffect(() => {
+    async function loadAgents() {
+      const data = await fetchPublicCompositeAgents();
+      setAgents(data);
+      setLoading(false);
+    }
+
+    loadAgents();
+  }, []);
+
+  // Load agent count
+  useEffect(() => {
+    async function loadAgentCount() {
+      const count = await fetchCompositeAgentCount();
+      setAgentCount(count);
+    }
+    loadAgentCount();
+  }, []);
+
+  // Link to Fibu Agents
+  const handleTryAgent = (agentId: number) => {
+    // Pass the agentId as a query parameter
+    router.push(`/fibu/?agentId=${agentId}`);
+  };
+
   return (
     <div className="min-h-screen bg-black text-white">
       {/* Header */}
@@ -41,7 +83,9 @@ export default function Home() {
         {/* Right floating agent count */}
         <div className="flex-1 flex justify-center md:justify-end mt-8 md:mt-0 relative z-10">
           <div className="bg-gray-900/70 border border-yellow-500/40 rounded-2xl p-6 text-center shadow-lg backdrop-blur-sm w-64">
-            <div className="text-5xl font-bold text-yellow-400">128</div>
+            <div className="text-5xl font-bold text-yellow-400">
+              {agentCount}
+            </div>
             <div className="text-gray-300 mt-2">Active Agents</div>
           </div>
         </div>
@@ -49,30 +93,38 @@ export default function Home() {
 
       {/* Agents Showcase Section */}
       <section className="relative w-full py-12 px-8 bg-gray-1000 overflow-hidden">
-        {/* Section title */}
         <h2 className="text-3xl font-bold text-white mb-6">Agents</h2>
 
-        {/* Horizontal scrollable vertical cards */}
         <div className="flex overflow-x-auto gap-6 pb-4">
-          {Array.from({ length: 8 }).map((_, i) => (
-            <div
-              key={i}
-              className="min-w-[120px] max-w-[160px] h-[200px] bg-gray-800/80 backdrop-blur-sm rounded-2xl p-4 flex-shrink-0 shadow-lg hover:shadow-xl transition flex flex-col justify-between"
-            >
-              <div>
-                <div className="w-12 h-12 bg-gray-600 rounded-full mb-3 flex items-center justify-center text-white font-bold text-lg">
-                  A{i + 1}
+          {loading ? (
+            <p className="text-gray-300">Loading agents...</p>
+          ) : (
+            agents.map((agent) => (
+              <div
+                key={agent.id}
+                className="min-w-[200px] max-w-[280px] h-auto bg-gray-800/80 backdrop-blur-sm rounded-2xl p-4 flex-shrink-0 shadow-lg hover:shadow-xl transition flex flex-col justify-between"
+              >
+                {/* Top Content */}
+                <div className="flex-1">
+                  <div className="w-12 h-12 bg-gray-600 rounded-full mb-3 flex items-center justify-center text-white font-bold text-lg">
+                    {agent.name[0].toUpperCase()}
+                  </div>
+                  <h3 className="text-lg font-semibold text-white mb-2 truncate">{agent.name}</h3>
+                  <p className="text-gray-300 text-xs break-words">{agent.description}</p>
                 </div>
-                <h3 className="text-lg font-semibold text-white mb-1 truncate">Agent {i + 1}</h3>
-                <p className="text-gray-300 text-xs break-words">
-                  Handles workouts, nutrition tracking, and intelligent suggestions.
-                </p>
+
+                {/* Try Agent Button */}
+                <button
+                  onClick={() => handleTryAgent(agent.id)}
+                  className="mt-4 w-full bg-yellow-500 text-black font-semibold px-3 py-2 rounded-lg hover:bg-yellow-400 transition"
+                >
+                  Try Agent
+                </button>
               </div>
-            </div>
-          ))}
+            ))
+          )}
         </div>
       </section>
-
 
       {/* Application Section */}
       <section className="w-full py-20 px-8 bg-gray-900">

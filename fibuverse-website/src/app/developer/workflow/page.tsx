@@ -1,0 +1,468 @@
+"use client";
+
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
+import {
+  fetchWorkflows,
+  runCompositeAgentFormData,
+  RunCompositeResponse,
+  fetchWorkflowHistory,
+} from "@/api/developer";
+
+interface SubAgent { id: number; name: string; }
+interface CompositeLayer { id: number; layer_index: number; allow_parallel: boolean; subagents: SubAgent[]; }
+interface Workflow { id: number; name: string; description: string; layers: CompositeLayer[]; }
+
+interface WorkflowRun {
+  id: number;
+  workflow_id?: number;
+  inputs: Record<string, any>;
+  outputs: Record<string, any>;
+  created_at: string; // or started_at
+  status: "pending" | "running" | "success" | "failed" | string;
+  error_message?: string;
+}
+
+export default function DeveloperWorkflowView() {
+  const router = useRouter();
+  const [workflows, setWorkflows] = useState<Workflow[]>([]);
+  const [selectedWorkflow, setSelectedWorkflow] = useState<Workflow | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  // Searching
+  const [search, setSearch] = useState("");
+
+  const containerRef = useRef<HTMLDivElement | null>(null);
+  const nodeRefs = useRef<Record<string, HTMLDivElement | null>>({});
+  const [positions, setPositions] = useState<Record<string, any>>({});
+
+  // Run Workflow state
+  const [inputs, setInputs] = useState<Record<string, any>>({});
+  const [output, setOutput] = useState<Record<string, any> | null>(null);
+  const [running, setRunning] = useState(false);
+
+  // History
+  const [history, setHistory] = useState<WorkflowRun[]>([]);
+  const [selectedRun, setSelectedRun] = useState<WorkflowRun | null>(null);
+  const [showRunModal, setShowRunModal] = useState(false);
+
+  // Load workflows
+  useEffect(() => {
+    async function loadWorkflows() {
+      try {
+        setLoading(true);
+        const data = await fetchWorkflows();
+        setWorkflows(data);
+        if (data.length > 0) setSelectedWorkflow(data[0]);
+      } catch (err: any) {
+        console.error("Error fetching workflows:", err);
+        setError("Failed to load workflows");
+      } finally {
+        setLoading(false);
+      }
+    }
+    loadWorkflows();
+  }, []);
+
+  // compute node positions for arrows (kept from your code)
+  useLayoutEffect(() => {
+    const compute = () => {
+      const container = containerRef.current;
+      if (!container) return;
+      const contRect = container.getBoundingClientRect();
+      const newPositions: Record<string, any> = {};
+      Object.entries(nodeRefs.current).forEach(([key, el]) => {
+        if (!el) return;
+        const r = el.getBoundingClientRect();
+        newPositions[key] = {
+          left: r.left - contRect.left,
+          right: r.right - contRect.left,
+          top: r.top - contRect.top,
+          bottom: r.bottom - contRect.top,
+          width: r.width,
+          height: r.height,
+          cx: r.left - contRect.left + r.width / 2,
+          cy: r.top - contRect.top + r.height / 2,
+        };
+      });
+      setPositions(newPositions);
+    };
+
+    compute();
+    window.addEventListener("resize", compute);
+    window.addEventListener("scroll", compute, true);
+    return () => {
+      window.removeEventListener("resize", compute);
+      window.removeEventListener("scroll", compute, true);
+    };
+  }, [selectedWorkflow]);
+
+  // Initialize inputs when workflow changes & load history
+  useEffect(() => {
+    if (!selectedWorkflow) return;
+
+    // init inputs from first subagent's schema (as before)
+    const firstSubagentInputs = selectedWorkflow.layers[0]?.subagents[0]?.inputs ?? {};
+    const initInputs: Record<string, any> = {};
+    Object.keys(firstSubagentInputs).forEach((k) => {
+      initInputs[k] = firstSubagentInputs[k].default ?? "";
+    });
+    setInputs(initInputs);
+
+    // load history for this workflow
+    loadHistory(selectedWorkflow.id);
+  }, [selectedWorkflow]);
+
+  // fetch history helper
+  const loadHistory = async (workflowId: number) => {
+    try {
+      const runs = await fetchWorkflowHistory(workflowId);
+      // Ensure runs have a date field; try started_at or created_at
+      const normalized = runs.map((r: any) => ({
+        ...r,
+        // prefer finished_at -> started_at -> created_at, fallback to now
+        created_at: r.finished_at ?? r.started_at ?? r.created_at ?? new Date().toISOString(),
+      }));
+      // sort descending by created_at
+      normalized.sort((a: any, b: any) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+      setHistory(normalized);
+    } catch (err) {
+      console.error("Failed to load history:", err);
+    }
+  };
+
+  // Handle input change
+  const handleInputChange = (key: string, value: string | File | null) => {
+    setInputs((prev) => ({ ...prev, [key]: value }));
+  };
+
+  // Type coercion helper (kept)
+  const coerceType = (value: any, type?: string) => {
+    if (value == null) return value;
+    switch (type) {
+      case "int": return parseInt(value, 10);
+      case "float": return parseFloat(value);
+      case "bool": return value === "true" || value === true;
+      case "string":
+      default: return value.toString();
+    }
+  };
+
+  // Run workflow
+  const handleRun = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedWorkflow) return;
+    try {
+      setRunning(true);
+
+      const subagentInputs = selectedWorkflow.layers[0]?.subagents[0]?.inputs || {};
+      const formData = new FormData();
+
+      formData.append("id", selectedWorkflow.id.toString());
+
+      Object.entries(subagentInputs).forEach(([key, meta]: [string, any]) => {
+        const value = inputs[key];
+        if (meta.type === "file" && value instanceof File) {
+          formData.append(key, value); // append file
+        } else if (value !== undefined && value !== null) {
+          formData.append(key, value.toString()); // append other inputs as strings
+        }
+      });
+
+      const res: RunCompositeResponse = await runCompositeAgentFormData(formData);
+      setOutput(res.outputs ?? null);
+
+      if (res.history_id) {
+        await loadHistory(selectedWorkflow.id);
+      } else {
+        await loadHistory(selectedWorkflow.id);
+      }
+    } catch (err) {
+      console.error("Workflow run failed:", err);
+      if (selectedWorkflow) loadHistory(selectedWorkflow.id);
+    } finally {
+      setRunning(false);
+    }
+  };
+
+  // click handler to show run details
+  const openRunDetails = (run: WorkflowRun) => {
+    setSelectedRun(run);
+    setShowRunModal(true);
+  };
+
+  const closeRunDetails = () => {
+    setSelectedRun(null);
+    setShowRunModal(false);
+  };
+
+  if (loading) return <div className="p-6 text-gray-400">Loading workflows...</div>;
+  if (error) return <div className="p-6 text-red-500">{error}</div>;
+
+  return (
+    <div className="flex h-full">
+      {/* Sidebar */}
+      <div className="w-1/4 border-r border-gray-700 bg-gray-800 p-4 flex flex-col gap-2">
+        {/* Search bar */}
+        <input
+          type="text"
+          placeholder="Search workflows..."
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          className="w-full px-3 py-2 rounded bg-gray-700 text-sm text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 mb-2"
+        />
+
+        {/* Workflow list */}
+        {workflows
+          .filter((workflow) =>
+            workflow.name.toLowerCase().includes(search.toLowerCase())
+          )
+          .map((workflow) => (
+            <button
+              key={workflow.id}
+              className={`w-full text-left px-3 py-2 rounded hover:bg-gray-700 transition ${
+                selectedWorkflow?.id === workflow.id
+                  ? "bg-gray-700 font-semibold"
+                  : ""
+              }`}
+              onClick={() => setSelectedWorkflow(workflow)}
+            >
+              {workflow.name}
+            </button>
+          ))}
+
+        {/* Create new workflow button */}
+        <button
+          className="bg-green-600 text-white px-3 py-2 rounded hover:bg-green-700 mt-auto"
+          onClick={() => router.push("/developer/workflow/create")}
+        >
+          + New Workflow
+        </button>
+      </div>
+
+      {/* Main */}
+      <div className="flex-1 p-6 overflow-auto">
+        {selectedWorkflow ? (
+          <>
+            <h1 className="text-2xl font-bold mb-6">{selectedWorkflow.name}</h1>
+            <p className="text-gray-400 mb-6">{selectedWorkflow.description}</p>
+
+            {/* Diagram */}
+            <div
+              ref={containerRef}
+              className="relative w-full h-[300px] mb-6 border border-gray-600 rounded bg-gray-800 flex gap-6 overflow-x-auto"
+            >
+              {/* SVG arrows */}
+              <svg className="absolute top-0 left-0 w-full h-full pointer-events-none z-0">
+                <defs>
+                  <marker
+                    id="arrow"
+                    markerWidth="10"
+                    markerHeight="10"
+                    refX="6"
+                    refY="3"
+                    orient="auto"
+                    markerUnits="strokeWidth"
+                  >
+                    <path d="M0,0 L0,6 L9,3 z" fill="#10b981" />
+                  </marker>
+                </defs>
+
+                {selectedWorkflow.layers.map((layer, i) => {
+                  if (i === selectedWorkflow.layers.length - 1) return null;
+                  const nextLayer = selectedWorkflow.layers[i + 1];
+                  return (
+                    <g key={`g-${i}`}>
+                      {layer.subagents.map((a, rowIndex) =>
+                        nextLayer.subagents.map((b, nextRowIndex) => {
+                          const aKey = `${i}-${rowIndex}-${a.id}`;
+                          const bKey = `${i + 1}-${nextRowIndex}-${b.id}`;
+                          const posA = positions[aKey];
+                          const posB = positions[bKey];
+                          if (!posA || !posB) return null;
+                          return (
+                            <line
+                              key={`${a.id}-${b.id}`}
+                              x1={posA.right + 6}
+                              y1={posA.cy}
+                              x2={posB.left - 6}
+                              y2={posB.cy}
+                              stroke="#10b981"
+                              strokeWidth={2}
+                              markerEnd="url(#arrow)"
+                            />
+                          );
+                        })
+                      )}
+                    </g>
+                  );
+                })}
+              </svg>
+
+              {selectedWorkflow.layers.map((layer, i) => (
+                <div
+                  key={layer.id}
+                  className="flex flex-col gap-3 min-w-[200px] flex-1 p-3 border-l border-gray-600 z-10 relative"
+                >
+                  <h3 className="text-gray-300 font-semibold mb-2">
+                    Layer {layer.layer_index}
+                  </h3>
+                  {layer.subagents.map((sub, idx) => {
+                    const key = `${i}-${idx}-${sub.id}`;
+                    return (
+                      <div
+                        key={key}
+                        ref={(el) => (nodeRefs.current[key] = el)}
+                        className="bg-green-600 text-white p-2 rounded shadow-md text-center"
+                      >
+                        {sub.name}
+                      </div>
+                    );
+                  })}
+                </div>
+              ))}
+            </div>
+
+            {/* Inputs & Run */}
+            <div className="mb-6">
+              <h2 className="text-xl font-semibold mb-2">Inputs</h2>
+              <form className="flex flex-col gap-3 max-w-lg" onSubmit={handleRun}>
+                {selectedWorkflow.layers[0]?.subagents[0]?.inputs &&
+                  Object.entries(selectedWorkflow.layers[0].subagents[0].inputs).map(([key, meta]: any) => (
+                    <div key={key} className="flex flex-col gap-1">
+                      <label className="text-gray-300 font-medium">
+                        {key} {!meta.required && "(Optional)"} {meta.type && `- Type: ${meta.type}`}
+                      </label>
+
+                      {meta.type === "file" ? (
+                        <input
+                          type="file"
+                          accept="image/*"
+                          onChange={(e) => handleInputChange(key, e.target.files?.[0] ?? null)}
+                          className="p-2 rounded bg-gray-700 text-white border border-gray-600 focus:outline-none focus:ring-2 focus:ring-green-500"
+                        />
+                      ) : (
+                        <input
+                          type="text"
+                          value={inputs[key] ?? ""}
+                          onChange={(e) => handleInputChange(key, e.target.value)}
+                          placeholder={`Enter ${key}${meta.type ? ` (${meta.type})` : ""}`}
+                          className="p-2 rounded bg-gray-700 text-white border border-gray-600 focus:outline-none focus:ring-2 focus:ring-green-500"
+                        />
+                      )}
+                    </div>
+                  ))}
+                <button
+                  type="submit"
+                  disabled={running}
+                  className="self-start bg-green-600 px-4 py-2 rounded hover:bg-green-700"
+                >
+                  {running ? "Running..." : "Run"}
+                </button>
+              </form>
+            </div>
+
+            {/* Output */}
+            <div className="p-4 bg-gray-700 text-white rounded border border-gray-600 mb-6">
+              {output && Object.keys(output).length > 0 ? (
+                (() => {
+                  const keys = Object.keys(output);
+                  const lastKey = keys[keys.length - 1];
+                  return <pre>{JSON.stringify({ [lastKey]: output[lastKey] }, null, 2)}</pre>;
+                })()
+              ) : (
+                <p>No output yet. Run the workflow to see results.</p>
+              )}
+            </div>
+
+            {/* History */}
+            <div>
+              <h2 className="text-xl font-semibold mb-2">History</h2>
+              <ul className="flex flex-col gap-2">
+                {history.length === 0 && <li className="text-gray-400">No runs yet.</li>}
+
+                {history
+                  .slice(-5) // show last 5 runs
+                  .reverse() // newest first
+                  .map((run) => (
+                    <li
+                      key={run.id}
+                      className="p-3 bg-gray-700 rounded text-gray-200 flex justify-between items-center hover:bg-gray-600 cursor-pointer"
+                      onClick={() => openRunDetails(run)}
+                    >
+                      <div>
+                        <div className="font-medium">{new Date(run.created_at).toLocaleString()}</div>
+                        <div className="text-sm text-gray-400">
+                          {run.workflow_id ? `Workflow ${run.workflow_id}` : ""}
+                        </div>
+                      </div>
+                      <div
+                        className={`px-2 py-1 rounded text-sm ${
+                          run.status === "success"
+                            ? "bg-green-600"
+                            : run.status === "failed"
+                            ? "bg-red-600"
+                            : "bg-yellow-600"
+                        }`}
+                      >
+                        {run.status}
+                      </div>
+                    </li>
+                  ))}
+              </ul>
+            </div>
+
+            {/* Run Modal */}
+            {showRunModal && selectedRun && (
+              <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+                <div className="bg-gray-900 text-white rounded p-6 w-[90%] max-w-3xl">
+                  <div className="flex justify-between items-center mb-4">
+                    <h3 className="text-lg font-semibold">
+                      Run #{selectedRun.id} — {new Date(selectedRun.created_at).toLocaleString()}
+                    </h3>
+                    <div className="flex gap-2 items-center">
+                      <div
+                        className={`px-2 py-1 rounded text-sm ${
+                          selectedRun.status === "success"
+                            ? "bg-green-600"
+                            : selectedRun.status === "failed"
+                            ? "bg-red-600"
+                            : "bg-yellow-600"
+                        }`}
+                      >
+                        {selectedRun.status}
+                      </div>
+                      <button onClick={closeRunDetails} className="bg-gray-700 px-3 py-1 rounded">
+                        Close
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="space-y-4">
+                    <div>
+                      <h4 className="font-medium mb-1">Inputs</h4>
+                      <pre className="bg-black/30 p-3 rounded">{JSON.stringify(selectedRun.inputs, null, 2)}</pre>
+                    </div>
+                    <div>
+                      <h4 className="font-medium mb-1">Outputs</h4>
+                      <pre className="bg-black/30 p-3 rounded">{JSON.stringify(selectedRun.outputs, null, 2)}</pre>
+                    </div>
+                    {selectedRun.error_message && (
+                      <div>
+                        <h4 className="font-medium mb-1">Error</h4>
+                        <pre className="bg-black/30 p-3 rounded">{selectedRun.error_message}</pre>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
+          </>
+        ) : (
+          <div className="text-gray-400">No workflows available</div>
+        )}
+      </div>
+    </div>
+  );
+}
