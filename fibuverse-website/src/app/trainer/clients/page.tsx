@@ -12,7 +12,14 @@ import {
   isSameDay,
   isSameMonth,
 } from "date-fns";
-import { getTrainerClients } from "@/api/trainer";
+import { getTrainerClients, getClientWeightsMetaData, getClientWeightsSessionData, getClientCardioMetaData, getClientCardioSessionData, getClientNutrittionData, getClientMetricsData } from "@/api/trainer";
+import WeightsAnalysisTab from "@/components/clients/WeightsAnalysisTab";
+import HistoryTab from "@/components/clients/HistoryTab";
+import ProgramsTab from "@/components/clients/ProgramsTab";
+import CardioAnalysisTab from "@/components/clients/CardioAnalysisTab";
+import NutritionAnalysisTab from "@/components/clients/NutritionAnalysisTab";
+import ClientMetricsTab from "@/components/clients/ClientMetricsTab";
+import { useRouter } from "next/navigation"; 
 
 interface Client {
   id: number;
@@ -41,7 +48,14 @@ interface Client {
 export default function ClientsPage() {
   const [clients, setClients] = useState<Client[]>([]);
   const [selectedClient, setSelectedClient] = useState<Client | null>(null);
-  const [activeTab, setActiveTab] = useState<"Analysis" | "History" | "Programs">("Analysis");
+  const [weightsMeta, setWeightsMeta] = useState<any>(null); // store insights
+  const [weightsSessionInsights, setWeightsSessionInsights] = useState<any>(null);
+  const [cardioMeta, setCardioMeta] = useState<any>(null); // store insights
+  const [cardioSessionInsights, setCardioSessionInsights] = useState<any>(null);
+  const [nutritionMeta, setNutritionMeta] = useState<any>(null); // store insights
+  const [metricsData, setMetricsData] = useState<any>(null); // store insights
+
+  const [activeTab, setActiveTab] = useState<"Client Metrics" | "Weights Analysis" | "Cardio Analysis" | "History" | "Programs">("Client Metrics");
   const [loading, setLoading] = useState(true);
 
   const [currentMonth, setCurrentMonth] = useState(new Date());
@@ -53,6 +67,7 @@ export default function ClientsPage() {
 
   const prevMonth = () => setCurrentMonth(addDays(monthStart, -1 * monthStart.getDate()));
   const nextMonth = () => setCurrentMonth(addDays(monthEnd, 1));
+  const router = useRouter();
 
   useEffect(() => {
     const token = localStorage.getItem("access_token");
@@ -100,15 +115,169 @@ export default function ClientsPage() {
     fetchClients();
   }, []);
 
+  // Retrieve Client Weigths Workout Data
+  useEffect(() => {
+    if (!selectedClient) return;
+
+    async function fetchWeightsMeta() {
+      try {
+        setLoading(true);
+        const data = await getClientWeightsMetaData(selectedClient.id);
+        console.log("Weights metadata:", data);
+        setWeightsMeta(data.data); // assuming your API returns { status, data }
+      } catch (err) {
+        console.error("Failed to fetch client weights metadata:", err);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    fetchWeightsMeta();
+  }, [selectedClient]);
+
+  // Retrieve Clients Weight Session Data
+  useEffect(() => {
+    if (!selectedClient) return;
+
+    async function fetchWeightsSessionInsights() {
+      try {
+        setLoading(true);
+        const data = await getClientWeightsSessionData(selectedClient.id); // your frontend function
+        console.log("Client weights session insights:", data);
+        setWeightsSessionInsights(data.data); // assuming API returns { status, data }
+      } catch (err) {
+        console.error("Failed to fetch client weights session insights:", err);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    fetchWeightsSessionInsights();
+  }, [selectedClient]);
+
+  // Retrieve Client Cardio Workout Data
+  useEffect(() => {
+    if (!selectedClient) return;
+
+    async function fetchCardioMeta() {
+      try {
+        setLoading(true);
+        const data = await getClientCardioMetaData(selectedClient.id);
+        console.log("Cardio metadata:", data);
+        setCardioMeta(data.data); // assuming your API returns { status, data }
+      } catch (err) {
+        console.error("Failed to fetch client cardio metadata:", err);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    fetchCardioMeta();
+  }, [selectedClient]);
+
+    // Retrieve Clients Weight Session Data
+  useEffect(() => {
+    if (!selectedClient) return;
+
+    async function fetchCardioSessionInsights() {
+      try {
+        setLoading(true);
+        const data = await getClientCardioSessionData(selectedClient.id); // your frontend function
+        console.log("Client weights session insights:", data);
+        setCardioSessionInsights(data.data); // assuming API returns { status, data }
+      } catch (err) {
+        console.error("Failed to fetch client cardio session insights:", err);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    fetchCardioSessionInsights();
+  }, [selectedClient]);
+
+  // Retrieve Client Nutrition Workout Data
+  useEffect(() => {
+    if (!selectedClient) return;
+
+    async function fetchNutritionMeta() {
+      try {
+        setLoading(true);
+        const data = await getClientNutrittionData(selectedClient.id);
+        console.log("Nutrition metadata:", data);
+        setNutritionMeta(data.data); // assuming your API returns { status, data }
+      } catch (err) {
+        console.error("Failed to fetch client Nutrition:", err);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    fetchNutritionMeta();
+  }, [selectedClient]);
+
+    // Retrieve Client Metrics Workout Data
+    useEffect(() => {
+      if (!selectedClient) return;
+
+      async function fetchMetricsData() {
+        try {
+          setLoading(true);
+          const data = await getClientMetricsData(selectedClient.id);
+          console.log("Metrics metadata:", data);
+          setMetricsData(data); // assuming your API returns { status, data }
+        } catch (err) {
+          console.error("Failed to fetch client metrics:", err);
+        } finally {
+          setLoading(false);
+        }
+      }
+
+      fetchMetricsData();
+    }, [selectedClient]);
+
+  const tabs = [
+    { label: "Client Metrics",
+      component: ClientMetricsTab,
+      props: { metricsData }, 
+    },
+    {
+      label: "Weights Analysis",
+      component: WeightsAnalysisTab,
+      props: { weightsMeta, weightsSessionInsights },
+    },
+    {
+      label: "Cardio Analysis",
+      component: CardioAnalysisTab,
+      props: { cardioMeta, cardioSessionInsights },
+    },
+    {
+      label: "Nutrition Analysis",
+      component: NutritionAnalysisTab,
+      props: { nutritionMeta }
+    },
+    { label: "History", component: HistoryTab, props: {} },
+    { label: "Programs", component: ProgramsTab, props: {} },
+  ];
+
   return (
     <div className="flex h-full min-h-screen bg-gray-900 text-white">
       {/* Left sidebar */}
       <div className="w-1/5 border-r border-gray-700 p-4 flex flex-col">
+        {/* Add Client Button */}
+        <button
+          onClick={() => router.push("/trainer/clients/add-client")} // adjust route if needed
+          className="mb-4 px-3 py-2 bg-green-600 text-white rounded hover:bg-green-700 transition"
+        >
+          + Add Client
+        </button>
+
+        {/* Search Input */}
         <input
           type="text"
           placeholder="Search clients..."
           className="p-2 rounded bg-gray-800 mb-4 placeholder-gray-400 text-white"
         />
+
         <div className="flex-1 overflow-y-auto">
           {loading ? (
             <div className="text-center text-gray-400 mt-4">Loading clients...</div>
@@ -133,61 +302,72 @@ export default function ClientsPage() {
         {/* Top section split: Client details + Calendar */}
         <div className="flex gap-4">
         {/* Client details */}
-        <div className="w-full md:w-1/3 bg-gray-800 p-4 rounded shadow flex flex-col gap-4">
-          <h2 className="font-semibold text-lg mb-2">Client Details</h2>
+        <div className="w-full md:w-1/3 bg-gray-800 p-4 rounded-2xl shadow-md flex flex-col gap-4">
+          <h2 className="font-semibold text-xl border-b border-gray-700 pb-2">Client Details</h2>
+
           {selectedClient ? (
-            <div className="flex flex-col md:flex-row gap-4">
-              {/* Left: client info */}
-              <div className="flex-1 flex flex-col gap-2">
-                {/* Name */}
-                <p className="text-xl font-semibold">
-                  {selectedClient.first_name || "-"} {selectedClient.last_name || "-"}
-                </p>
-
-                {/* Email */}
-                <p className="text-gray-300">{selectedClient.email || "-"}</p>
-
-                {/* City & Home State */}
-                <p className="text-gray-300">
-                  {selectedClient.city || "-"}, {selectedClient.home_state || "-"}
-                </p>
-
-                {/* Other details */}
-                <div className="flex flex-wrap gap-2 text-gray-300">
-                  <span><strong>Gender:</strong> {selectedClient.gender || "-"}</span>
-                  <span><strong>Height:</strong> {selectedClient.height ? `${selectedClient.height} cm` : "-"}</span>
-                  <span><strong>Weight:</strong> {selectedClient.weight ? `${selectedClient.weight} kg` : "-"}</span>
-                  <span><strong>Age:</strong> {selectedClient.age || "-"}</span>
-                </div>
-
-                {/* Fitness Goal */}
-                <div className="mt-2 text-gray-300">
-                  <span><strong>Fitness Goal:</strong> {selectedClient.fitness_goal || "-"}</span>
-                </div>
-
-                {/* Activity Metrics */}
-                <div className="mt-2 text-gray-300 grid grid-cols-2 gap-2">
-                  <span><strong>Workouts/week:</strong> {selectedClient.activity_metrics?.workouts_per_week ?? "-"}</span>
-                  <span><strong>Runs/week:</strong> {selectedClient.activity_metrics?.runs_per_week ?? "-"}</span>
-                  <span><strong>Avg daily steps:</strong> {selectedClient.activity_metrics?.average_daily_steps ?? "-"}</span>
-                </div>
-              </div>
-
-              {/* Right: profile image */}
-              <div className="flex-shrink-0 md:self-start self-center">
+            <div className="flex flex-col gap-4">
+              {/* Top section: avatar + name */}
+              <div className="flex items-center gap-4">
                 <img
                   src={selectedClient.profile_image || "/placeholder-profile.png"}
                   alt={`${selectedClient.first_name} ${selectedClient.last_name}`}
-                  className="w-24 h-24 md:w-32 md:h-32 rounded-full object-cover"
+                  className="w-16 h-16 rounded-full object-cover border border-gray-600"
                 />
+                <div>
+                  <p className="text-lg font-semibold">
+                    {selectedClient.first_name || "-"} {selectedClient.last_name || "-"}
+                  </p>
+                  <p className="text-gray-300 text-sm">{selectedClient.email || "-"}</p>
+                  <p className="text-gray-400 text-sm">
+                    {selectedClient.city || "-"}, {selectedClient.home_state || "-"}
+                  </p>
+                </div>
+              </div>
+
+              {/* Info boxes */}
+              <div className="grid grid-cols-2 gap-3">
+                <div className="bg-gray-700 p-3 rounded-lg">
+                  <span className="block text-xs text-gray-400">Gender</span>
+                  <span className="font-medium">{selectedClient.gender || "-"}</span>
+                </div>
+                <div className="bg-gray-700 p-3 rounded-lg">
+                  <span className="block text-xs text-gray-400">Age</span>
+                  <span className="font-medium">{selectedClient.age || "-"}</span>
+                </div>
+                <div className="bg-gray-700 p-3 rounded-lg">
+                  <span className="block text-xs text-gray-400">Height</span>
+                  <span className="font-medium">{selectedClient.height ? `${selectedClient.height} cm` : "-"}</span>
+                </div>
+                <div className="bg-gray-700 p-3 rounded-lg">
+                  <span className="block text-xs text-gray-400">Weight</span>
+                  <span className="font-medium">{selectedClient.weight ? `${selectedClient.weight} kg` : "-"}</span>
+                </div>
+              </div>
+
+              {/* Fitness goal */}
+              <div className="bg-gray-700 p-3 rounded-lg">
+                <span className="block text-xs text-gray-400">Fitness Goal</span>
+                <span className="font-medium">{selectedClient.fitness_goal || "-"}</span>
+              </div>
+
+              {/* Activity Metrics */}
+              <div className="bg-gray-700 p-3 rounded-lg">
+                <span className="block text-xs text-gray-400 mb-1">Activity Metrics</span>
+                <div className="grid grid-cols-2 gap-2 text-sm">
+                  <span><strong>Workouts/wk:</strong> {selectedClient.activity_metrics?.workouts_per_week ?? "-"}</span>
+                  <span><strong>Runs/wk:</strong> {selectedClient.activity_metrics?.runs_per_week ?? "-"}</span>
+                  <span><strong>Steps/day:</strong> {selectedClient.activity_metrics?.average_daily_steps ?? "-"}</span>
+                </div>
               </div>
             </div>
           ) : (
             <p className="text-gray-400">Select a client to view details</p>
           )}
         </div>
+
           {/* Calendar */}
-          <div className="flex-1 bg-gray-800 p-4 rounded shadow">
+          <div className="flex-1 bg-gray-800 p-4 rounded-2xl shadow-md">
             <div className="flex justify-between items-center mb-2">
               <button onClick={prevMonth} className="px-2 py-1 bg-gray-700 rounded hover:bg-gray-600">
                 Prev
@@ -220,26 +400,34 @@ export default function ClientsPage() {
         </div>
 
         {/* Tabs below top section */}
-        <div className="flex gap-2">
-          {["Analysis", "History", "Programs"].map(tab => (
-            <button
-              key={tab}
-              onClick={() => setActiveTab(tab as any)}
-              className={`px-4 py-2 rounded ${
-                activeTab === tab ? "bg-blue-600 text-white" : "bg-gray-800 text-gray-300 hover:bg-gray-700"
-              }`}
-            >
-              {tab}
-            </button>
-          ))}
+        <div className="flex-1 flex flex-col">
+          {/* Tabs */}
+          <div className="flex gap-2 mb-4">
+            {tabs.map(({ label }) => (
+              <button
+                key={label}
+                onClick={() => setActiveTab(label)}
+                className={`px-4 py-2 rounded transition-colors duration-200 ${
+                  activeTab === label
+                    ? "bg-blue-600 text-white shadow-lg"
+                    : "bg-gray-800 text-gray-300 hover:bg-gray-700"
+                }`}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+
+          {/* Tab content */}
+          <div className="flex-1 overflow-auto rounded bg-gray-800 p-4">
+            {tabs.map(({ label, component: Component, props }) =>
+              activeTab === label && selectedClient ? (
+                <Component key={label} clientId={selectedClient.id} {...props} />
+              ) : null
+            )}
+          </div>
         </div>
 
-        {/* Tab content */}
-        <div className="flex-1 overflow-auto rounded bg-gray-800 p-4">
-          {activeTab === "Analysis" && <div>Analysis content here</div>}
-          {activeTab === "History" && <div>History content here</div>}
-          {activeTab === "Programs" && <div>Programs content here</div>}
-        </div>
       </div>
     </div>
   );

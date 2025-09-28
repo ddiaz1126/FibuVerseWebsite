@@ -93,6 +93,59 @@ export async function fetchWithAutoRefresh(endpoint: string, options: RequestIni
 }
 
 /**
+ * POST JSON wrapper with automatic token refresh (tries once).
+ */
+export async function postWithAutoRefresh(endpoint: string, payload: any, options: RequestInit = {}) {
+  let token = localStorage.getItem("accessToken") ?? null;
+
+  // Base headers for JSON POST
+  const baseHeaders: Record<string, string> = {
+    "Content-Type": "application/json",
+    ...(options.headers ? (options.headers as Record<string, string>) : {}),
+  };
+  if (token) baseHeaders["Authorization"] = `Bearer ${token}`;
+
+  const doFetch = async (hdrs: Record<string, string>) => {
+    const mergedOptions: RequestInit = {
+      method: "POST",
+      ...options,
+      headers: hdrs,
+      body: JSON.stringify(payload),
+    };
+    return await fetch(`${API_URL}${endpoint}`, mergedOptions);
+  };
+
+  let res = await doFetch(baseHeaders);
+
+  if (res.status === 401) {
+    console.info("[postWithAutoRefresh] 401 received, attempting token refresh");
+    const newToken = await refreshAccessToken();
+    if (!newToken) {
+      throw new Error("Access token expired. Please login again.");
+    }
+    // retry with new token
+    const retryHeaders = { ...baseHeaders, Authorization: `Bearer ${newToken}` };
+    res = await doFetch(retryHeaders);
+  }
+
+  const text = await res.text();
+  let data: any = {};
+  try {
+    data = text ? JSON.parse(text) : {};
+  } catch (err) {
+    console.warn("[postWithAutoRefresh] response is not valid JSON:", text);
+    throw new Error("API did not return valid JSON");
+  }
+
+  if (!res.ok) {
+    const errMsg = data?.error || data?.message || `Request failed with status ${res.status}`;
+    throw new Error(errMsg);
+  }
+
+  return data;
+}
+
+/**
  * POST FormData wrapper with auto-refresh (works for file uploads).
  * Does not set Content-Type (browser will set boundary).
  */

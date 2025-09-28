@@ -153,31 +153,37 @@ export default function DeveloperWorkflowView() {
   const handleRun = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedWorkflow) return;
+
     try {
       setRunning(true);
 
-      const subagentInputs = selectedWorkflow.layers[0]?.subagents[0]?.inputs || {};
       const formData = new FormData();
-
       formData.append("id", selectedWorkflow.id.toString());
 
-      Object.entries(subagentInputs).forEach(([key, meta]: [string, any]) => {
-        const value = inputs[key];
-        if (meta.type === "file" && value instanceof File) {
-          formData.append(key, value); // append file
-        } else if (value !== undefined && value !== null) {
-          formData.append(key, value.toString()); // append other inputs as strings
-        }
+      // Loop over all subagents in the first layer
+      const subagents = selectedWorkflow.layers[0]?.subagents || [];
+      subagents.forEach((subagent: any) => {
+        if (!subagent.inputs) return;
+
+        Object.entries(subagent.inputs).forEach(([key, meta]: [string, any]) => {
+          const value = inputs[key];
+          if (value === undefined || value === null) return;
+
+          if (meta.type === "file" && value instanceof File) {
+            formData.append(key, value);
+          } else if (meta.type === "Dict" || meta.type === "dict") {
+            // Serialize Dict objects as JSON strings
+            formData.append(key, JSON.stringify(value));
+          } else {
+            formData.append(key, value.toString());
+          }
+        });
       });
 
       const res: RunCompositeResponse = await runCompositeAgentFormData(formData);
       setOutput(res.outputs ?? null);
 
-      if (res.history_id) {
-        await loadHistory(selectedWorkflow.id);
-      } else {
-        await loadHistory(selectedWorkflow.id);
-      }
+      await loadHistory(selectedWorkflow.id);
     } catch (err) {
       console.error("Workflow run failed:", err);
       if (selectedWorkflow) loadHistory(selectedWorkflow.id);
@@ -203,7 +209,7 @@ export default function DeveloperWorkflowView() {
   return (
     <div className="flex h-full">
       {/* Sidebar */}
-      <div className="w-1/4 border-r border-gray-700 bg-gray-800 p-4 flex flex-col gap-2">
+    <div className="w-[300px] border-r border-gray-700 bg-gray-800 p-4 flex flex-col gap-2">
         {/* Search bar */}
         <input
           type="text"
@@ -301,15 +307,15 @@ export default function DeveloperWorkflowView() {
               </svg>
 
               {selectedWorkflow.layers.map((layer, i) => (
-                <div
-                  key={layer.id}
-                  className="flex flex-col gap-3 min-w-[200px] flex-1 p-3 border-l border-gray-600 z-10 relative"
-                >
+                    <div
+                      key={`layer-${layer.id || i}`}
+                      className="flex flex-col gap-3 min-w-[200px] p-3 border-l border-gray-600 z-10 relative"
+                    >
                   <h3 className="text-gray-300 font-semibold mb-2">
                     Layer {layer.layer_index}
                   </h3>
                   {layer.subagents.map((sub, idx) => {
-                    const key = `${i}-${idx}-${sub.id}`;
+                    const key = `sub-${layer.id}-${sub.id || idx}`;
                     return (
                       <div
                         key={key}
@@ -328,8 +334,22 @@ export default function DeveloperWorkflowView() {
             <div className="mb-6">
               <h2 className="text-xl font-semibold mb-2">Inputs</h2>
               <form className="flex flex-col gap-3 max-w-lg" onSubmit={handleRun}>
-                {selectedWorkflow.layers[0]?.subagents[0]?.inputs &&
-                  Object.entries(selectedWorkflow.layers[0].subagents[0].inputs).map(([key, meta]: any) => (
+                {(() => {
+                  const seenKeys = new Set<string>();
+                  const dedupedInputs: Array<[string, any]> = [];
+
+                  selectedWorkflow.layers[0]?.subagents?.forEach((subagent: any) => {
+                    if (!subagent.inputs) return;
+
+                    Object.entries(subagent.inputs).forEach(([key, meta]: any) => {
+                      if (!seenKeys.has(key)) {
+                        seenKeys.add(key);
+                        dedupedInputs.push([key, meta]);
+                      }
+                    });
+                  });
+
+                  return dedupedInputs.map(([key, meta]) => (
                     <div key={key} className="flex flex-col gap-1">
                       <label className="text-gray-300 font-medium">
                         {key} {!meta.required && "(Optional)"} {meta.type && `- Type: ${meta.type}`}
@@ -342,6 +362,52 @@ export default function DeveloperWorkflowView() {
                           onChange={(e) => handleInputChange(key, e.target.files?.[0] ?? null)}
                           className="p-2 rounded bg-gray-700 text-white border border-gray-600 focus:outline-none focus:ring-2 focus:ring-green-500"
                         />
+                      ) : meta.type === "Dict" || meta.type === "dict" ? (
+                        <div className="flex flex-col gap-2 p-3 bg-gray-800 rounded border border-gray-600">
+                          {meta.description && (
+                            <p className="text-sm text-gray-400 mb-2">{meta.description}</p>
+                          )}
+                          {(() => {
+                            // Parse the example from the description to get expected keys
+                            const currentDict = inputs[key] || {};
+                            let expectedKeys: string[] = [];
+                            
+                            // Try to extract keys from the description example
+                            if (meta.description) {
+                              const match = meta.description.match(/\{[^}]+\}/);
+                              if (match) {
+                                try {
+                                  const exampleObj = JSON.parse(match[0].replace(/(\w+):/g, '"$1":'));
+                                  expectedKeys = Object.keys(exampleObj);
+                                } catch (e) {
+                                  // If parsing fails, fall back to common keys or empty
+                                }
+                              }
+                            }
+                            
+                            // If no keys found in description, show current dict keys or provide default structure
+                            if (expectedKeys.length === 0) {
+                              expectedKeys = Object.keys(currentDict).length > 0 ? Object.keys(currentDict) : [];
+                            }
+                            
+                            return expectedKeys.map((dictKey) => (
+                              <div key={dictKey} className="flex flex-col gap-1">
+                                <label className="text-gray-400 text-sm font-medium">{dictKey}</label>
+                                <input
+                                  type="text"
+                                  value={currentDict[dictKey] || ""}
+                                  onChange={(e) => {
+                                    const newDict = { ...currentDict };
+                                    newDict[dictKey] = e.target.value;
+                                    handleInputChange(key, newDict);
+                                  }}
+                                  placeholder={`Enter ${dictKey} value`}
+                                  className="p-2 rounded bg-gray-700 text-white border border-gray-600 focus:outline-none focus:ring-2 focus:ring-green-500"
+                                />
+                              </div>
+                            ));
+                          })()}
+                        </div>
                       ) : (
                         <input
                           type="text"
@@ -352,7 +418,9 @@ export default function DeveloperWorkflowView() {
                         />
                       )}
                     </div>
-                  ))}
+                  ));
+                })()}
+
                 <button
                   type="submit"
                   disabled={running}
@@ -369,7 +437,11 @@ export default function DeveloperWorkflowView() {
                 (() => {
                   const keys = Object.keys(output);
                   const lastKey = keys[keys.length - 1];
-                  return <pre>{JSON.stringify({ [lastKey]: output[lastKey] }, null, 2)}</pre>;
+                  return (
+                    <pre className="overflow-x-auto max-w-full break-words">
+                      {JSON.stringify({ [lastKey]: output[lastKey] }, null, 2)}
+                    </pre>
+                  );
                 })()
               ) : (
                 <p>No output yet. Run the workflow to see results.</p>
