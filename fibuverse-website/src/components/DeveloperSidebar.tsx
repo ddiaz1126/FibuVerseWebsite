@@ -11,7 +11,7 @@ type DeveloperSidebarProps = {
 const items = [
   { name: "Dashboard", icon: HomeIcon, href: "/developer/dashboard" }, // ✅ added dashboard
   { name: "Agents", icon: CubeIcon, href: "/developer/agents" },
-  { name: "Workflow", icon: ArrowsRightLeftIcon, href: "/developer/workflow" },
+  { name: "Sandbox", icon: ArrowsRightLeftIcon, href: "/developer/workflow" },
   { name: "Documentation", icon: BookOpenIcon, href: "/developer/docs" },
   { name: "Settings", icon: CogIcon, href: "/developer/settings" },
   { name: "Help", icon: QuestionMarkCircleIcon, href: "/developer/help" },

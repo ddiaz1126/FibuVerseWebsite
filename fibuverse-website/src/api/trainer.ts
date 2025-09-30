@@ -102,7 +102,11 @@ export async function postWithAutoRefresh(endpoint: string, payload: any, option
 export async function fetchWithAutoRefresh(endpoint: string, options: RequestInit = {}) {
   let token = localStorage.getItem("accessToken") ?? null;
 
-  // Build headers object we can mutate for retry
+  // Get user's timezone and append to endpoint
+  const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+  const separator = endpoint.includes('?') ? '&' : '?';
+  const endpointWithTimezone = `${endpoint}${separator}timezone=${encodeURIComponent(timezone)}`;
+
   const baseHeaders: Record<string, string> = {
     "Content-Type": "application/json",
     ...(options.headers ? (options.headers as Record<string, string>) : {}),
@@ -111,7 +115,7 @@ export async function fetchWithAutoRefresh(endpoint: string, options: RequestIni
 
   const doFetch = async (hdrs: Record<string, string>) => {
     const mergedOptions = { ...options, headers: hdrs };
-    return await fetch(`${API_URL}${endpoint}`, mergedOptions);
+    return await fetch(`${API_URL}${endpointWithTimezone}`, mergedOptions);
   };
 
   let res = await doFetch(baseHeaders);
@@ -340,6 +344,7 @@ export async function getClientMetricsData(client_id: number) {
     throw err;
   }
 }
+
 // Fetch Alerts for Trainer
 export async function getTrainerAlerts() {
   try {
@@ -398,6 +403,22 @@ export async function sendBodyFatData(
     return data;
   } catch (err: any) {
     console.error("[sendBodyFatData] error:", err);
+    throw err;
+  }
+}
+// Post Fitness Tests Data
+export async function sendFitnessTestsData(
+  payload: { client_id?: number; [key: string]: any }
+) {
+  try {
+    const data = await postWithAutoRefresh(
+      "/clients/add-fitness-test/",
+      payload
+    );
+    console.log("Send Fitness Tests Data:", data);
+    return data;
+  } catch (err: any) {
+    console.error("[sendFitnessTestsData] error:", err);
     throw err;
   }
 }

@@ -42,6 +42,8 @@ interface Client {
   body_fat_skinfolds?: any;
   activity_metrics?: any;
   alerts?: any[];
+  cardio_sessions: req.cardio_sessions,     
+  weight_workouts: req.weight_workouts, 
 }
 
 
@@ -53,7 +55,7 @@ export default function ClientsPage() {
   const [cardioMeta, setCardioMeta] = useState<any>(null); // store insights
   const [cardioSessionInsights, setCardioSessionInsights] = useState<any>(null);
   const [nutritionMeta, setNutritionMeta] = useState<any>(null); // store insights
-  const [metricsData, setMetricsData] = useState<any>(null); // store insights
+  const [metricsData, setMetricsData] = useState<any>({});
 
   const [activeTab, setActiveTab] = useState<"Client Metrics" | "Weights Analysis" | "Cardio Analysis" | "History" | "Programs">("Client Metrics");
   const [loading, setLoading] = useState(true);
@@ -68,6 +70,10 @@ export default function ClientsPage() {
   const prevMonth = () => setCurrentMonth(addDays(monthStart, -1 * monthStart.getDate()));
   const nextMonth = () => setCurrentMonth(addDays(monthEnd, 1));
   const router = useRouter();
+
+  // Extract session dates
+  const cardioDates = metricsData.cardio_sessions?.map((s: any) => s.cardio_date) || [];
+  const weightDates = metricsData.weight_workouts?.map((w: any) => w.workout_date) || [];
 
   useEffect(() => {
     const token = localStorage.getItem("access_token");
@@ -255,9 +261,16 @@ export default function ClientsPage() {
       component: NutritionAnalysisTab,
       props: { nutritionMeta }
     },
-    { label: "History", component: HistoryTab, props: {} },
-    { label: "Programs", component: ProgramsTab, props: {} },
-  ];
+    { 
+      label: "History", 
+      component: HistoryTab, 
+      props: { 
+        cardioSessions: metricsData.cardio_sessions, 
+        weightWorkouts: metricsData.weight_workouts 
+      } 
+    },
+      { label: "Programs", component: ProgramsTab, props: {} },
+    ];
 
   return (
     <div className="flex h-full min-h-screen bg-gray-900 text-white">
@@ -337,11 +350,17 @@ export default function ClientsPage() {
                 </div>
                 <div className="bg-gray-700 p-3 rounded-lg">
                   <span className="block text-xs text-gray-400">Height</span>
-                  <span className="font-medium">{selectedClient.height ? `${selectedClient.height} cm` : "-"}</span>
+                  <span className="font-medium">
+                    {metricsData.body_measurements?.[0]?.height_cm
+                      ? `${metricsData.body_measurements[0].height_cm} cm`
+                      : "-"}
+                  </span>
                 </div>
                 <div className="bg-gray-700 p-3 rounded-lg">
                   <span className="block text-xs text-gray-400">Weight</span>
-                  <span className="font-medium">{selectedClient.weight ? `${selectedClient.weight} kg` : "-"}</span>
+                  <span className="font-medium">{metricsData.body_measurements?.[0]?.weight_kg
+                       ? `${metricsData.body_measurements?.[0]?.weight_kg
+                        } kg` : "-"}</span>
                 </div>
               </div>
 
@@ -368,33 +387,75 @@ export default function ClientsPage() {
 
           {/* Calendar */}
           <div className="flex-1 bg-gray-800 p-4 rounded-2xl shadow-md">
-            <div className="flex justify-between items-center mb-2">
-              <button onClick={prevMonth} className="px-2 py-1 bg-gray-700 rounded hover:bg-gray-600">
-                Prev
+            {/* Header with navigation */}
+            <div className="flex justify-between items-center mb-8">
+              <button 
+                onClick={prevMonth} 
+                className="px-3 py-1.5 bg-gray-700 rounded-lg hover:bg-gray-600 transition-colors text-sm font-medium"
+              >
+                ← Prev
               </button>
-              <div className="font-semibold text-lg">{format(currentMonth, "MMMM yyyy")}</div>
-              <button onClick={nextMonth} className="px-2 py-1 bg-gray-700 rounded hover:bg-gray-600">
-                Next
+              <div className="font-bold text-lg">{format(currentMonth, "MMMM yyyy")}</div>
+              <button 
+                onClick={nextMonth} 
+                className="px-3 py-1.5 bg-gray-700 rounded-lg hover:bg-gray-600 transition-colors text-sm font-medium"
+              >
+                Next →
               </button>
             </div>
 
-            <div className="grid grid-cols-7 gap-1 text-center mb-1">
+            {/* Legend */}
+            <div className="flex gap-4 mb-3 items-center text-xs justify-center">
+              <div className="flex items-center gap-1.5">
+                <span className="w-2.5 h-2.5 bg-green-500 rounded-full"></span>
+                <span className="text-gray-300">Cardio</span>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <span className="w-2.5 h-2.5 bg-yellow-500 rounded-full"></span>
+                <span className="text-gray-300">Weights</span>
+              </div>
+            </div>
+
+            {/* Day headers */}
+            <div className="grid grid-cols-7 gap-1.5 text-center mb-2">
               {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map(d => (
-                <div key={d} className="font-semibold">{d}</div>
+                <div key={d} className="font-semibold text-gray-400 text-xs">{d}</div>
               ))}
             </div>
 
-            <div className="grid grid-cols-7 gap-1 text-center">
-              {days.map(day => (
-                <div
-                  key={day.toISOString()}
-                  className={`h-16 flex items-center justify-center rounded cursor-pointer transition ${
-                    isSameDay(day, new Date()) ? "bg-blue-600 text-white" : "bg-gray-700 hover:bg-gray-600"
-                  } ${!isSameMonth(day, monthStart) ? "text-gray-500" : ""}`}
-                >
-                  {format(day, "d")}
-                </div>
-              ))}
+            {/* Calendar grid */}
+            <div className="grid grid-cols-7 grid-rows-6 gap-1.5">
+              {days.map(day => {
+                const dayStr = format(day, "yyyy-MM-dd");
+                const hasCardio = cardioDates.includes(dayStr);
+                const hasWeight = weightDates.includes(dayStr);
+                const isToday = isSameDay(day, new Date());
+                const isCurrentMonth = isSameMonth(day, monthStart);
+
+                return (
+                  <div
+                    key={day.toISOString()}
+                    className={`
+                      h-12 flex flex-col items-center justify-center rounded-lg cursor-pointer transition-all
+                      ${isToday 
+                        ? "bg-blue-600 text-white shadow-lg" 
+                        : "bg-gray-700 hover:bg-gray-600"
+                      }
+                      ${!isCurrentMonth ? "opacity-40" : ""}
+                    `}
+                  >
+                    <span className={`text-sm ${isToday ? "font-bold" : "font-medium"}`}>
+                      {format(day, "d")}
+                    </span>
+                    {(hasCardio || hasWeight) && (
+                      <div className="flex gap-1 mt-0.5">
+                        {hasCardio && <span className="w-1.5 h-1.5 bg-green-400 rounded-full"></span>}
+                        {hasWeight && <span className="w-1.5 h-1.5 bg-yellow-400 rounded-full"></span>}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
             </div>
           </div>
         </div>
@@ -419,10 +480,17 @@ export default function ClientsPage() {
           </div>
 
           {/* Tab content */}
-          <div className="flex-1 overflow-auto rounded bg-gray-800 p-4">
+          <div className="flex-1 overflow-auto bg-gray-800 p-4 rounded-2xl shadow-md">
             {tabs.map(({ label, component: Component, props }) =>
               activeTab === label && selectedClient ? (
-                <Component key={label} clientId={selectedClient.id} {...props} />
+                <Component
+                  key={label}
+                  clientId={selectedClient.id}
+                  clientName={`${selectedClient.first_name} ${selectedClient.last_name}`}
+                  clientGender={selectedClient.gender}
+                  clientAge={selectedClient.age}
+                  {...props}
+                />
               ) : null
             )}
           </div>

@@ -2,12 +2,253 @@
 
 import { useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { sendHealthMetricsData, sendBodyMeasurementData, sendBodyFatData } from "@/api/trainer";
+import { sendHealthMetricsData, sendBodyMeasurementData, sendBodyFatData, sendFitnessTestsData } from "@/api/trainer";
+import fitnessMetadata from "@/app/data/fitness_metric_metadata.json";
+
+interface MetricGaugeProps {
+  label: string;
+  value: string | number;
+  onChange: (value: string) => void;
+  ranges: { label: string; min: number; max: number; color: string }[];
+  maxValue: number;
+  description?: string;
+  tableData?: Record<string, any>;
+  expandedMetric: string | null;
+  setExpandedMetric: (val: string | null) => void;
+}
+
+const MetricGauge = ({
+  label,
+  value,
+  onChange,
+  ranges,
+  minValue,
+  maxValue,
+  ticks = [],
+  description,
+  tableData,
+  expandedMetric,
+  setExpandedMetric,
+}) => {
+  const calculateMarkerPosition = () => {
+    const num = Number(value);
+    if (!num && num !== 0) return 0;
+    const pct = ((num - minValue) / (maxValue - minValue)) * 100;
+    return Math.min(Math.max(pct, 0), 100);
+  };
+
+  const toPct = (abs) => ((abs - minValue) / (maxValue - minValue)) * 100;
+
+  const labelColors = {};
+  ranges.forEach(r => {
+    labelColors[r.label] = r.color;
+  });
+
+  const formattedLabel = label.replace(/_/g, " ").toUpperCase();
+
+  return (
+    <div className="flex flex-col gap-6 w-full p-6 bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 rounded-xl shadow-2xl border border-gray-700">
+      <div className="flex items-center gap-6 w-full">
+        {/* Input Section */}
+        <div className="flex flex-col w-1/2 gap-2">
+          <label className="text-sm font-semibold text-gray-300 tracking-wide">
+            {formattedLabel}
+          </label>
+          <input
+            type="number"
+            step="any"
+            value={value ?? ""}
+            onChange={(e) => onChange(e.target.value)}
+            className="px-4 py-3 rounded-lg bg-gray-800/50 text-white border border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 backdrop-blur-sm"
+            placeholder="Enter value..."
+          />
+        </div>
+
+        {/* Gauge Section */}
+        <div className="flex flex-col w-1/2 self-end"> {/* <-- self-end lowers the gauge */}
+          {/* Gauge Bar */}
+          <div className="relative h-8 w-full rounded-lg bg-gray-800/80 overflow-hidden shadow-inner border border-gray-700/50">
+            {/* Colored ranges */}
+            {ranges.map((r) => {
+              const left = toPct(r.min);
+              const width = toPct(r.max) - toPct(r.min);
+              return (
+                <div
+                  key={r.label}
+                  className={`${r.color} absolute top- h-full transition-all duration-300`}
+                  style={{ left: `${left}%`, width: `${width}%` }}
+                />
+              );
+            })}
+
+            {/* Marker for current value */}
+            <div
+              className="absolute top-0 h-full w-1 bg-white shadow-lg transition-all duration-300 z-10"
+              style={{ left: `${calculateMarkerPosition()}%`, transform: 'translateX(-50%)' }}
+            >
+              <div className="absolute -top-2 left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-b-4 border-transparent border-b-white"></div>
+            </div>
+
+            {/* Vertical tick lines */}
+            {ticks.map((t, i) => {
+              const left = toPct(t);
+              return (
+                <div
+                  key={`tick-${i}`}
+                  className="absolute top-0 h-full w-px bg-white/20"
+                  style={{ left: `${left}%` }}
+                />
+              );
+            })}
+            <div className="absolute top-0 h-full w-px bg-white/20" style={{ right: 0 }} />
+          </div>
+
+          {/* Tick labels */}
+          <div className="relative w-full h-4">
+            {ticks.map((t, i) => (
+              <span
+                key={`tick-label-${i}`}
+                className="absolute text-sm font-medium text-gray-200"
+                style={{ left: `${toPct(t)}%`, transform: "translateX(-50%)" }}
+              >
+                {t}
+              </span>
+            ))}
+            <span className="absolute text-sm font-medium text-gray-200 right-0">
+              {maxValue}
+            </span>
+          </div>
+        </div>
+      </div>
+
+      {/* Dropdown Details Section */}
+      {description && (
+        <div className="border-t border-gray-700 pt-4">
+          <button
+            type="button"
+            className="flex items-center gap-2 text-sm font-medium text-blue-400 hover:text-blue-300 transition-colors duration-200"
+            onClick={() => setExpandedMetric && setExpandedMetric(expandedMetric === label ? null : label)}
+          >
+            <svg 
+              className={`w-4 h-4 transition-transform duration-200 ${expandedMetric === label ? 'rotate-180' : ''}`}
+              fill="none" 
+              stroke="currentColor" 
+              viewBox="0 0 24 24"
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+            </svg>
+            {expandedMetric === label ? "Hide Details" : "Show Details"}
+          </button>
+
+          {expandedMetric === label && tableData && (
+            <div className="bg-gray-950/50 p-5 rounded-lg mt-4 border border-gray-700/50 backdrop-blur-sm animate-fadeIn">
+              <p className="mb-4 text-sm text-gray-300 leading-relaxed">{description}</p>
+              <div className="overflow-x-auto rounded-lg border border-gray-700">
+                <table className="w-full text-xs">
+                  <thead>
+                    <tr className="bg-gray-800/80">
+                      <th className="border-b border-r border-gray-700 px-4 py-3 text-left font-semibold text-gray-300">Gender</th>
+                      <th className="border-b border-r border-gray-700 px-4 py-3 text-left font-semibold text-gray-300">Age Range</th>
+                      {Object.keys(tableData["male"][Object.keys(tableData["male"])[0]]).map((metricKey) => (
+                        <th
+                          key={metricKey}
+                          className={`border-b border-r border-gray-700 px-4 py-3 text-left font-semibold ${labelColors[metricKey]}`}
+                        >
+                          {metricKey}
+                        </th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {Object.entries(tableData).map(([gender, ageGroups]) =>
+                      Object.entries(ageGroups).map(([ageRange, values], idx) => (
+                        <tr key={`${gender}-${ageRange}`} className="hover:bg-gray-800/40 transition-colors duration-150">
+                          <td className="border-b border-r border-gray-700/50 px-4 py-3 text-gray-200 capitalize">{gender}</td>
+                          <td className="border-b border-r border-gray-700/50 px-4 py-3 text-gray-200">{ageRange}</td>
+                          {Object.keys(values).map((metricKey) => (
+                            <td
+                              key={metricKey}
+                              className={`border-b border-r border-gray-700/50 px-4 py-3 ${labelColors[metricKey]}`}
+                            >
+                              {values[metricKey] ?? "-"}
+                            </td>
+                          ))}
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+};
 
 export default function Page({ metricsData }: any) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const clientId = Number(searchParams.get("clientId")) || 1;
+  const clientName = searchParams.get("clientName") || "Unknown";
+  const clientGender = searchParams.get("clientGender") || "Unknown";
+  const clientAgeStr = searchParams.get("clientAge");
+  const clientAge = clientAgeStr ? Number(clientAgeStr) : null;
+  const [allMetrics, setAllMetrics] = useState(fitnessMetadata);
+
+
+  // Fetch Metric Data
+  function filterMetric(metric: string, gender: string, age: number) {
+    const metricData = allMetrics[metric];
+    if (!metricData) return null;
+
+    const { description, ...rest } = metricData;
+    const genderData = rest[gender.toLowerCase()] || {};
+    
+    // Later you can filter by age range
+    const ageGroup = Object.entries(genderData).find(([range]) => {
+      const [min, max] = range.split("-").map(Number);
+      return age >= min && age <= max;
+    });
+
+    return {
+      description,
+      ranges: ageGroup ? ageGroup[1] : null,
+    };
+  }
+
+  // Metric Ranges for specific Client for Gauges
+  const getRangesForMetric = (
+    metric: string,
+    gender?: string | null,
+    age?: number | null
+  ) => {
+    const defaultGender = "male"; // fallback if gender not provided
+    const metricData = fitnessMetadata[metric]; // <-- use imported JSON
+
+    if (!metricData) return null;
+
+    // Determine gender to use
+    const g = gender && metricData[gender.toLowerCase()] ? gender.toLowerCase() : defaultGender;
+
+    // Determine age group
+    const ageGroups = Object.keys(metricData[g]);
+    let selectedGroup = ageGroups[0]; // default to first group
+    if (age) {
+      for (const group of ageGroups) {
+        const [min, max] = group.split("-").map(Number);
+        if (age >= min && age <= max) {
+          selectedGroup = group;
+          break;
+        }
+      }
+    }
+
+    const ranges = metricData[g][selectedGroup];
+
+    return ranges;
+  };
 
   // -------------------- Health Metrics --------------------
   const [healthMetrics, setHealthMetrics] = useState({
@@ -43,6 +284,20 @@ export default function Page({ metricsData }: any) {
     suprailiac: "",
   });
 
+    // -------------------- Fitness Tests --------------------
+  const [fitnessTest, setFitnessTests] = useState({
+    sit_and_reach_cm: "",
+    hand_dynamometer_kg: "",
+    plank_hold_seconds: "",
+    wall_sit_seconds: "",
+    balance_test_seconds: "",
+    push_ups_test: "",
+    sit_ups_test: "",
+    pull_ups_test: "",
+    bench_press_1rm_kg: "",
+    leg_press_1rm_kg: "",
+  });
+
   const handleChange = (section: string, field: string, value: string) => {
     switch (section) {
       case "health":
@@ -54,6 +309,9 @@ export default function Page({ metricsData }: any) {
       case "skinfold":
         setSkinfolds({ ...skinfolds, [field]: value });
         break;
+      case "fitness":
+        setFitnessTests({ ...fitnessTest, [field]: value });
+        break;
     }
   };
 
@@ -62,6 +320,7 @@ export default function Page({ metricsData }: any) {
       { func: sendHealthMetricsData, data: healthMetrics },
       { func: sendBodyMeasurementData, data: bodyMeasurements },
       { func: sendBodyFatData, data: skinfolds },
+      { func: sendFitnessTestsData, data: fitnessTest },
     ];
 
     const clientPayload = { client_id: clientId };
@@ -86,1119 +345,376 @@ export default function Page({ metricsData }: any) {
     }
   };
 
-  // -------------------- Resting HR Gauge --------------------
-  const restingHRRanges = [
-    { label: "Bradycardia", min: 0, max: 59, color: "bg-red-500/30" },
-    { label: "Normal", min: 60, max: 100, color: "bg-green-500/30" },
-    { label: "Tachycardia", min: 101, max: 180, color: "bg-red-500/30" },
-  ];
+  const [expandedMetric, setExpandedMetric] = useState<string | null>(null);
+  // Renders a single health metric with dynamic gauge and table
+  const renderHealthMetric = (field: string) => {
+    const metricData = fitnessMetadata[field];
+    if (!metricData) return null;
 
-  const calculateMarkerPosition = () => {
-    const hr = Number(healthMetrics.resting_hr);
-    if (!hr) return 0;
-    const min = 0;
-    const max = 180;
-    const pct = ((hr - min) / (max - min)) * 100;
-    return Math.min(Math.max(pct, 0), 100);
+    // get base numeric values for the chosen client (e.g., { low:20, healthy:50, high:100 })
+    const rangesObj = getRangesForMetric(field, clientGender, Number(clientAge)) || {};
+    const sortedLabels = Object.keys(rangesObj);                // ["low","healthy","high"]
+    const sortedValues = sortedLabels.map((label) => rangesObj[label] ?? 0); // [20,50,100]
+
+    if (sortedValues.length === 0) {
+      // fallback single empty range
+      return null;
+    }
+
+    // padding for visual breathing room
+    const leftPadding = Math.max(sortedValues[0] - 20, 0);
+    const rightPadding = sortedValues[sortedValues.length - 1] + 20;
+
+    // Build ranges: each range covers previousBoundary -> currentBoundary.
+    // last range extends to rightPadding
+    const ranges = sortedLabels.map((label, i) => {
+      const currBoundary = sortedValues[i];
+      const nextBoundary = i < sortedLabels.length - 1 ? sortedValues[i + 1] : rightPadding;
+
+      const colors: Record<string, string> = {
+        low: "bg-red-500/30",          // very low / risky
+        poor: "bg-red-400/30",      // slightly better than low, still bad
+        healthy: "bg-green-500/30",    // normal healthy range
+        overweight: "bg-yellow-500/30",   // slightly above healthy
+        high: "bg-red-600/30",         // too high, risky
+        obese: "bg-red-700/30",        // very high risk
+        underweight: "bg-blue-400/30", // too low, also unhealthy
+        overweight: "bg-orange-500/30",// above healthy but not obese
+        good: "bg-green-600/30",    // solid healthy
+        "below average": "bg-orange-400/30",
+        average: "bg-yellow-400/30",
+        "above average": "bg-green-500/30",
+        excellent: "bg-green-700/30",    // top tier
+
+      };
+
+      // First range starts from leftPadding
+      const rangeMin = i === 0 ? leftPadding : currBoundary;
+      const rangeMax = nextBoundary;
+
+      return {
+        label,
+        min: rangeMin,
+        max: rangeMax,
+        boundary: currBoundary,
+        color: colors[label] ?? "bg-gray-500/30",
+      };
+    });
+
+    // Tick values: show the canonical boundaries (the original values) so last high is visible
+    const tickValues = sortedValues.slice(); // e.g. [20,50,100]
+
+    // overall scale
+    const overallMin = leftPadding;
+    const overallMax = rightPadding;
+
+    return (
+      <MetricGauge
+        key={field} // ← Add this
+        label={field}
+        value={healthMetrics[field]}
+        onChange={(val) => handleChange("health", field, val)}
+        ranges={ranges}
+        minValue={overallMin}
+        maxValue={overallMax}
+        ticks={tickValues}
+        description={metricData.description}
+        tableData={{
+          male: metricData.male,
+          female: metricData.female,
+        }}
+        expandedMetric={expandedMetric}
+        setExpandedMetric={setExpandedMetric}
+      />
+    );
   };
 
-  const renderHealthMetric = (field: string) => {
-  if (field === "resting_hr") {
+  // Renders a single health metric with dynamic gauge and table
+  const renderBodyMetric = (field: string) => {
+    const metricData = fitnessMetadata[field];
+    if (!metricData) return null;
+
+    // get base numeric values for the chosen client (e.g., { low:20, healthy:50, high:100 })
+    const rangesObj = getRangesForMetric(field, clientGender, Number(clientAge)) || {};
+    const sortedLabels = Object.keys(rangesObj);                // ["low","healthy","high"]
+    const sortedValues = sortedLabels.map((label) => rangesObj[label] ?? 0); // [20,50,100]
+
+    if (sortedValues.length === 0) {
+      // fallback single empty range
+      return null;
+    }
+
+    // padding for visual breathing room
+    const leftPadding = Math.max(sortedValues[0] - 20, 0);
+    const rightPadding = sortedValues[sortedValues.length - 1] + 20;
+
+    // last range extends to rightPadding
+    const ranges = sortedLabels.map((label, i) => {
+          const currBoundary = sortedValues[i];
+          const nextBoundary = i < sortedLabels.length - 1 ? sortedValues[i + 1] : rightPadding;
+
+          const colors: Record<string, string> = {
+            low: "bg-red-500/30",          // very low / risky
+            healthy: "bg-green-500/30",    // normal healthy range
+            high: "bg-red-600/30",         // too high, risky
+
+            obese: "bg-red-700/30",        // very high risk
+            underweight: "bg-blue-400/30", // too low, also unhealthy
+            overweight: "bg-orange-500/30",// above healthy but not obese
+
+            "below average": "bg-orange-400/30", // slightly concerning, warmer tone
+            average: "bg-yellow-400/30",         // neutral baseline, balanced
+            "above average": "bg-green-500/30",
+          };
+
+          // First range starts from leftPadding, others start at current boundary
+          const rangeMin = i === 0 ? leftPadding : currBoundary;
+          const rangeMax = nextBoundary;
+
+          return {
+            label,
+            min: rangeMin,
+            max: rangeMax,
+            // store also the canonical boundary for tick labeling if needed
+            boundary: currBoundary,
+            color: colors[label] ?? "bg-gray-500/30",
+          };
+        });
+
+    // Tick values: show the canonical boundaries (the original values) so last high is visible
+    const tickValues = sortedValues.slice(); // e.g. [20,50,100]
+
+    // overall scale
+    const minVal = Math.min(...sortedValues);
+    const maxVal = Math.max(...sortedValues);
+    const padding = (maxVal - minVal) * 0.2;
+
+    let overallMin = minVal - padding;
+    let overallMax = maxVal + padding;
+
+    // Round based on magnitude
+    const isDecimal = overallMax <= 1;
+    if (isDecimal) {
+      // round to hundredth
+      overallMin = Math.max(0, Math.round(overallMin * 100) / 100);
+      overallMax = Math.round(overallMax * 100) / 100;
+    } else {
+      // whole numbers
+      overallMin = Math.max(0, Math.floor(overallMin));
+      overallMax = Math.ceil(overallMax);
+    }
+
     return (
-      <div key={field} className="flex items-center gap-4 w-full">
-        {/* Input: 50% width */}
-        <div className="flex flex-col w-1/2">
-          <label className="mb-1">{field.replace(/_/g, " ").toUpperCase()}</label>
-          <input
-            type="number"
-            step="any"
-            value={healthMetrics.resting_hr}
-            onChange={(e) => handleChange("health", field, e.target.value)}
-            className="px-3 py-2 rounded bg-gray-800 text-white border border-gray-700 focus:outline-none focus:border-blue-500"
-          />
-        </div>
-
-        {/* Gauge: 50% width */}
-        <div className="flex flex-col w-1/2">
-          {/* Current value */}
-          <div className="mt-1 text-white text-sm">
-            Current Resting HR: {healthMetrics.resting_hr || "-"} bpm
-          </div>
-          <div className="relative h-4 w-full rounded bg-gray-700">
-            {restingHRRanges.map((range) => {
-              const left = (range.min / 180) * 100;
-              const width = ((range.max - range.min) / 180) * 100;
-              return (
-                <div
-                  key={range.label}
-                  className={`${range.color} absolute top-0 h-4`}
-                  style={{ left: `${left}%`, width: `${width}%` }}
-                />
-              );
-            })}
-            {/* Marker */}
-            <div
-              className="absolute top-0 h-4 w-0.5 bg-white"
-              style={{ left: `${calculateMarkerPosition()}%` }}
-            />
-          </div>
-
-          {/* Range labels under the gauge */}
-          <div className="relative w-full mt-1 h-4">
-            {restingHRRanges.map((range) => {
-              const left = (range.min / 180) * 100;
-              return (
-                <span
-                  key={range.label}
-                  className="absolute text-xs text-white -top-0"
-                  style={{ left: `${left}%`, transform: "translateX(-50%)" }}
-                >
-                  {range.min}
-                </span>
-              );
-            })}
-            <span className="absolute text-xs text-white -top-0 right-0">180</span>
-          </div>
-        </div>
-      </div>
+      <MetricGauge
+        key={field} // ← Add this
+        label={field}
+        value={bodyMeasurements[field]}
+        onChange={(val) => handleChange("body", field, val)}
+        ranges={ranges}
+        minValue={overallMin}
+        maxValue={overallMax}
+        ticks={tickValues}
+        description={metricData.description}
+        tableData={{
+          male: metricData.male,
+          female: metricData.female,
+        }}
+        expandedMetric={expandedMetric}
+        setExpandedMetric={setExpandedMetric}
+      />
     );
-  }
-    if (field === "max_hr") {
-      const maxHRRanges = [
-        { label: "Low", min: 0, max: 139, color: "bg-red-500/30" },
-        { label: "Normal", min: 140, max: 190, color: "bg-green-500/30" },
-        { label: "High", min: 191, max: 220, color: "bg-red-500/30" },
-      ];
+  };
+    // Renders a single health metric with dynamic gauge and table
+  const renderFitnessTests = (field: string) => {
+    const metricData = fitnessMetadata[field];
+    if (!metricData) return null;
 
-      const calculateMaxHRPosition = () => {
-        const hr = Number(healthMetrics.max_hr);
-        if (!hr) return 0;
-        const min = 0;
-        const max = 220;
-        const pct = ((hr - min) / (max - min)) * 100;
-        return Math.min(Math.max(pct, 0), 100);
-      };
+    // get base numeric values for the chosen client (e.g., { low:20, healthy:50, high:100 })
+    const rangesObj = getRangesForMetric(field, clientGender, Number(clientAge)) || {};
+    const sortedLabels = Object.keys(rangesObj);                // ["low","healthy","high"]
+    const sortedValues = sortedLabels.map((label) => rangesObj[label] ?? 0); // [20,50,100]
 
-      return (
-        <div key={field} className="flex items-center gap-4 w-full">
-          {/* Input: 50% width */}
-          <div className="flex flex-col w-1/2">
-            <label className="mb-1">{field.replace(/_/g, " ").toUpperCase()}</label>
-            <input
-              type="number"
-              step="any"
-              value={healthMetrics.max_hr}
-              onChange={(e) => handleChange("health", field, e.target.value)}
-              className="px-3 py-2 rounded bg-gray-800 text-white border border-gray-700 focus:outline-none focus:border-blue-500"
-            />
-          </div>
-
-          {/* Gauge: 50% width */}
-          <div className="flex flex-col w-1/2">
-            {/* Current value */}
-            <div className="mt-1 text-white text-sm">
-              Current Max HR: {healthMetrics.max_hr || "-"} bpm
-            </div>
-            <div className="relative h-4 w-full rounded bg-gray-700">
-              {maxHRRanges.map((range) => {
-                const left = (range.min / 220) * 100;
-                const width = ((range.max - range.min) / 220) * 100;
-                return (
-                  <div
-                    key={range.label}
-                    className={`${range.color} absolute top-0 h-4`}
-                    style={{ left: `${left}%`, width: `${width}%` }}
-                  />
-                );
-              })}
-              {/* Marker */}
-              <div
-                className="absolute top-0 h-4 w-0.5 bg-white"
-                style={{ left: `${calculateMaxHRPosition()}%` }}
-              />
-            </div>
-
-            {/* Range labels under the gauge */}
-            <div className="relative w-full mt-1 h-4">
-              {maxHRRanges.map((range) => {
-                const left = (range.min / 220) * 100;
-                return (
-                  <span
-                    key={range.label}
-                    className="absolute text-xs text-white -top-0"
-                    style={{ left: `${left}%`, transform: "translateX(-50%)" }}
-                  >
-                    {range.min}
-                  </span>
-                );
-              })}
-              {/* Max value label */}
-              <span className="absolute text-xs text-white -top-0 right-0">220</span>
-            </div>
-          </div>
-        </div>
-      );
-    }
-    if (field === "vo2max") {
-      const vo2Ranges = [
-        { label: "Poor", min: 0, max: 34, color: "bg-red-500/30" },
-        { label: "Average", min: 35, max: 44, color: "bg-yellow-500/30" },
-        { label: "Good", min: 45, max: 54, color: "bg-green-500/30" },
-        { label: "Excellent", min: 55, max: 70, color: "bg-blue-500/30" },
-      ];
-
-      const calculateVO2Position = () => {
-        const value = Number(healthMetrics.vo2max);
-        if (!value) return 0;
-        const min = 0;
-        const max = 70;
-        const pct = ((value - min) / (max - min)) * 100;
-        return Math.min(Math.max(pct, 0), 100);
-      };
-
-      return (
-        <div key={field} className="flex items-center gap-4 w-full">
-          {/* Input */}
-          <div className="flex flex-col w-1/2">
-            <label className="mb-1">{field.replace(/_/g, " ").toUpperCase()}</label>
-            <input
-              type="number"
-              step="any"
-              value={healthMetrics.vo2max}
-              onChange={(e) => handleChange("health", field, e.target.value)}
-              className="px-3 py-2 rounded bg-gray-800 text-white border border-gray-700 focus:outline-none focus:border-blue-500"
-            />
-          </div>
-
-          {/* Gauge */}
-          <div className="flex flex-col w-1/2">
-            {/* Current value */}
-            <div className="mt-1 text-white text-sm">
-              Current VO₂ Max: {healthMetrics.vo2max || "-"} mL/kg/min
-            </div>
-            <div className="relative h-4 w-full rounded bg-gray-700">
-              {vo2Ranges.map((range) => {
-                const left = (range.min / 70) * 100;
-                const width = ((range.max - range.min) / 70) * 100;
-                return (
-                  <div
-                    key={range.label}
-                    className={`${range.color} absolute top-0 h-4`}
-                    style={{ left: `${left}%`, width: `${width}%` }}
-                  />
-                );
-              })}
-              {/* Marker */}
-              <div
-                className="absolute top-0 h-4 w-0.5 bg-white"
-                style={{ left: `${calculateVO2Position()}%` }}
-              />
-            </div>
-
-            {/* Range labels under the gauge */}
-            <div className="relative w-full mt-1 h-4">
-              {vo2Ranges.map((range) => {
-                const left = (range.min / 70) * 100;
-                return (
-                  <span
-                    key={range.label}
-                    className="absolute text-xs text-white -top-0"
-                    style={{ left: `${left}%`, transform: "translateX(-50%)" }}
-                  >
-                    {range.min}
-                  </span>
-                );
-              })}
-              {/* Max value label */}
-              <span className="absolute text-xs text-white -top-0 right-0">70</span>
-            </div>
-          </div>
-        </div>
-      );
-    }
-    if (field === "hrv_ms") {
-      const hrvRanges = [
-        { label: "Low", min: 0, max: 50, color: "bg-red-500/30" },
-        { label: "Normal", min: 51, max: 100, color: "bg-green-500/30" },
-        { label: "High", min: 101, max: 200, color: "bg-blue-500/30" },
-      ];
-
-      const calculateHRVPosition = () => {
-        const value = Number(healthMetrics.hrv_ms);
-        if (!value) return 0;
-        const min = 0;
-        const max = 200;
-        const pct = ((value - min) / (max - min)) * 100;
-        return Math.min(Math.max(pct, 0), 100);
-      };
-
-      return (
-        <div key={field} className="flex items-center gap-4 w-full">
-          {/* Input */}
-          <div className="flex flex-col w-1/2">
-            <label className="mb-1">{field.replace(/_/g, " ").toUpperCase()}</label>
-            <input
-              type="number"
-              step="any"
-              value={healthMetrics.hrv_ms}
-              onChange={(e) => handleChange("health", field, e.target.value)}
-              className="px-3 py-2 rounded bg-gray-800 text-white border border-gray-700 focus:outline-none focus:border-blue-500"
-            />
-          </div>
-
-          {/* Gauge */}
-          <div className="flex flex-col w-1/2">
-            {/* Current value */}
-            <div className="mt-1 text-white text-sm">
-              Current HRV: {healthMetrics.hrv_ms || "-"} ms
-            </div>
-            <div className="relative h-4 w-full rounded bg-gray-700">
-              {hrvRanges.map((range) => {
-                const left = (range.min / 200) * 100;
-                const width = ((range.max - range.min) / 200) * 100;
-                return (
-                  <div
-                    key={range.label}
-                    className={`${range.color} absolute top-0 h-4`}
-                    style={{ left: `${left}%`, width: `${width}%` }}
-                  />
-                );
-              })}
-              {/* Marker */}
-              <div
-                className="absolute top-0 h-4 w-0.5 bg-white"
-                style={{ left: `${calculateHRVPosition()}%` }}
-              />
-            </div>
-
-            {/* Range labels under the gauge */}
-            <div className="relative w-full mt-1 h-4">
-              {hrvRanges.map((range) => {
-                const left = (range.min / 200) * 100;
-                return (
-                  <span
-                    key={range.label}
-                    className="absolute text-xs text-white -top-0"
-                    style={{ left: `${left}%`, transform: "translateX(-50%)" }}
-                  >
-                    {range.min}
-                  </span>
-                );
-              })}
-              {/* Max value label */}
-              <span className="absolute text-xs text-white -top-0 right-0">200</span>
-            </div>
-          </div>
-        </div>
-      );
-    }
-    if (field === "systolic_bp") {
-      const sysRanges = [
-        { label: "Low", min: 0, max: 90, color: "bg-red-500/30" },
-        { label: "Normal", min: 91, max: 120, color: "bg-green-500/30" },
-        { label: "Elevated", min: 121, max: 129, color: "bg-yellow-500/30" },
-        { label: "High", min: 130, max: 180, color: "bg-red-500/30" },
-      ];
-
-      const calculateSysPosition = () => {
-        const value = Number(healthMetrics.systolic_bp);
-        if (!value) return 0;
-        const min = 0;
-        const max = 180;
-        const pct = ((value - min) / (max - min)) * 100;
-        return Math.min(Math.max(pct, 0), 100);
-      };
-
-      return (
-        <div key={field} className="flex items-center gap-4 w-full">
-          {/* Input */}
-          <div className="flex flex-col w-1/2">
-            <label className="mb-1">{field.replace(/_/g, " ").toUpperCase()}</label>
-            <input
-              type="number"
-              step="any"
-              value={healthMetrics.systolic_bp}
-              onChange={(e) => handleChange("health", field, e.target.value)}
-              className="px-3 py-2 rounded bg-gray-800 text-white border border-gray-700 focus:outline-none focus:border-blue-500"
-            />
-          </div>
-
-          {/* Gauge */}
-          <div className="flex flex-col w-1/2">
-            <div className="mt-1 text-white text-sm">
-              Current Systolic BP: {healthMetrics.systolic_bp || "-"} mmHg
-            </div>
-            <div className="relative h-4 w-full rounded bg-gray-700">
-              {sysRanges.map((range) => {
-                const left = (range.min / 180) * 100;
-                const width = ((range.max - range.min) / 180) * 100;
-                return (
-                  <div
-                    key={range.label}
-                    className={`${range.color} absolute top-0 h-4`}
-                    style={{ left: `${left}%`, width: `${width}%` }}
-                  />
-                );
-              })}
-              {/* Marker */}
-              <div
-                className="absolute top-0 h-4 w-0.5 bg-white"
-                style={{ left: `${calculateSysPosition()}%` }}
-              />
-            </div>
-
-            {/* Range labels under the gauge */}
-            <div className="relative w-full mt-1 h-4">
-              {sysRanges.map((range) => {
-                const left = (range.min / 180) * 100;
-                return (
-                  <span
-                    key={range.label}
-                    className="absolute text-xs text-white -top-0"
-                    style={{ left: `${left}%`, transform: "translateX(-50%)" }}
-                  >
-                    {range.min}
-                  </span>
-                );
-              })}
-              {/* Max value label */}
-              <span className="absolute text-xs text-white -top-0 right-0">180</span>
-            </div>
-          </div>
-        </div>
-      );
+    if (sortedValues.length === 0) {
+      // fallback single empty range
+      return null;
     }
 
-    if (field === "diastolic_bp") {
-      const diaRanges = [
-        { label: "Low", min: 0, max: 60, color: "bg-red-500/30" },
-        { label: "Normal", min: 61, max: 80, color: "bg-green-500/30" },
-        { label: "High", min: 81, max: 90, color: "bg-yellow-500/30" },
-        { label: "Hypertension", min: 91, max: 120, color: "bg-red-500/30" },
-      ];
+    // padding for visual breathing room
+    const leftPadding = Math.max(sortedValues[0] - 20, 0);
+    const rightPadding = sortedValues[sortedValues.length - 1] + 20;
 
-      const calculateDiaPosition = () => {
-        const value = Number(healthMetrics.diastolic_bp);
-        if (!value) return 0;
-        const min = 0;
-        const max = 120;
-        const pct = ((value - min) / (max - min)) * 100;
-        return Math.min(Math.max(pct, 0), 100);
-      };
+        // last range extends to rightPadding
+    const ranges = sortedLabels.map((label, i) => {
+          const currBoundary = sortedValues[i];
+          const nextBoundary = i < sortedLabels.length - 1 ? sortedValues[i + 1] : rightPadding;
 
-      return (
-        <div key={field} className="flex items-center gap-4 w-full">
-          {/* Input */}
-          <div className="flex flex-col w-1/2">
-            <label className="mb-1">{field.replace(/_/g, " ").toUpperCase()}</label>
-            <input
-              type="number"
-              step="any"
-              value={healthMetrics.diastolic_bp}
-              onChange={(e) => handleChange("health", field, e.target.value)}
-              className="px-3 py-2 rounded bg-gray-800 text-white border border-gray-700 focus:outline-none focus:border-blue-500"
-            />
-          </div>
+          const colors: Record<string, string> = {
+            low: "bg-red-500/30",            // very low / risky
+            poor: "bg-red-400/30",           // slightly better than low, still bad
+            obese: "bg-red-700/30",          // very risky (darker red for severity)
+            overweight: "bg-orange-400/30",     // caution, leaning unhealthy
+            average: "bg-yellow-400/30",     // middle-of-the-road, neutral
+            healthy: "bg-green-500/30",      // normal healthy range
+            good: "bg-green-600/30",         // solid healthy
+            excellent: "bg-green-700/30",    // top tier
+          };
 
-          {/* Gauge */}
-          <div className="flex flex-col w-1/2">
-            <div className="mt-1 text-white text-sm">
-              Current Diastolic BP: {healthMetrics.diastolic_bp || "-"} mmHg
-            </div>
-            <div className="relative h-4 w-full rounded bg-gray-700">
-              {diaRanges.map((range) => {
-                const left = (range.min / 120) * 100;
-                const width = ((range.max - range.min) / 120) * 100;
-                return (
-                  <div
-                    key={range.label}
-                    className={`${range.color} absolute top-0 h-4`}
-                    style={{ left: `${left}%`, width: `${width}%` }}
-                  />
-                );
-              })}
+          // First range starts from leftPadding, others start at current boundary
+          const rangeMin = i === 0 ? leftPadding : currBoundary;
+          const rangeMax = nextBoundary;
 
-              {/* Marker */}
-              <div
-                className="absolute top-0 h-4 w-0.5 bg-white"
-                style={{ left: `${calculateDiaPosition()}%` }}
-              />
-            </div>
+          return {
+            label,
+            min: rangeMin,
+            max: rangeMax,
+            // store also the canonical boundary for tick labeling if needed
+            boundary: currBoundary,
+            color: colors[label] ?? "bg-gray-500/30",
+          };
+        });
 
-            {/* Range labels under the gauge */}
-            <div className="relative w-full mt-1 h-4">
-              {diaRanges.map((range) => {
-                const left = (range.min / 120) * 100;
-                return (
-                  <span
-                    key={range.label}
-                    className="absolute text-xs text-white -top-0"
-                    style={{ left: `${left}%`, transform: "translateX(-50%)" }}
-                  >
-                    {range.min}
-                  </span>
-                );
-              })}
-              {/* Max value label */}
-              <span className="absolute text-xs text-white -top-0 right-0">120</span>
-            </div>
-          </div>
-        </div>
-      );
-    }    
-    // Other health metrics
+    // Tick values: show the canonical boundaries (the original values) so last high is visible
+    const tickValues = sortedValues.slice(); // e.g. [20,50,100]
+
+    // overall scale
+    const minVal = Math.min(...sortedValues);
+    const maxVal = Math.max(...sortedValues);
+    const padding = (maxVal - minVal) * 0.2;
+
+    let overallMin = minVal - padding;
+    let overallMax = maxVal + padding;
+
+    // Round based on magnitude
+    const isDecimal = overallMax <= 1;
+    if (isDecimal) {
+      // round to hundredth
+      overallMin = Math.max(0, Math.round(overallMin * 100) / 100);
+      overallMax = Math.round(overallMax * 100) / 100;
+    } else {
+      // whole numbers
+      overallMin = Math.max(0, Math.floor(overallMin));
+      overallMax = Math.ceil(overallMax);
+    }
+
     return (
-      <div key={field} className="flex flex-col">
-        <label className="mb-1">{field.replace(/_/g, " ").toUpperCase()}</label>
-        <input
-          type="number"
-          step="any"
-          value={healthMetrics[field as keyof typeof healthMetrics]}
-          onChange={(e) => handleChange("health", field, e.target.value)}
-          className="px-3 py-2 rounded bg-gray-800 text-white border border-gray-700 focus:outline-none focus:border-blue-500"
-        />
-      </div>
+      <MetricGauge
+        key={field} // ← Add this
+        label={field}
+        value={fitnessTest[field]}
+        onChange={(val) => handleChange("fitness", field, val)}
+        ranges={ranges}
+        minValue={overallMin}
+        maxValue={overallMax}
+        ticks={tickValues}
+        description={metricData.description}
+        tableData={{
+          male: metricData.male,
+          female: metricData.female,
+        }}
+        expandedMetric={expandedMetric}
+        setExpandedMetric={setExpandedMetric}
+      />
     );
   };
   // 1️⃣ Create a render function for body metrics
-  const renderBodyMetric = (field: string) => {
-    if (field === "weight_kg") {
-      const weightRanges = [
-        { label: "Underweight", min: 0, max: 60, color: "bg-blue-500/30" },
-        { label: "Normal", min: 61, max: 80, color: "bg-green-500/30" },
-        { label: "Overweight", min: 81, max: 100, color: "bg-yellow-500/30" },
-        { label: "Obese", min: 101, max: 150, color: "bg-red-500/30" },
-      ];
+  const renderSkinfold = (field: string) => {
+      const metricData = fitnessMetadata[field];
+      if (!metricData) return null;
 
-      const calculateWeightPosition = () => {
-        const value = Number(bodyMeasurements.weight_kg);
-        if (!value) return 0;
-        const min = 0;
-        const max = 150;
-        const pct = ((value - min) / (max - min)) * 100;
-        return Math.min(Math.max(pct, 0), 100);
-      };
+      // get base numeric values for the chosen client (e.g., { low:20, healthy:50, high:100 })
+      const rangesObj = getRangesForMetric(field, clientGender, Number(clientAge)) || {};
+      const sortedLabels = Object.keys(rangesObj);                // ["low","healthy","high"]
+      const sortedValues = sortedLabels.map((label) => rangesObj[label] ?? 0); // [20,50,100]
 
-      return (
-        <div key={field} className="flex items-center gap-4 w-full">
-          {/* Input */}
-          <div className="flex flex-col w-1/2">
-            <label className="mb-1">{field.replace(/_/g, " ").toUpperCase()}</label>
-            <input
-              type="number"
-              step="any"
-              value={bodyMeasurements.weight_kg}
-              onChange={(e) => handleChange("body", field, e.target.value)}
-              className="px-3 py-2 rounded bg-gray-800 text-white border border-gray-700 focus:outline-none focus:border-blue-500"
-            />
-          </div>
+      if (sortedValues.length === 0) {
+        // fallback single empty range
+        return null;
+      }
 
-          {/* Dot-on-line gauge with ranges */}
-          <div className="flex flex-col w-1/2">
-            <div className="mt-1 text-white text-sm">
-              Current Weight: {bodyMeasurements.weight_kg || "-"} kg
-            </div>
+      // padding for visual breathing room
+      const leftPadding = Math.max(sortedValues[0] - 20, 0);
+      const rightPadding = sortedValues[sortedValues.length - 1] + 20;
 
-            <div className="relative h-4 w-full rounded bg-gray-700">
-              {/* Ranges */}
-              {weightRanges.map((range) => {
-                const left = (range.min / 150) * 100;
-                const width = ((range.max - range.min) / 150) * 100;
-                return (
-                  <div
-                    key={range.label}
-                    className={`${range.color} absolute top-0 h-4`}
-                    style={{ left: `${left}%`, width: `${width}%` }}
-                  />
-                );
-              })}
+      // last range extends to rightPadding
+      const ranges = sortedLabels.map((label, i) => {
+        const currBoundary = sortedValues[i];
+        const nextBoundary = i < sortedLabels.length - 1 ? sortedValues[i + 1] : rightPadding;
 
-              {/* Dot */}
-              <div
-                className="absolute top-0.5 h-3 w-3 bg-white rounded-full -translate-x-1/2"
-                style={{ left: `${calculateWeightPosition()}%` }}
-              />
-            </div>
+        const colors: Record<string, string> = {
+          low: "bg-red-500/30",       // very low / risky
+          poor: "bg-red-400/30",      // slightly better than low, still bad
+          healthy: "bg-green-500/30", // normal healthy range
+          average: "bg-yellow-400/30",// middle-of-the-road, not bad
+          overweight: "bg-yellow-500/30",// slightly above healthy
+          good: "bg-green-600/30",    // solid healthy
+          obese: "bg-red-600/30",      // too high, risky
+        };
 
-            {/* Range labels above the gauge */}
-            <div className="relative w-full mt-1 h-4">
-              {weightRanges.map((range) => {
-                const left = (range.min / 150) * 100;
-                return (
-                  <span
-                    key={range.label}
-                    className="absolute text-xs text-white -top-0"
-                    style={{ left: `${left}%`, transform: "translateX(-50%)" }}
-                  >
-                    {range.min}
-                  </span>
-                );
-              })}
-              {/* Max value label */}
-              <span className="absolute text-xs text-white -top-0 right-0">150</span>
-            </div>
-          </div>
-        </div>
-      );
-    }
-    if (field === "height_cm") {
-      const heightRanges = [
-        { label: "Short", min: 140, max: 160, color: "bg-blue-500/30" },
-        { label: "Average", min: 161, max: 180, color: "bg-green-500/30" },
-        { label: "Tall", min: 181, max: 210, color: "bg-yellow-500/30" },
-      ];
+        // First range starts from leftPadding, others start at current boundary
+        const rangeMin = i === 0 ? leftPadding : currBoundary;
+        const rangeMax = nextBoundary;
 
-      const calculateHeightPosition = () => {
-        const value = Number(bodyMeasurements.height_cm);
-        if (!value) return 0;
-        const min = 140;
-        const max = 210;
-        const pct = ((value - min) / (max - min)) * 100;
-        return Math.min(Math.max(pct, 0), 100);
-      };
+        return {
+          label,
+          min: rangeMin,
+          max: rangeMax,
+          // store also the canonical boundary for tick labeling if needed
+          boundary: currBoundary,
+          color: colors[label] ?? "bg-gray-500/30",
+        };
+      });
+
+      // Tick values: show the canonical boundaries (the original values) so last high is visible
+      const tickValues = sortedValues.slice(); // e.g. [20,50,100]
+
+      // overall scale
+      const minVal = Math.min(...sortedValues);
+      const maxVal = Math.max(...sortedValues);
+      const padding = (maxVal - minVal) * 0.2;
+
+      let overallMin = minVal - padding;
+      let overallMax = maxVal + padding;
+
+      // Round based on magnitude
+      const isDecimal = overallMax <= 1;
+      if (isDecimal) {
+        // round to hundredth
+        overallMin = Math.max(0, Math.round(overallMin * 100) / 100);
+        overallMax = Math.round(overallMax * 100) / 100;
+      } else {
+        // whole numbers
+        overallMin = Math.max(0, Math.floor(overallMin));
+        overallMax = Math.ceil(overallMax);
+      }
 
       return (
-        <div key={field} className="flex items-center gap-4 w-full">
-          {/* Input */}
-          <div className="flex flex-col w-1/2">
-            <label className="mb-1">{field.replace(/_/g, " ").toUpperCase()}</label>
-            <input
-              type="number"
-              step="any"
-              value={bodyMeasurements.height_cm}
-              onChange={(e) => handleChange("body", field, e.target.value)}
-              className="px-3 py-2 rounded bg-gray-800 text-white border border-gray-700 focus:outline-none focus:border-blue-500"
-            />
-          </div>
-
-          {/* Dot-on-line gauge with ranges */}
-          <div className="flex flex-col w-1/2">
-            <div className="mt-1 text-white text-sm">
-              Current Height: {bodyMeasurements.height_cm || "-"} cm
-            </div>
-
-            <div className="relative h-4 w-full rounded bg-gray-700">
-              {/* Ranges */}
-              {heightRanges.map((range) => {
-                const left = ((range.min - 140) / (210 - 140)) * 100;
-                const width = ((range.max - range.min) / (210 - 140)) * 100;
-                return (
-                  <div
-                    key={range.label}
-                    className={`${range.color} absolute top-0 h-4`}
-                    style={{ left: `${left}%`, width: `${width}%` }}
-                  />
-                );
-              })}
-
-              {/* Dot */}
-              <div
-                className="absolute top-0.5 h-3 w-3 bg-white rounded-full -translate-x-1/2"
-                style={{ left: `${calculateHeightPosition()}%` }}
-              />
-            </div>
-
-            {/* Range labels above the gauge */}
-            <div className="relative w-full mt-1 h-4">
-              {heightRanges.map((range) => {
-                const left = ((range.min - 140) / (210 - 140)) * 100;
-                return (
-                  <span
-                    key={range.label}
-                    className="absolute text-xs text-white -top-0"
-                    style={{ left: `${left}%`, transform: "translateX(-50%)" }}
-                  >
-                    {range.min}
-                  </span>
-                );
-              })}
-              {/* Max value label */}
-              <span className="absolute text-xs text-white -top-0 right-0">210</span>
-            </div>
-          </div>
-        </div>
-      );
-    }
-    if (field === "bmi") {
-      const bmiRanges = [
-        { label: "Underweight", min: 0, max: 18.5, color: "bg-blue-500/30" },
-        { label: "Normal", min: 18.6, max: 24.9, color: "bg-green-500/30" },
-        { label: "Overweight", min: 25, max: 29.9, color: "bg-yellow-500/30" },
-        { label: "Obese", min: 30, max: 50, color: "bg-red-500/30" },
-      ];
-
-      const calculateBMIPosition = () => {
-        const value = Number(bodyMeasurements.bmi);
-        if (!value) return 0;
-        const min = 0;
-        const max = 50;
-        const pct = ((value - min) / (max - min)) * 100;
-        return Math.min(Math.max(pct, 0), 100);
-      };
-
-      return (
-        <div key={field} className="flex items-center gap-4 w-full">
-          {/* Input */}
-          <div className="flex flex-col w-1/2">
-            <label className="mb-1">{field.replace(/_/g, " ").toUpperCase()}</label>
-            <input
-              type="number"
-              step="any"
-              value={bodyMeasurements.bmi}
-              onChange={(e) => handleChange("body", field, e.target.value)}
-              className="px-3 py-2 rounded bg-gray-800 text-white border border-gray-700 focus:outline-none focus:border-blue-500"
-            />
-          </div>
-
-          {/* Dot-on-line gauge with ranges */}
-          <div className="flex flex-col w-1/2">
-            <div className="mt-1 text-white text-sm">
-              Current BMI: {bodyMeasurements.bmi || "-"}
-            </div>
-
-            <div className="relative h-4 w-full rounded bg-gray-700">
-              {/* Ranges */}
-              {bmiRanges.map((range) => {
-                const left = (range.min / 50) * 100;
-                const width = ((range.max - range.min) / 50) * 100;
-                return (
-                  <div
-                    key={range.label}
-                    className={`${range.color} absolute top-0 h-4`}
-                    style={{ left: `${left}%`, width: `${width}%` }}
-                  />
-                );
-              })}
-
-              {/* Dot */}
-              <div
-                className="absolute top-0.5 h-3 w-3 bg-white rounded-full -translate-x-1/2"
-                style={{ left: `${calculateBMIPosition()}%` }}
-              />
-            </div>
-
-            {/* Range labels above the gauge */}
-            <div className="relative w-full mt-1 h-4">
-              {bmiRanges.map((range) => {
-                const left = (range.min / 50) * 100;
-                return (
-                  <span
-                    key={range.label}
-                    className="absolute text-xs text-white -top-0"
-                    style={{ left: `${left}%`, transform: "translateX(-50%)" }}
-                  >
-                    {range.min}
-                  </span>
-                );
-              })}
-              {/* Max value label */}
-              <span className="absolute text-xs text-white -top-0 right-0">50</span>
-            </div>
-          </div>
-        </div>
-      );
-    }
-    if (field === "waist_cm") {
-      const waistRanges = [
-        { label: "Low", min: 0, max: 70, color: "bg-blue-500/30" },
-        { label: "Normal", min: 71, max: 94, color: "bg-green-500/30" },
-        { label: "High", min: 95, max: 110, color: "bg-yellow-500/30" },
-        { label: "Very High", min: 111, max: 150, color: "bg-red-500/30" },
-      ];
-
-      const calculateWaistPosition = () => {
-        const value = Number(bodyMeasurements.waist_cm);
-        if (!value) return 0;
-        const min = 0;
-        const max = 150;
-        const pct = ((value - min) / (max - min)) * 100;
-        return Math.min(Math.max(pct, 0), 100);
-      };
-
-      return (
-        <div key={field} className="flex items-center gap-4 w-full">
-          {/* Input */}
-          <div className="flex flex-col w-1/2">
-            <label className="mb-1">{field.replace(/_/g, " ").toUpperCase()}</label>
-            <input
-              type="number"
-              step="any"
-              value={bodyMeasurements.waist_cm}
-              onChange={(e) => handleChange("body", field, e.target.value)}
-              className="px-3 py-2 rounded bg-gray-800 text-white border border-gray-700 focus:outline-none focus:border-blue-500"
-            />
-          </div>
-
-          {/* Gauge */}
-          <div className="flex flex-col w-1/2">
-            <div className="mt-1 text-white text-sm">
-              Current Waist: {bodyMeasurements.waist_cm || "-"} cm
-            </div>
-            <div className="relative h-4 w-full rounded bg-gray-700">
-              {waistRanges.map((range) => {
-                const left = (range.min / 150) * 100;
-                const width = ((range.max - range.min) / 150) * 100;
-                return (
-                  <div
-                    key={range.label}
-                    className={`${range.color} absolute top-0 h-4`}
-                    style={{ left: `${left}%`, width: `${width}%` }}
-                  />
-                );
-              })}
-              {/* Dot */}
-              <div
-                className="absolute top-0.5 h-3 w-3 bg-white rounded-full -translate-x-1/2"
-                style={{ left: `${calculateWaistPosition()}%` }}
-              />
-            </div>
-
-            {/* Labels */}
-            <div className="relative w-full mt-1 h-4">
-              {waistRanges.map((range) => {
-                const left = (range.min / 150) * 100;
-                return (
-                  <span
-                    key={range.label}
-                    className="absolute text-xs text-white -top-0"
-                    style={{ left: `${left}%`, transform: "translateX(-50%)" }}
-                  >
-                    {range.min}
-                  </span>
-                );
-              })}
-              <span className="absolute text-xs text-white -top-0 right-0">150</span>
-            </div>
-          </div>
-        </div>
-      );
-    }
-    if (field === "hip_cm") {
-      const hipRanges = [
-        { label: "Low", min: 0, max: 80, color: "bg-blue-500/30" },
-        { label: "Normal", min: 81, max: 100, color: "bg-green-500/30" },
-        { label: "High", min: 101, max: 120, color: "bg-yellow-500/30" },
-        { label: "Very High", min: 121, max: 150, color: "bg-red-500/30" },
-      ];
-
-      const calculateHipPosition = () => {
-        const value = Number(bodyMeasurements.hip_cm);
-        if (!value) return 0;
-        const min = 0;
-        const max = 150;
-        const pct = ((value - min) / (max - min)) * 100;
-        return Math.min(Math.max(pct, 0), 100);
-      };
-
-      return (
-        <div key={field} className="flex items-center gap-4 w-full">
-          {/* Input */}
-          <div className="flex flex-col w-1/2">
-            <label className="mb-1">{field.replace(/_/g, " ").toUpperCase()}</label>
-            <input
-              type="number"
-              step="any"
-              value={bodyMeasurements.hip_cm}
-              onChange={(e) => handleChange("body", field, e.target.value)}
-              className="px-3 py-2 rounded bg-gray-800 text-white border border-gray-700 focus:outline-none focus:border-blue-500"
-            />
-          </div>
-
-          {/* Gauge */}
-          <div className="flex flex-col w-1/2">
-            <div className="mt-1 text-white text-sm">
-              Current Hip: {bodyMeasurements.hip_cm || "-"} cm
-            </div>
-            <div className="relative h-4 w-full rounded bg-gray-700">
-              {hipRanges.map((range) => {
-                const left = (range.min / 150) * 100;
-                const width = ((range.max - range.min) / 150) * 100;
-                return (
-                  <div
-                    key={range.label}
-                    className={`${range.color} absolute top-0 h-4`}
-                    style={{ left: `${left}%`, width: `${width}%` }}
-                  />
-                );
-              })}
-              {/* Dot */}
-              <div
-                className="absolute top-0.5 h-3 w-3 bg-white rounded-full -translate-x-1/2"
-                style={{ left: `${calculateHipPosition()}%` }}
-              />
-            </div>
-
-            {/* Labels */}
-            <div className="relative w-full mt-1 h-4">
-              {hipRanges.map((range) => {
-                const left = (range.min / 150) * 100;
-                return (
-                  <span
-                    key={range.label}
-                    className="absolute text-xs text-white -top-0"
-                    style={{ left: `${left}%`, transform: "translateX(-50%)" }}
-                  >
-                    {range.min}
-                  </span>
-                );
-              })}
-              <span className="absolute text-xs text-white -top-0 right-0">150</span>
-            </div>
-          </div>
-        </div>
-      );
-    }
-    if (field === "waist_to_height_ratio") {
-      const whrRanges = [
-        { label: "Low", min: 0, max: 0.42, color: "bg-blue-500/30" },
-        { label: "Healthy", min: 0.43, max: 0.50, color: "bg-green-500/30" },
-        { label: "High", min: 0.51, max: 0.57, color: "bg-yellow-500/30" },
-        { label: "Very High", min: 0.58, max: 1, color: "bg-red-500/30" },
-      ];
-
-      const calculateWHRPosition = () => {
-        const value = Number(bodyMeasurements.waist_to_height_ratio);
-        if (!value) return 0;
-        const min = 0;
-        const max = 1;
-        const pct = ((value - min) / (max - min)) * 100;
-        return Math.min(Math.max(pct, 0), 100);
-      };
-
-      return (
-        <div key={field} className="flex items-center gap-4 w-full">
-          {/* Input */}
-          <div className="flex flex-col w-1/2">
-            <label className="mb-1">{field.replace(/_/g, " ").toUpperCase()}</label>
-            <input
-              type="number"
-              step="any"
-              value={bodyMeasurements.waist_to_height_ratio}
-              onChange={(e) => handleChange("body", field, e.target.value)}
-              className="px-3 py-2 rounded bg-gray-800 text-white border border-gray-700 focus:outline-none focus:border-blue-500"
-            />
-          </div>
-
-          {/* Gauge */}
-          <div className="flex flex-col w-1/2">
-            <div className="mt-1 text-white text-sm">
-              Current WHR: {bodyMeasurements.waist_to_height_ratio || "-"}
-            </div>
-            <div className="relative h-4 w-full rounded bg-gray-700">
-              {whrRanges.map((range) => {
-                const left = (range.min / 1) * 100;
-                const width = ((range.max - range.min) / 1) * 100;
-                return (
-                  <div
-                    key={range.label}
-                    className={`${range.color} absolute top-0 h-4`}
-                    style={{ left: `${left}%`, width: `${width}%` }}
-                  />
-                );
-              })}
-              {/* Dot */}
-              <div
-                className="absolute top-0.5 h-3 w-3 bg-white rounded-full -translate-x-1/2"
-                style={{ left: `${calculateWHRPosition()}%` }}
-              />
-            </div>
-
-            {/* Labels */}
-            <div className="relative w-full mt-1 h-4">
-              {whrRanges.map((range) => {
-                const left = (range.min / 1) * 100;
-                return (
-                  <span
-                    key={range.label}
-                    className="absolute text-xs text-white -top-0"
-                    style={{ left: `${left}%`, transform: "translateX(-50%)" }}
-                  >
-                    {range.min.toFixed(2)}
-                  </span>
-                );
-              })}
-              <span className="absolute text-xs text-white -top-0 right-0">1</span>
-            </div>
-          </div>
-        </div>
-      );
-    }
-    if (field === "body_fat_percentage") {
-      const bfRanges = [
-        { label: "Low", min: 0, max: 10, color: "bg-blue-500/30" },
-        { label: "Healthy", min: 11, max: 20, color: "bg-green-500/30" },
-        { label: "Overfat", min: 21, max: 30, color: "bg-yellow-500/30" },
-        { label: "Obese", min: 31, max: 50, color: "bg-red-500/30" },
-      ];
-
-      const calculateBFPosition = () => {
-        const value = Number(bodyMeasurements.body_fat_percentage);
-        if (!value) return 0;
-        const min = 0;
-        const max = 50;
-        const pct = ((value - min) / (max - min)) * 100;
-        return Math.min(Math.max(pct, 0), 100);
-      };
-
-      return (
-        <div key={field} className="flex items-center gap-4 w-full">
-          {/* Input */}
-          <div className="flex flex-col w-1/2">
-            <label className="mb-1">{field.replace(/_/g, " ").toUpperCase()}</label>
-            <input
-              type="number"
-              step="any"
-              value={bodyMeasurements.body_fat_percentage}
-              onChange={(e) => handleChange("body", field, e.target.value)}
-              className="px-3 py-2 rounded bg-gray-800 text-white border border-gray-700 focus:outline-none focus:border-blue-500"
-            />
-          </div>
-
-          {/* Gauge */}
-          <div className="flex flex-col w-1/2">
-            <div className="mt-1 text-white text-sm">
-              Current Body Fat: {bodyMeasurements.body_fat_percentage || "-"} %
-            </div>
-            <div className="relative h-4 w-full rounded bg-gray-700">
-              {bfRanges.map((range) => {
-                const left = (range.min / 50) * 100;
-                const width = ((range.max - range.min) / 50) * 100;
-                return (
-                  <div
-                    key={range.label}
-                    className={`${range.color} absolute top-0 h-4`}
-                    style={{ left: `${left}%`, width: `${width}%` }}
-                  />
-                );
-              })}
-              {/* Dot */}
-              <div
-                className="absolute top-0.5 h-3 w-3 bg-white rounded-full -translate-x-1/2"
-                style={{ left: `${calculateBFPosition()}%` }}
-              />
-            </div>
-
-            {/* Labels */}
-            <div className="relative w-full mt-1 h-4">
-              {bfRanges.map((range) => {
-                const left = (range.min / 50) * 100;
-                return (
-                  <span
-                    key={range.label}
-                    className="absolute text-xs text-white -top-0"
-                    style={{ left: `${left}%`, transform: "translateX(-50%)" }}
-                  >
-                    {range.min}
-                  </span>
-                );
-              })}
-              <span className="absolute text-xs text-white -top-0 right-0">50</span>
-            </div>
-          </div>
-        </div>
-      );
-    }
-
-    // fallback for other body fields
-    return (
-      <div key={field} className="flex flex-col">
-        <label className="mb-1">{field.replace(/_/g, " ").toUpperCase()}</label>
-        <input
-          type="number"
-          step="any"
-          value={bodyMeasurements[field as keyof typeof bodyMeasurements]}
-          onChange={(e) => handleChange("body", field, e.target.value)}
-          className="px-3 py-2 rounded bg-gray-800 text-white border border-gray-700 focus:outline-none focus:border-blue-500"
-        />
-      </div>
-    );
-  };
-    const renderSkinfold = (field: string) => {
-    // Example ranges in mm, adjust as needed
-    const skinfoldRanges = [
-      { label: "Low", min: 0, max: 5, color: "bg-blue-500/30" },
-      { label: "Normal", min: 6, max: 15, color: "bg-green-500/30" },
-      { label: "High", min: 16, max: 25, color: "bg-yellow-500/30" },
-      { label: "Very High", min: 26, max: 50, color: "bg-red-500/30" },
-    ];
-
-    const calculateSkinfoldPosition = () => {
-      const value = Number(skinfolds[field as keyof typeof skinfolds]);
-      if (!value) return 0;
-      const min = 0;
-      const max = 50; // adjust max if needed
-      const pct = ((value - min) / (max - min)) * 100;
-      return Math.min(Math.max(pct, 0), 100);
-    };
-
-    return (
-  <div key={field} className="flex items-center gap-4 w-full">
-    {/* Label + Input */}
-    <div className="flex flex-col w-1/2">
-      <label className="mb-1">{field.replace(/_/g, " ").toUpperCase()}</label>
-      <input
-        type="number"
-        step="any"
-        value={skinfolds[field as keyof typeof skinfolds]}
-        onChange={(e) => handleChange("skinfold", field, e.target.value)}
-        className="px-3 py-2 rounded bg-gray-800 text-white border border-gray-700 focus:outline-none focus:border-blue-500"
-      />
-    </div>
-
-    {/* Horizontal range bar */}
-    <div className="flex flex-col w-1/2">
-      <div className="mt-1 text-white text-sm">
-        {field.replace(/_/g, " ").toUpperCase()}: {skinfolds[field as keyof typeof skinfolds] || "-"} mm
-      </div>
-      <div className="relative h-4 w-full rounded bg-gray-700">
-        {[
-          { label: "Low", min: 0, max: 5, color: "bg-blue-500/30" },
-          { label: "Normal", min: 6, max: 15, color: "bg-green-500/30" },
-          { label: "High", min: 16, max: 30, color: "bg-red-500/30" },
-        ].map((range) => {
-          const left = (range.min / 30) * 100;
-          const width = ((range.max - range.min) / 30) * 100;
-          return (
-            <div
-              key={range.label}
-              className={`${range.color} absolute top-0 h-4`}
-              style={{ left: `${left}%`, width: `${width}%` }}
-            />
-          );
-        })}
-
-        {/* Marker */}
-        <div
-          className="absolute top-0 h-4 w-0.5 bg-white"
-          style={{
-            left: `${(Number(skinfolds[field as keyof typeof skinfolds]) / 30) * 100}%`,
+        <MetricGauge
+          key={field} // ← Add this
+          label={field}
+          value={skinfolds[field]}
+          onChange={(val) => handleChange("skinfold", field, val)}
+          ranges={ranges}
+          minValue={overallMin}
+          maxValue={overallMax}
+          ticks={tickValues}
+          description={metricData.description}
+          tableData={{
+            male: metricData.male,
+            female: metricData.female,
           }}
+          expandedMetric={expandedMetric}
+          setExpandedMetric={setExpandedMetric}
         />
-      </div>
-
-      {/* Labels for each range */}
-      <div className="relative w-full mt-1 h-4">
-        {[0, 5, 15, 30].map((val) => (
-          <span
-            key={val}
-            className="absolute text-xs text-white -top-0"
-            style={{ left: `${(val / 30) * 100}%`, transform: "translateX(-50%)" }}
-          >
-            {val}
-          </span>
-        ))}
-      </div>
-    </div>
-  </div>
-
-    );
-  };
-
-
+      );
+    };
 
   return (
     <div className="p-6 max-w-6xl mx-auto">
-      <h1 className="text-3xl font-bold mb-6">Add Metrics for Client {clientId}</h1>
+      <h1 className="text-3xl font-bold mb-6">Add Metrics for {clientName}</h1>
+      {/* Info line */}
+      <div className="text-base text-gray-400 mb-6">
+        Using ranges for Gender: {clientGender}, Age: {clientAgeStr || "Unknown"}
+      </div>
 
       <form onSubmit={handleSubmit} className="flex flex-col gap-6">
         {/* Health Metrics */}
@@ -1224,6 +740,25 @@ export default function Page({ metricsData }: any) {
               "waist_to_height_ratio",
               "body_fat_percentage",
             ].map(renderBodyMetric)}
+          </div>
+        </section>
+
+        {/* Fitness Tests */}
+        <section className="mb-6">
+          <h2 className="text-xl font-bold mb-2">Fitness Tests</h2>
+          <div className="flex flex-col gap-3">
+            {[
+              "sit_and_reach_cm",
+              "hand_dynamometer_kg",
+              "plank_hold_seconds",
+              "wall_sit_seconds",
+              "balance_test_seconds",
+              "push_ups_test",
+              "sit_ups_test",
+              "pull_ups_test",
+              "bench_press_1rm_kg",
+              "leg_press_1rm_kg",
+            ].map(renderFitnessTests)}
           </div>
         </section>
 

@@ -109,13 +109,6 @@ export default function DeveloperPortalSection() {
           />
         </div>
 
-        {/* Flowing data streams */}
-        <div className="absolute inset-0">
-          <div className="absolute top-1/4 left-0 w-full h-0.5 bg-gradient-to-r from-transparent via-yellow-400/30 to-transparent animate-pulse" style={{ animationDelay: '0s' }} />
-          <div className="absolute top-2/4 left-0 w-full h-0.5 bg-gradient-to-r from-transparent via-blue-400/30 to-transparent animate-pulse" style={{ animationDelay: '1s' }} />
-          <div className="absolute top-3/4 left-0 w-full h-0.5 bg-gradient-to-r from-transparent via-purple-400/30 to-transparent animate-pulse" style={{ animationDelay: '2s' }} />
-        </div>
-
         {/* Corner circuit patterns */}
         <div className="absolute top-0 left-0 w-32 h-32 opacity-20">
           <div className="absolute inset-0 border-l-2 border-t-2 border-yellow-400/50" />

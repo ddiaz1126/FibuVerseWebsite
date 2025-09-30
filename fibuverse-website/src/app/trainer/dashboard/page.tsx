@@ -122,7 +122,7 @@ export default function TrainerDashboard() {
           return match || ph;
         });
         setDayAlerts(merged);
-        setSelectedDayIndex(6); // select today
+        setSelectedDayIndex(0); // select today
       })
       .catch((err) => {
         console.error("Failed to fetch alerts:", err);
@@ -210,11 +210,6 @@ export default function TrainerDashboard() {
     }
   };
 
-  // Trigger initial run on mount
-  useEffect(() => {
-    runResearchWorkflow(selectedCategory);
-  }, []);
-
   if (!trainer)
     return <div className="p-8 text-white">Loading trainer info...</div>;
 
@@ -289,16 +284,16 @@ export default function TrainerDashboard() {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div className="bg-gray-800 p-6 rounded-lg shadow">
-              <h2 className="font-semibold text-lg mb-2">Total Clients</h2>
-              <p>
+            <div className="bg-gray-800 p-6 rounded-lg shadow flex flex-col items-center flex-1">
+              <h2 className="font-semibold text-lg mb-4">Total Clients</h2>
+              <p className="text-5xl font-extrabold text-blue-500">
                 {metrics ? metrics.total_clients : "Loading..."}
               </p>
             </div>
 
-            <div className="bg-gray-800 p-6 rounded-lg shadow">
-              <h2 className="font-semibold text-lg mb-2">Client Workouts Today:</h2>
-              <p>
+            <div className="bg-gray-800 p-6 rounded-lg shadow flex flex-col items-center flex-1">
+              <h2 className="font-semibold text-lg mb-4">Today's Client Sessions</h2>
+              <p className="text-5xl font-extrabold text-blue-500">
                 {metrics ? metrics.total_workouts_today : "Loading..."}
               </p>
             </div>
@@ -392,15 +387,14 @@ export default function TrainerDashboard() {
                   </select>
                 </div>
               </div>
-              <div className="space-y-4">
+
+              {/* Reserve space for 3 papers */}
+              <div className="space-y-4 min-h-[36rem]">
                 {running ? (
-                  // Show placeholder while agent is running
-                  <p className="text-gray-400">Loading papers…</p>
+                  <p className="text-gray-400">Serching web for papers…</p>
                 ) : papers.length === 0 ? (
-                  // Show fallback if no papers
                   <p className="text-gray-400">No papers found.</p>
                 ) : (
-                  // Show actual papers
                   papers.slice(0, 3).map((paper, idx) => (
                     <div key={idx} className="bg-gray-900 p-4 rounded-lg">
                       <h3 className="text-white font-bold text-md">{paper.title}</h3>
@@ -413,29 +407,17 @@ export default function TrainerDashboard() {
                       </p>
                       <div className="flex gap-3 mt-2 text-blue-400 text-xs">
                         {paper.doi && (
-                          <a
-                            href={`https://doi.org/${paper.doi}`}
-                            target="_blank"
-                            rel="noreferrer"
-                          >
+                          <a href={`https://doi.org/${paper.doi}`} target="_blank" rel="noreferrer">
                             DOI
                           </a>
                         )}
                         {paper.pdf_link && (
-                          <a
-                            href={paper.pdf_link}
-                            target="_blank"
-                            rel="noreferrer"
-                          >
+                          <a href={paper.pdf_link} target="_blank" rel="noreferrer">
                             PDF
                           </a>
                         )}
                         {paper.pmid && (
-                          <a
-                            href={`https://pubmed.ncbi.nlm.nih.gov/${paper.pmid}/`}
-                            target="_blank"
-                            rel="noreferrer"
-                          >
+                          <a href={`https://pubmed.ncbi.nlm.nih.gov/${paper.pmid}/`} target="_blank" rel="noreferrer">
                             PubMed
                           </a>
                         )}
@@ -445,6 +427,7 @@ export default function TrainerDashboard() {
                 )}
               </div>
             </div>
+
           </div>
         </div>
 
@@ -453,44 +436,43 @@ export default function TrainerDashboard() {
           <h2 className="text-xl font-bold mb-4">Alerts</h2>
 
           {/* Tabs for last 7 days */}
-          <div className="relative mb-3">
-            {/* Left / Right scroll buttons */}
+          <div className="relative mb-3 flex items-center">
+            {/* Left scroll button */}
             <button
               onClick={() => scrollTabs(-100)}
-              className="absolute left-0 top-1/2 -translate-y-1/2 z-10 bg-gray-700 text-white px-2 py-1 rounded hover:bg-gray-600"
+              className="z-10 bg-gray-700 text-white px-2 py-1 rounded hover:bg-gray-600 mr-2"
             >
               ◀
             </button>
+
+            {/* Scrollable tabs container */}
+            <div
+              ref={tabsRef}
+              className="flex gap-2 overflow-x-auto scrollbar-hide whitespace-nowrap h-16 items-center flex-1"
+              style={{ scrollbarWidth: "none" }}
+            >
+              {dayAlerts.slice().reverse().map((day, idx) => (
+                <button
+                  key={day.date}
+                  onClick={() => setSelectedDayIndex(idx)}
+                  className={`flex-shrink-0 px-4 py-2 rounded text-base whitespace-nowrap ${
+                    idx === selectedDayIndex
+                      ? "bg-blue-600 text-white"
+                      : "bg-gray-800 text-gray-300 hover:bg-gray-700"
+                  }`}
+                >
+                  {day.date.split(",")[1]?.trim() || day.date}
+                </button>
+              ))}
+            </div>
+
+            {/* Right scroll button */}
             <button
               onClick={() => scrollTabs(100)}
-              className="absolute right-0 top-1/2 -translate-y-1/2 z-10 bg-gray-700 text-white px-2 py-1 rounded hover:bg-gray-600"
+              className="z-10 bg-gray-700 text-white px-2 py-1 rounded hover:bg-gray-600 ml-2"
             >
               ▶
             </button>
-
-            {/* Tabs container */}
-            <div
-              ref={tabsRef}
-              className="flex gap-2 overflow-x-auto scrollbar-hide whitespace-nowrap px-6 h-16 items-center"
-              style={{ paddingLeft: "2rem", paddingRight: "2rem" }}
-            >
-              {dayAlerts
-                .slice()
-                .reverse()
-                .map((day, idx) => (
-                  <button
-                    key={day.date}
-                    onClick={() => setSelectedDayIndex(idx)}
-                    className={`flex-shrink-0 px-3 py-1 rounded text-sm whitespace-nowrap ${
-                      idx === selectedDayIndex
-                        ? "bg-blue-600 text-white"
-                        : "bg-gray-800 text-gray-300 hover:bg-gray-700"
-                    }`}
-                  >
-                    {day.date.split(",")[1]?.trim() || day.date}
-                  </button>
-                ))}
-            </div>
           </div>
 
           {/* Selected Date */}

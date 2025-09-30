@@ -45,7 +45,7 @@ const HeroSection: React.FC<HeroSectionProps> = ({
 
   useEffect(() => {
     // Initialize particles
-    setParticles([...Array(25)].map(() => ({
+    setParticles([...Array(90)].map(() => ({
       left: `${Math.random() * 100}%`,
       top: `${Math.random() * 100}%`,
       duration: `${12 + Math.random() * 25}s`,
@@ -53,7 +53,7 @@ const HeroSection: React.FC<HeroSectionProps> = ({
     })));
 
     // Initialize network nodes
-    setNetworkNodes([...Array(12)].map(() => ({
+    setNetworkNodes([...Array(18)].map(() => ({
       x: 10 + Math.random() * 80,
       y: 10 + Math.random() * 80,
       size: 3 + Math.random() * 4,
@@ -132,71 +132,71 @@ const HeroSection: React.FC<HeroSectionProps> = ({
         </div>
       </div>
 
-      {/* Agents Section - Integrated */}
+      {/* Agents Section - Full width with scrollable cards */}
       {agents.length > 0 && (
-        <div className="relative z-10 px-8 pb-16">
-          <div className="max-w-7xl mx-auto">
-            <h2 className="text-4xl font-bold text-white mb-4 bg-gradient-to-r from-white via-gray-200 to-gray-300 bg-clip-text text-transparent">
+        <div className="relative z-10 w-full px-8 pb-16">
+          {/* Header */}
+          <div className="mb-6 max-w-full">
+            <h2 className="text-4xl font-bold text-white mb-2">
               AI Agents
             </h2>
-            <p className="text-gray-300 mb-12 text-lg max-w-2xl">
+            {/* <p className="text-gray-300 text-lg max-w-3xl">
               Try our collection of specialized AI agents, each designed to solve specific challenges in fitness and wellness.
-            </p>
+            </p> */}
+          </div>
 
-            {/* Agents Grid */}
-            <div className="flex overflow-x-auto gap-6 pb-8 pt-4 scrollbar-hide">
-              {loading ? (
-                <div className="flex items-center justify-center w-full py-12">
-                  <div className="flex flex-col items-center space-y-4">
-                    <div className="w-8 h-8 border-2 border-yellow-400 border-t-transparent rounded-full animate-spin"></div>
-                    <p className="text-gray-300">Loading agents...</p>
+          {/* Agents Scroll Container */}
+          {loading ? (
+            <div className="w-full flex items-center justify-center py-12">
+              <div className="flex flex-col items-center space-y-4">
+                <div className="w-8 h-8 border-2 border-yellow-400 border-t-transparent rounded-full animate-spin"></div>
+                <p className="text-gray-300">Loading agents...</p>
+              </div>
+            </div>
+          ) : (
+            <div className="flex gap-6 overflow-x-auto pb-8 pt-4 scrollbar-hide">
+              {agents.map((agent) => (
+                <div
+                  key={agent.id}
+                  className="group min-w-[280px] max-w-[320px] h-auto bg-gray-900/60 backdrop-blur-lg border border-gray-700/50 rounded-2xl p-6 flex-shrink-0 shadow-xl hover:shadow-2xl hover:border-yellow-400/30 transition-all duration-300 hover:scale-105 relative overflow-hidden"
+                >
+                  {/* Card glow */}
+                  <div className="absolute inset-0 bg-gradient-to-r from-yellow-400/5 via-transparent to-blue-400/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-2xl" />
+                  
+                  {/* Content */}
+                  <div className="relative z-10 flex flex-col h-full">
+                    {/* Avatar */}
+                    <div className="relative mb-4">
+                      <div className="w-14 h-14 bg-gradient-to-br from-yellow-400 to-yellow-500 rounded-xl flex items-center justify-center text-black font-bold text-xl shadow-lg">
+                        {agent.name[0].toUpperCase()}
+                      </div>
+                      <div className="absolute -top-1 -right-1 w-4 h-4 bg-green-400 rounded-full border-2 border-gray-900 animate-pulse"></div>
+                    </div>
+
+                    {/* Info */}
+                    <div className="flex-1 mb-6">
+                      <h3 className="text-xl font-semibold text-white mb-3 group-hover:text-yellow-300 transition-colors">
+                        {agent.name}
+                      </h3>
+                      <p className="text-gray-300 text-sm leading-relaxed">
+                        {agent.description}
+                      </p>
+                    </div>
+
+                    {/* Action Button */}
+                    {onTryAgent && (
+                      <button
+                        onClick={() => onTryAgent(agent.id)}
+                        className="w-full bg-gradient-to-r from-yellow-400 to-yellow-500 hover:from-yellow-300 hover:to-yellow-400 text-black font-semibold px-4 py-3 rounded-xl transition-all duration-200 transform hover:scale-105 hover:shadow-lg shadow-yellow-400/25"
+                      >
+                        Try Agent →
+                      </button>
+                    )}
                   </div>
                 </div>
-              ) : (
-                agents.map((agent) => (
-                  <div
-                    key={agent.id}
-                    className="group min-w-[280px] max-w-[320px] h-auto bg-gray-900/60 backdrop-blur-lg border border-gray-700/50 rounded-2xl p-6 flex-shrink-0 shadow-xl hover:shadow-2xl hover:border-yellow-400/30 transition-all duration-300 hover:scale-105 relative overflow-hidden"
-                    style={{ transformOrigin: 'center center' }}
-                  >
-                    {/* Card glow effect */}
-                    <div className="absolute inset-0 bg-gradient-to-r from-yellow-400/5 via-transparent to-blue-400/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-2xl" />
-                    
-                    {/* Content */}
-                    <div className="relative z-10 flex flex-col h-full">
-                      {/* Agent Avatar */}
-                      <div className="relative mb-4">
-                        <div className="w-14 h-14 bg-gradient-to-br from-yellow-400 to-yellow-500 rounded-xl flex items-center justify-center text-black font-bold text-xl shadow-lg">
-                          {agent.name[0].toUpperCase()}
-                        </div>
-                        <div className="absolute -top-1 -right-1 w-4 h-4 bg-green-400 rounded-full border-2 border-gray-900 animate-pulse"></div>
-                      </div>
-
-                      {/* Agent Info */}
-                      <div className="flex-1 mb-6">
-                        <h3 className="text-xl font-semibold text-white mb-3 group-hover:text-yellow-300 transition-colors">
-                          {agent.name}
-                        </h3>
-                        <p className="text-gray-300 text-sm leading-relaxed">
-                          {agent.description}
-                        </p>
-                      </div>
-
-                      {/* Action Button */}
-                      {onTryAgent && (
-                        <button
-                          onClick={() => onTryAgent(agent.id)}
-                          className="w-full bg-gradient-to-r from-yellow-400 to-yellow-500 hover:from-yellow-300 hover:to-yellow-400 text-black font-semibold px-4 py-3 rounded-xl transition-all duration-200 transform hover:scale-105 hover:shadow-lg shadow-yellow-400/25"
-                        >
-                          Try Agent →
-                        </button>
-                      )}
-                    </div>
-                  </div>
-                ))
-              )}
+              ))}
             </div>
-          </div>
+          )}
         </div>
       )}
 
@@ -224,12 +224,10 @@ const HeroSection: React.FC<HeroSectionProps> = ({
             key={i}
             className="absolute rounded-full bg-yellow-400 shadow-lg"
             style={{
-              left: `${node.x}%`,
-              top: `${node.y}%`,
-              width: `${node.size}px`,
-              height: `${node.size}px`,
-              boxShadow: `0 0 ${node.size * 3}px rgba(250, 204, 21, 0.6)`,
-              animation: `node-pulse ${2 + Math.random()}s ease-in-out infinite`,
+              animationName: 'node-pulse',
+              animationDuration: `${2 + Math.random()}s`,
+              animationTimingFunction: 'ease-in-out',
+              animationIterationCount: 'infinite',
               animationDelay: node.delay,
             }}
           />
@@ -243,7 +241,7 @@ const HeroSection: React.FC<HeroSectionProps> = ({
                 Math.pow(node.x - otherNode.x, 2) + Math.pow(node.y - otherNode.y, 2)
               );
               
-              if (distance < 25) {
+              if (distance < 30) {
                 return (
                   <line
                     key={`${i}-${j}`}
@@ -252,8 +250,8 @@ const HeroSection: React.FC<HeroSectionProps> = ({
                     x2={`${otherNode.x}%`}
                     y2={`${otherNode.y}%`}
                     stroke="#facc15"
-                    strokeWidth="1"
-                    opacity="0.3"
+                    strokeWidth="3"
+                    opacity="0.8"
                     style={{
                       animation: `connection-fade ${3 + Math.random() * 2}s ease-in-out infinite`,
                       animationDelay: `${Math.random() * 2}s`

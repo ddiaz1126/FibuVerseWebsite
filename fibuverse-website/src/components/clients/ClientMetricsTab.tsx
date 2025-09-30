@@ -31,11 +31,17 @@ ChartJS.register(
 
 interface ClientMetricsTabProps {
   clientId: number;
-  metricsData: any; // { health_metrics, body_measurements, body_fat_skinfolds }
+  clientName: string;
+  clientGender?: string | null;
+  clientAge?: number | null;
+  metricsData: any; // { health_metrics, body_measurements, body_fat_skinfolds, fitness_tests }
 }
 
 export default function ClientMetricsTab({
   clientId,
+  clientName,
+  clientGender,
+  clientAge,
   metricsData,
 }: ClientMetricsTabProps) {
   const router = useRouter();
@@ -47,6 +53,11 @@ export default function ClientMetricsTab({
     | "hrv_ms"
     | "systolic_bp"
     | "diastolic_bp"
+    | "fat_mass"
+    | "lean_body_mass"
+    | "fev_1"
+    | "fvc_ratio"
+    | "o2_saturation"
   >("resting_hr");
 
   // -------------------- Body Measurements --------------------
@@ -72,6 +83,20 @@ export default function ClientMetricsTab({
     | "calf"
     | "suprailiac"
   >("chest");
+
+    // -------------------- Fitness Tests --------------------
+  const [activeFitnessTests, setFitnessTests] = useState<
+    | "sit_and_reach_cm"
+    | "hand_dynamometer_kg"
+    | "plank_hold_seconds"
+    | "wall_sit_seconds"
+    | "balance_test_seconds"
+    | "push_ups_test"
+    | "sit_ups_test"
+    | "pull_ups_test"
+    | "bench_press_1rm_kg"
+    | "leg_press_1rm_kg"
+  >("sit_and_reach_cm");
 
   if (!metricsData) return <p>Loading metrics...</p>;
 
@@ -192,6 +217,33 @@ export default function ClientMetricsTab({
       />
     );
   };
+    // -------------------- Fitness Tests Chart Renderer --------------------
+    const renderFitnessTestsChart = () => {
+    if (!metricsData.fitness_tests?.length) return <p>No fitness tests measurements recorded yet.</p>;
+
+    // Skinfolds x-axis
+    const labels = metricsData.fitness_tests.map((m: any) =>
+      new Date(m.created_at).toLocaleDateString(undefined, { month: "short", day: "numeric" })
+    );
+    const data = metricsData.fitness_tests.map((m: any) => m[activeFitnessTests]);
+
+    return (
+      <Line
+        data={{
+          labels,
+          datasets: [
+            {
+              label: activeFitnessTests.replace(/_/g, " ").toUpperCase(),
+              data,
+              borderColor: "rgba(153, 102, 255, 1)",
+              backgroundColor: "rgba(153, 102, 255, 0.2)",
+              tension: 0.3,
+            },
+          ],
+        }}
+      />
+    );
+  };
 
   // -------------------- Render Sections --------------------
   return (
@@ -199,7 +251,11 @@ export default function ClientMetricsTab({
       <div className="flex justify-end mb-6">
         <button
           onClick={() =>
-            router.push(`/trainer/clients/add-metrics?clientId=${clientId}`)
+            router.push(
+              `/trainer/clients/add-metrics?clientId=${clientId}&clientName=${encodeURIComponent(
+                clientName
+              )}&clientGender=${encodeURIComponent(clientGender || '')}&clientAge=${clientAge || ''}`
+            )
           }
           className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700"
         >
@@ -263,6 +319,38 @@ export default function ClientMetricsTab({
         <div className="bg-gray-900 p-4 rounded shadow">{renderBodyChart()}</div>
       </section>
 
+      {/* Fitness Tests */}
+      <section>
+        <h2 className="text-2xl font-bold mb-4">🏅 Fitness Tests</h2>
+        <div className="flex gap-2 mb-4 flex-wrap">
+          {[
+            "sit_and_reach_cm",
+            "hand_dynamometer_kg",
+            "plank_hold_seconds",
+            "wall_sit_seconds",
+            "balance_test_seconds",
+            "push_ups_test",
+            "sit_ups_test",
+            "pull_ups_test",
+            "bench_press_1rm_kg",
+            "leg_press_1rm_kg",
+          ].map((metric) => (
+            <button
+              key={metric}
+              onClick={() => setFitnessTests(metric as typeof activeFitnessTests)}
+              className={`px-3 py-1 rounded ${
+                activeSkinfoldMetric === metric
+                  ? "bg-purple-600 text-white"
+                  : "bg-gray-800 text-gray-300 hover:bg-gray-700"
+              }`}
+            >
+              {metric.replace(/_/g, " ").toUpperCase()}
+            </button>
+          ))}
+        </div>
+        <div className="bg-gray-900 p-4 rounded shadow">{renderFitnessTestsChart()}</div>
+      </section>
+
       {/* Body Fat Skinfolds */}
       <section>
         <h2 className="text-2xl font-bold mb-4">🩺 Body Fat Skinfolds</h2>
@@ -293,6 +381,7 @@ export default function ClientMetricsTab({
         </div>
         <div className="bg-gray-900 p-4 rounded shadow">{renderSkinfoldChart()}</div>
       </section>
+
     </div>
   );
 }
