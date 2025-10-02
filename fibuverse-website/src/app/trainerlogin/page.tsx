@@ -25,8 +25,15 @@ export default function TrainerLogin() {
 
       // Redirect to dashboard
       router.push("/trainer/dashboard");
-    } catch (err: any) {
-      alert(err.message);
+    } catch (err: unknown) {
+      if (err instanceof Error) {
+        // Safe access to .message
+        alert(err.message);
+      } else {
+        // Fallback for non-Error throws
+        alert("An unknown error occurred");
+        console.error(err);
+      }
     } finally {
       setLoading(false);
     }

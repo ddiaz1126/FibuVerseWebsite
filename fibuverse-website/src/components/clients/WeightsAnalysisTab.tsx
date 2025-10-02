@@ -26,14 +26,87 @@ ChartJS.register(
   Tooltip,
   Legend
 );
-
-interface WeightsAnalysisTabProps {
-  clientId: number;
-  weightsMeta: any;
-  weightsSessionInsights: any;
+interface WorkoutPerWeek {
+  week: string; // ISO date string
+  total: number;
 }
 
-export default function WeightsAnalysisTab({ clientId, weightsMeta, weightsSessionInsights }: WeightsAnalysisTabProps) {
+interface AvgDurationByMonth {
+  month: string; // ISO date string
+  avg_duration: number;
+}
+
+interface ExercisesPerWorkout {
+  workout_date: string; // ISO date string
+  workout_name: string;
+  total_exercises: number;
+}
+
+interface MuscleOrEquipmentStat {
+  name: string;
+  count: number;
+}
+
+interface DifficultyStat {
+  difficulty: string;
+  total: number;
+}
+
+interface WeightsMeta {
+  workouts_per_week: WorkoutPerWeek[];
+  avg_duration: AvgDurationByMonth[];
+  exercises_per_workout: ExercisesPerWorkout[];
+  muscle_group_stats: MuscleOrEquipmentStat[];
+  equipment_stats: MuscleOrEquipmentStat[];
+  difficulty_stats: DifficultyStat[];
+}
+interface VolumePerExercise {
+  workout_id: number;
+  exercise__name: string;
+  total_session_load: number;
+}
+
+interface AvgEffortPerExercise {
+  workout_id: number;
+  exercise_name: string;
+  effort: number;
+}
+
+interface AvgRepsPerExercise {
+  [exercise_name: string]: number; // avg reps per exercise
+}
+
+interface WeightProgression {
+  exercise__name: string;
+  workout__workout_date: string; // ISO date string
+  avg_weight: number;
+}
+
+interface SetsPerExercise {
+  exercise__name: string;
+  total_sets: number;
+}
+
+interface WeightsSessionInsights {
+  volume_per_exercise: VolumePerExercise[];
+  avg_effort_per_exercise: AvgEffortPerExercise[];
+  avg_reps_per_exercise: AvgRepsPerExercise;
+  weight_progression: WeightProgression[];
+  sets_per_exercise: SetsPerExercise[];
+}
+
+interface WeightsAnalysisTabProps {
+  weightsMeta: WeightsMeta | null;
+  weightsSessionInsights: WeightsSessionInsights | null;
+}
+
+interface SetPerExercise {
+  exercise__name: string;
+  total_sets: number;
+}
+
+
+export default function WeightsAnalysisTab({ weightsMeta, weightsSessionInsights }: WeightsAnalysisTabProps) {
   const [activeMetric, setActiveMetric] = useState<
     | "workouts_per_week"
     | "avg_duration"
@@ -191,13 +264,13 @@ export default function WeightsAnalysisTab({ clientId, weightsMeta, weightsSessi
           <Bar
             data={{
               labels: weightsSessionInsights.volume_per_exercise.map(
-                (v: any) => v.exercise__name
+                (v: VolumePerExercise) => v.exercise__name
               ),
               datasets: [
                 {
                   label: "Total Volume per Exercise",
                   data: weightsSessionInsights.volume_per_exercise.map(
-                    (v: any) => v.total_session_load
+                    (v: VolumePerExercise) => v.total_session_load
                   ),
                   backgroundColor: "rgba(75, 192, 192, 0.6)",
                 },
@@ -211,13 +284,13 @@ export default function WeightsAnalysisTab({ clientId, weightsMeta, weightsSessi
           <Bar
             data={{
               labels: weightsSessionInsights.avg_effort_per_exercise.map(
-                (e: any) => e.exercise_name
+                (e: AvgEffortPerExercise) => e.exercise_name
               ),
               datasets: [
                 {
                   label: "Avg Effort (RIR/RPE)",
                   data: weightsSessionInsights.avg_effort_per_exercise.map(
-                    (e: any) => e.effort
+                    (e: AvgEffortPerExercise) => e.effort
                   ),
                   backgroundColor: "rgba(255, 159, 64, 0.6)",
                 },
@@ -247,25 +320,30 @@ export default function WeightsAnalysisTab({ clientId, weightsMeta, weightsSessi
           <Line
             data={{
               labels: weightsSessionInsights.weight_progression.map(
-                (w: any) => new Date(w.workout__workout_date).toLocaleDateString()
+                (w: WeightProgression) =>
+                  new Date(w.workout__workout_date).toLocaleDateString()
               ),
-              datasets: weightsSessionInsights.weight_progression.reduce(
-                (acc: any[], w: any) => {
-                  const existing = acc.find(d => d.label === w.exercise__name);
-                  if (existing) {
-                    existing.data.push(w.avg_weight);
-                  } else {
-                    acc.push({ 
-                      label: w.exercise__name, 
-                      data: [w.avg_weight], 
-                      borderColor: colors[acc.length % colors.length], 
-                      fill: false 
-                    });
-                  }
-                  return acc;
-                },
-                []
-              ),
+              datasets: weightsSessionInsights.weight_progression.reduce<
+                {
+                  label: string;
+                  data: number[];
+                  borderColor: string;
+                  fill: boolean;
+                }[]
+              >((acc, w: WeightProgression) => {
+                const existing = acc.find(d => d.label === w.exercise__name);
+                if (existing) {
+                  existing.data.push(w.avg_weight);
+                } else {
+                  acc.push({ 
+                    label: w.exercise__name, 
+                    data: [w.avg_weight], 
+                    borderColor: colors[acc.length % colors.length], 
+                    fill: false 
+                  });
+                }
+                return acc;
+              }, []),
             }}
           />
         );
@@ -275,13 +353,13 @@ export default function WeightsAnalysisTab({ clientId, weightsMeta, weightsSessi
           <Bar
             data={{
               labels: weightsSessionInsights.sets_per_exercise.map(
-                (s: any) => s.exercise__name
+                (s: SetPerExercise) => s.exercise__name
               ),
               datasets: [
                 {
                   label: "Total Sets per Exercise",
                   data: weightsSessionInsights.sets_per_exercise.map(
-                    (s: any) => s.total_sets
+                    (s: SetPerExercise) => s.total_sets
                   ),
                   backgroundColor: "rgba(255, 206, 86, 0.6)",
                 },

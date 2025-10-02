@@ -1,9 +1,15 @@
 "use client";
 
-export default function ProgramsTab() {
+interface ProgramsTabProps {
+  clientName: string;
+  clientGender?: string | null;
+  clientAge?: number | null;
+}
+
+export default function ProgramsTab({ clientName, clientGender, clientAge }: ProgramsTabProps) {
   return (
     <div className="p-4 text-gray-400">
-      Programs Tab - content coming soon.
+      Programs Tab for {clientName} - content coming soon.
     </div>
   );
 }

@@ -1,6 +1,12 @@
 // developer.ts
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "";
 
+interface RefreshResponse {
+  access?: string;
+  refresh?: string;
+  [key: string]: unknown;
+}
+
 async function refreshAccessToken(): Promise<string | null> {
   const refreshToken = localStorage.getItem("refresh_token");
   if (!refreshToken) {
@@ -16,10 +22,10 @@ async function refreshAccessToken(): Promise<string | null> {
     });
 
     const text = await res.text();
-    let data: any = {};
+    let data: RefreshResponse = {};
     try {
-      data = text ? JSON.parse(text) : {};
-    } catch (err) {
+      data = text ? JSON.parse(text) as RefreshResponse : {};
+    } catch {
       console.warn("[auth] refresh returned non-json:", text);
       return null;
     }
@@ -46,8 +52,11 @@ async function refreshAccessToken(): Promise<string | null> {
 /**
  * Generic JSON fetch wrapper with automatic token refresh (tries once).
  */
-export async function fetchWithAutoRefresh(endpoint: string, options: RequestInit = {}) {
-  let token = localStorage.getItem("accessToken") ?? null;
+export async function fetchWithAutoRefresh<T = unknown>(
+  endpoint: string,
+  options: RequestInit = {}
+): Promise<T> {
+  const token = localStorage.getItem("accessToken") ?? null;
 
   // Build headers object we can mutate for retry
   const baseHeaders: Record<string, string> = {
@@ -75,30 +84,34 @@ export async function fetchWithAutoRefresh(endpoint: string, options: RequestIni
   }
 
   const text = await res.text();
-  let data: any = {};
+  let data: unknown = {};
   try {
     data = text ? JSON.parse(text) : {};
-  } catch (err) {
+  } catch {
     console.warn("[fetchWithAutoRefresh] response is not valid JSON:", text);
-    // If the caller expects JSON, throw. Otherwise return an empty object.
     throw new Error("API did not return valid JSON");
   }
 
   if (!res.ok) {
-    const errMsg = data?.error || data?.message || `Request failed with status ${res.status}`;
+    const errObj = data as { error?: string; message?: string } | undefined;
+    const errMsg = errObj?.error || errObj?.message || `Request failed with status ${res.status}`;
     throw new Error(errMsg);
   }
 
-  return data;
+  return data as T;
 }
+
 
 /**
  * POST JSON wrapper with automatic token refresh (tries once).
  */
-export async function postWithAutoRefresh(endpoint: string, payload: any, options: RequestInit = {}) {
-  let token = localStorage.getItem("accessToken") ?? null;
+export async function postWithAutoRefresh<T = unknown>(
+  endpoint: string,
+  payload: T,
+  options: RequestInit = {}
+): Promise<T> {
+  const token = localStorage.getItem("accessToken") ?? null;
 
-  // Base headers for JSON POST
   const baseHeaders: Record<string, string> = {
     "Content-Type": "application/json",
     ...(options.headers ? (options.headers as Record<string, string>) : {}),
@@ -123,39 +136,48 @@ export async function postWithAutoRefresh(endpoint: string, payload: any, option
     if (!newToken) {
       throw new Error("Access token expired. Please login again.");
     }
-    // retry with new token
     const retryHeaders = { ...baseHeaders, Authorization: `Bearer ${newToken}` };
     res = await doFetch(retryHeaders);
   }
 
   const text = await res.text();
-  let data: any = {};
+  let data: T;
   try {
-    data = text ? JSON.parse(text) : {};
-  } catch (err) {
+    data = text ? JSON.parse(text) : ({} as T);
+  } catch {
     console.warn("[postWithAutoRefresh] response is not valid JSON:", text);
     throw new Error("API did not return valid JSON");
   }
 
   if (!res.ok) {
-    const errMsg = data?.error || data?.message || `Request failed with status ${res.status}`;
+    let errMsg = `Request failed with status ${res.status}`;
+
+    if (typeof data === "object" && data !== null) {
+      const d = data as Record<string, unknown>;
+      if (typeof d.error === "string") errMsg = d.error;
+      else if (typeof d.message === "string") errMsg = d.message;
+    }
+
     throw new Error(errMsg);
   }
-
   return data;
 }
+
 
 /**
  * POST FormData wrapper with auto-refresh (works for file uploads).
  * Does not set Content-Type (browser will set boundary).
  */
-export async function postFormDataWithAutoRefresh(endpoint: string, formData: FormData) {
+export async function postFormDataWithAutoRefresh<T = unknown>(
+  endpoint: string,
+  formData: FormData
+): Promise<T> {
   let token = localStorage.getItem("accessToken") ?? null;
 
   const doFetch = async (authToken: string | null) => {
     const headers: Record<string, string> = {
       ...(authToken ? { Authorization: `Bearer ${authToken}` } : {}),
-      // intentionally DO NOT set Content-Type
+      // intentionally DO NOT set Content-Type for FormData
     };
     return await fetch(`${API_URL}${endpoint}`, {
       method: "POST",
@@ -177,16 +199,23 @@ export async function postFormDataWithAutoRefresh(endpoint: string, formData: Fo
   }
 
   const text = await res.text();
-  let data: any = {};
+  let data: T;
   try {
-    data = text ? JSON.parse(text) : {};
-  } catch (err) {
+    data = text ? JSON.parse(text) : ({} as T);
+  } catch {
     console.warn("[postFormDataWithAutoRefresh] response is not valid JSON:", text);
     throw new Error("API did not return valid JSON");
   }
 
   if (!res.ok) {
-    const errMsg = data?.error || data?.message || `Request failed with status ${res.status}`;
+    let errMsg = `Request failed with status ${res.status}`;
+
+    if (typeof data === "object" && data !== null) {
+      const d = data as Record<string, unknown>;
+      if (typeof d.error === "string") errMsg = d.error;
+      else if (typeof d.message === "string") errMsg = d.message;
+    }
+
     throw new Error(errMsg);
   }
 
@@ -207,13 +236,42 @@ export async function loginDeveloper(email: string, password: string) {
   return data;
 }
 
-export async function fetchSubAgents() {
-  const data = await fetchWithAutoRefresh("/developer/fetch-sub-agents/", {
+interface SubAgent {
+  id: number;
+  name: string;
+  filename: string;
+  description: string;
+  inputs: Record<string, { type: string; required?: boolean; description?: string }>;
+  outputs: Record<string, { type: string; description?: string }>;
+  allow_frontend: boolean;
+
+  // New fields
+  meta_category: "food" | "cardio" | "weights" | "other";
+  sub_category:
+    | "embedding"
+    | "detection"
+    | "aggregation"
+    | "analysis"
+    | "retrieval"
+    | "api"
+    | "orchestrator"
+    | "classifier"
+    | "structure"
+    | "monitoring";
+}
+
+interface FetchSubAgentsResponse {
+  subagents: SubAgent[];
+}
+
+export async function fetchSubAgents(): Promise<SubAgent[]> {
+  // tell TypeScript what the response shape is
+  const data = await fetchWithAutoRefresh<FetchSubAgentsResponse>("/developer/fetch-sub-agents/", {
     method: "GET",
   });
 
-  console.log("Parsed JSON:", data); // optional debug log
-  return data.subagents; // backend returns { subagents: [...] }
+  console.log("Parsed JSON:", data);
+  return data.subagents;
 }
 
 export async function createWorkflow(payload: {
@@ -239,34 +297,52 @@ export async function fetchWorkflows() {
   return data; // backend already returns list of composite agents
 }
 
+// Generic JSON-compatible type
+export type JsonData = string | number | boolean | null | JsonDataObject | JsonData[];
+export interface JsonDataObject {
+  [key: string]: JsonData;
+}
+
 export interface RunCompositeResponse {
   run_id: number;
   status: string;
-  outputs: Record<string, any>;
+  outputs: JsonDataObject;
   history_id?: number;
 }
+
 export async function runCompositeAgentFormData(
   formData: FormData
 ): Promise<RunCompositeResponse> {
-  const data = await postFormDataWithAutoRefresh("/developer/run-composite-agent/", formData);
+  const data = await postFormDataWithAutoRefresh<RunCompositeResponse>(
+    "/developer/run-composite-agent/",
+    formData
+  );
 
   console.log("Workflow run results:", data);
   return data;
 }
 
-export interface WorkflowRun {
-  id: number;                     // history entry ID
-  workflow_id: number;            // which workflow / composite agent
-  inputs: Record<string, any>;    // inputs used
-  outputs: Record<string, any>;   // outputs produced
-  started_at: string;             // timestamp
-  finished_at?: string;           // optional timestamp
-  status: "pending" | "running" | "success" | "failed";  
-  error_message?: string;         // optional error message
+export type RunStatus = "pending" | "running" | "succeeded" | "failed" | (string & {});
+
+/** Input/output are opaque JSON objects for now — safer than `any` */
+export type JsonObject = Record<string, unknown>;
+
+/** Single run record matching your Python serializer */
+export interface RunRecord {
+  id: number;
+  status: RunStatus;           // e.g. run.status.lower()
+  inputs: JsonObject | null;   // your run.inputs
+  outputs: JsonObject | null;  // your run.outputs
+  started_at: string;          // ISO datetime string
+  finished_at: string | null;  // ISO datetime string or null
+}
+
+export interface WorkflowHistoryResponse {
+  runs: RunRecord[];
 }
 
 export async function fetchWorkflowHistory(workflowId: number) {
-  const data = await fetchWithAutoRefresh(
+  const data = await fetchWithAutoRefresh<WorkflowHistoryResponse>(
     `/developer/fetch-composite-agent-history/?composite_agent_id=${workflowId}`,
     { method: "GET" }
   );
@@ -275,3 +351,4 @@ export async function fetchWorkflowHistory(workflowId: number) {
   // backend should return { runs: [...] }, fallback to []
   return data.runs ?? [];
 }
+

@@ -27,9 +27,14 @@ export default function DeveloperLogin() {
 
       // Redirect to developer dashboard
       router.push("/developer/dashboard");
-    } catch (err: any) {
-      console.error("Login failed:", err.message);
-      alert(err.message || "Login failed");
+    } catch (err: unknown) {
+      if (err instanceof Error) {
+        console.error("Login failed:", err.message);
+        alert(err.message || "Login failed");
+      } else {
+        console.error("Login failed (unexpected):", err);
+        alert("Login failed (unexpected error)");
+      }
     } finally {
       setLoading(false);
     }

@@ -7,17 +7,24 @@ import fitnessMetadata from "@/app/data/fitness_metric_metadata.json";
 
 interface MetricGaugeProps {
   label: string;
-  value: string | number;
-  onChange: (value: string) => void;
-  ranges: { label: string; min: number; max: number; color: string }[];
+  value: number;
+  onChange?: (val: number) => void;
+  ranges?: { min: number; max: number; color: string }[];
+  minValue: number;
   maxValue: number;
+  ticks?: number[];
   description?: string;
-  tableData?: Record<string, any>;
-  expandedMetric: string | null;
-  setExpandedMetric: (val: string | null) => void;
+  tableData?: {
+    [gender: string]: {
+      [ageRange: string]: {
+        [metric: string]: number;
+      };
+    };
+  };
+  expandedMetric?: string | null;
+  setExpandedMetric?: (metric: string | null) => void;
 }
-
-const MetricGauge = ({
+const MetricGauge: React.FC<MetricGaugeProps> = ({
   label,
   value,
   onChange,
@@ -37,11 +44,13 @@ const MetricGauge = ({
     return Math.min(Math.max(pct, 0), 100);
   };
 
-  const toPct = (abs) => ((abs - minValue) / (maxValue - minValue)) * 100;
+  const toPct = (abs: number) => ((abs - minValue) / (maxValue - minValue)) * 100;
 
-  const labelColors = {};
-  ranges.forEach(r => {
-    labelColors[r.label] = r.color;
+  const labelColors: Record<string, string> = {};
+  ranges?.forEach((r) => {
+    // e.g., use min-max as key
+    const key = `${r.min}-${r.max}`;
+    labelColors[key] = r.color;
   });
 
   const formattedLabel = label.replace(/_/g, " ").toUpperCase();
@@ -54,14 +63,14 @@ const MetricGauge = ({
           <label className="text-sm font-semibold text-gray-300 tracking-wide">
             {formattedLabel}
           </label>
-          <input
-            type="number"
-            step="any"
-            value={value ?? ""}
-            onChange={(e) => onChange(e.target.value)}
-            className="px-4 py-3 rounded-lg bg-gray-800/50 text-white border border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 backdrop-blur-sm"
-            placeholder="Enter value..."
-          />
+            <input
+              type="number"
+              step="any"
+              value={value ?? ""}
+              onChange={(e) => onChange?.(Number(e.target.value))} // safe call with optional chaining
+              className="px-4 py-3 rounded-lg bg-gray-800/50 text-white border border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 backdrop-blur-sm"
+              placeholder="Enter value..."
+            />
         </div>
 
         {/* Gauge Section */}
@@ -69,13 +78,13 @@ const MetricGauge = ({
           {/* Gauge Bar */}
           <div className="relative h-8 w-full rounded-lg bg-gray-800/80 overflow-hidden shadow-inner border border-gray-700/50">
             {/* Colored ranges */}
-            {ranges.map((r) => {
+            {ranges?.map((r) => {
               const left = toPct(r.min);
               const width = toPct(r.max) - toPct(r.min);
               return (
                 <div
-                  key={r.label}
-                  className={`${r.color} absolute top- h-full transition-all duration-300`}
+                  key={`${r.min}-${r.max}`} // safer key if label is not present
+                  className={`${r.color} absolute top-0 h-full transition-all duration-300`}
                   style={{ left: `${left}%`, width: `${width}%` }}
                 />
               );
@@ -149,7 +158,7 @@ const MetricGauge = ({
                     <tr className="bg-gray-800/80">
                       <th className="border-b border-r border-gray-700 px-4 py-3 text-left font-semibold text-gray-300">Gender</th>
                       <th className="border-b border-r border-gray-700 px-4 py-3 text-left font-semibold text-gray-300">Age Range</th>
-                      {Object.keys(tableData["male"][Object.keys(tableData["male"])[0]]).map((metricKey) => (
+                      {Object.keys(tableData?.["male"]?.[Object.keys(tableData["male"])[0]] || {}).map((metricKey) => (
                         <th
                           key={metricKey}
                           className={`border-b border-r border-gray-700 px-4 py-3 text-left font-semibold ${labelColors[metricKey]}`}
@@ -161,7 +170,7 @@ const MetricGauge = ({
                   </thead>
                   <tbody>
                     {Object.entries(tableData).map(([gender, ageGroups]) =>
-                      Object.entries(ageGroups).map(([ageRange, values], idx) => (
+                      Object.entries(ageGroups).map(([ageRange, values]) => (
                         <tr key={`${gender}-${ageRange}`} className="hover:bg-gray-800/40 transition-colors duration-150">
                           <td className="border-b border-r border-gray-700/50 px-4 py-3 text-gray-200 capitalize">{gender}</td>
                           <td className="border-b border-r border-gray-700/50 px-4 py-3 text-gray-200">{ageRange}</td>
@@ -187,7 +196,7 @@ const MetricGauge = ({
   );
 };
 
-export default function Page({ metricsData }: any) {
+export default function Page() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const clientId = Number(searchParams.get("clientId")) || 1;
@@ -195,28 +204,6 @@ export default function Page({ metricsData }: any) {
   const clientGender = searchParams.get("clientGender") || "Unknown";
   const clientAgeStr = searchParams.get("clientAge");
   const clientAge = clientAgeStr ? Number(clientAgeStr) : null;
-  const [allMetrics, setAllMetrics] = useState(fitnessMetadata);
-
-
-  // Fetch Metric Data
-  function filterMetric(metric: string, gender: string, age: number) {
-    const metricData = allMetrics[metric];
-    if (!metricData) return null;
-
-    const { description, ...rest } = metricData;
-    const genderData = rest[gender.toLowerCase()] || {};
-    
-    // Later you can filter by age range
-    const ageGroup = Object.entries(genderData).find(([range]) => {
-      const [min, max] = range.split("-").map(Number);
-      return age >= min && age <= max;
-    });
-
-    return {
-      description,
-      ranges: ageGroup ? ageGroup[1] : null,
-    };
-  }
 
   // Metric Ranges for specific Client for Gauges
   const getRangesForMetric = (
@@ -224,17 +211,22 @@ export default function Page({ metricsData }: any) {
     gender?: string | null,
     age?: number | null
   ) => {
-    const defaultGender = "male"; // fallback if gender not provided
-    const metricData = fitnessMetadata[metric]; // <-- use imported JSON
-
+    const defaultGender = "male";
+    
+    // Type assertion to tell TypeScript this is safe
+    const metricData = fitnessMetadata[metric as keyof typeof fitnessMetadata];
+    
     if (!metricData) return null;
-
+    
     // Determine gender to use
-    const g = gender && metricData[gender.toLowerCase()] ? gender.toLowerCase() : defaultGender;
-
+    const g = gender && metricData[gender.toLowerCase() as keyof typeof metricData] 
+      ? gender.toLowerCase() 
+      : defaultGender;
+    
     // Determine age group
-    const ageGroups = Object.keys(metricData[g]);
-    let selectedGroup = ageGroups[0]; // default to first group
+    const ageGroups = Object.keys(metricData[g as keyof typeof metricData]);
+    let selectedGroup = ageGroups[0];
+    
     if (age) {
       for (const group of ageGroups) {
         const [min, max] = group.split("-").map(Number);
@@ -244,9 +236,10 @@ export default function Page({ metricsData }: any) {
         }
       }
     }
-
-    const ranges = metricData[g][selectedGroup];
-
+    
+    const genderData = metricData[g as keyof typeof metricData];
+    const ranges = genderData[selectedGroup as keyof typeof genderData];
+    
     return ranges;
   };
 
@@ -316,7 +309,7 @@ export default function Page({ metricsData }: any) {
   };
 
   const handleSubmit = async () => {
-    const payloads: { func: Function; data: any }[] = [
+    const payloads = [
       { func: sendHealthMetricsData, data: healthMetrics },
       { func: sendBodyMeasurementData, data: bodyMeasurements },
       { func: sendBodyFatData, data: skinfolds },
@@ -332,12 +325,11 @@ export default function Page({ metricsData }: any) {
         );
         if (!hasData) continue;
 
-        await func({ ...clientPayload, ...data });
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        await (func as any)({ ...clientPayload, ...data });
       }
 
       alert("Metrics sent successfully!");
-
-      // ✅ Go back to clients list
       router.push("/trainer/clients");
     } catch (err) {
       console.error(err);
@@ -348,13 +340,13 @@ export default function Page({ metricsData }: any) {
   const [expandedMetric, setExpandedMetric] = useState<string | null>(null);
   // Renders a single health metric with dynamic gauge and table
   const renderHealthMetric = (field: string) => {
-    const metricData = fitnessMetadata[field];
+    const metricData = fitnessMetadata[field as keyof typeof fitnessMetadata];
     if (!metricData) return null;
 
     // get base numeric values for the chosen client (e.g., { low:20, healthy:50, high:100 })
     const rangesObj = getRangesForMetric(field, clientGender, Number(clientAge)) || {};
     const sortedLabels = Object.keys(rangesObj);                // ["low","healthy","high"]
-    const sortedValues = sortedLabels.map((label) => rangesObj[label] ?? 0); // [20,50,100]
+    const sortedValues = sortedLabels.map((label) => rangesObj[label as keyof typeof rangesObj] ?? 0); // [20,50,100]
 
     if (sortedValues.length === 0) {
       // fallback single empty range
@@ -379,7 +371,6 @@ export default function Page({ metricsData }: any) {
         high: "bg-red-600/30",         // too high, risky
         obese: "bg-red-700/30",        // very high risk
         underweight: "bg-blue-400/30", // too low, also unhealthy
-        overweight: "bg-orange-500/30",// above healthy but not obese
         good: "bg-green-600/30",    // solid healthy
         "below average": "bg-orange-400/30",
         average: "bg-yellow-400/30",
@@ -412,8 +403,8 @@ export default function Page({ metricsData }: any) {
       <MetricGauge
         key={field} // ← Add this
         label={field}
-        value={healthMetrics[field]}
-        onChange={(val) => handleChange("health", field, val)}
+        value={Number(healthMetrics[field as keyof typeof healthMetrics]) || 0}
+        onChange={(val) => handleChange("health", field, String(val))}        
         ranges={ranges}
         minValue={overallMin}
         maxValue={overallMax}
@@ -431,13 +422,13 @@ export default function Page({ metricsData }: any) {
 
   // Renders a single health metric with dynamic gauge and table
   const renderBodyMetric = (field: string) => {
-    const metricData = fitnessMetadata[field];
+    const metricData = fitnessMetadata[field as keyof typeof fitnessMetadata];
     if (!metricData) return null;
 
     // get base numeric values for the chosen client (e.g., { low:20, healthy:50, high:100 })
     const rangesObj = getRangesForMetric(field, clientGender, Number(clientAge)) || {};
     const sortedLabels = Object.keys(rangesObj);                // ["low","healthy","high"]
-    const sortedValues = sortedLabels.map((label) => rangesObj[label] ?? 0); // [20,50,100]
+    const sortedValues = sortedLabels.map((label) => rangesObj[label as keyof typeof rangesObj] ?? 0); // [20,50,100]
 
     if (sortedValues.length === 0) {
       // fallback single empty range
@@ -508,8 +499,8 @@ export default function Page({ metricsData }: any) {
       <MetricGauge
         key={field} // ← Add this
         label={field}
-        value={bodyMeasurements[field]}
-        onChange={(val) => handleChange("body", field, val)}
+        value={Number(bodyMeasurements[field as keyof typeof bodyMeasurements])}
+        onChange={(val) => handleChange("body", field, String(val))}
         ranges={ranges}
         minValue={overallMin}
         maxValue={overallMax}
@@ -526,13 +517,13 @@ export default function Page({ metricsData }: any) {
   };
     // Renders a single health metric with dynamic gauge and table
   const renderFitnessTests = (field: string) => {
-    const metricData = fitnessMetadata[field];
+    const metricData = fitnessMetadata[field as keyof typeof fitnessMetadata];
     if (!metricData) return null;
 
     // get base numeric values for the chosen client (e.g., { low:20, healthy:50, high:100 })
     const rangesObj = getRangesForMetric(field, clientGender, Number(clientAge)) || {};
     const sortedLabels = Object.keys(rangesObj);                // ["low","healthy","high"]
-    const sortedValues = sortedLabels.map((label) => rangesObj[label] ?? 0); // [20,50,100]
+    const sortedValues = sortedLabels.map((label) => rangesObj[label as keyof typeof rangesObj] ?? 0); // [20,50,100]
 
     if (sortedValues.length === 0) {
       // fallback single empty range
@@ -600,8 +591,8 @@ export default function Page({ metricsData }: any) {
       <MetricGauge
         key={field} // ← Add this
         label={field}
-        value={fitnessTest[field]}
-        onChange={(val) => handleChange("fitness", field, val)}
+        value={Number(fitnessTest[field as keyof typeof fitnessTest])}
+        onChange={(val) => handleChange("fitness", field, String(val))}
         ranges={ranges}
         minValue={overallMin}
         maxValue={overallMax}
@@ -618,13 +609,13 @@ export default function Page({ metricsData }: any) {
   };
   // 1️⃣ Create a render function for body metrics
   const renderSkinfold = (field: string) => {
-      const metricData = fitnessMetadata[field];
+      const metricData = fitnessMetadata[field as keyof typeof fitnessMetadata];
       if (!metricData) return null;
 
       // get base numeric values for the chosen client (e.g., { low:20, healthy:50, high:100 })
       const rangesObj = getRangesForMetric(field, clientGender, Number(clientAge)) || {};
       const sortedLabels = Object.keys(rangesObj);                // ["low","healthy","high"]
-      const sortedValues = sortedLabels.map((label) => rangesObj[label] ?? 0); // [20,50,100]
+      const sortedValues = sortedLabels.map((label) => rangesObj[label as keyof typeof rangesObj] ?? 0); // [20,50,100]
 
       if (sortedValues.length === 0) {
         // fallback single empty range
@@ -691,8 +682,8 @@ export default function Page({ metricsData }: any) {
         <MetricGauge
           key={field} // ← Add this
           label={field}
-          value={skinfolds[field]}
-          onChange={(val) => handleChange("skinfold", field, val)}
+          value={Number(skinfolds[field as keyof typeof skinfolds])}
+          onChange={(val) => handleChange("skinfold", field, String(val))}
           ranges={ranges}
           minValue={overallMin}
           maxValue={overallMax}

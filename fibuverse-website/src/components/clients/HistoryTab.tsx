@@ -3,20 +3,66 @@
 import React from "react";
 import { format } from "date-fns";
 
-interface HistoryTabProps {
-  cardioSessions?: any[];
-  weightWorkouts?: any[];
+
+interface CardioSession {
+  id: number;
+  cardio_name: string;
+  cardio_date: string; // ISO date
+  cardio_start_time?: string | null;
+  cardio_end_time?: string | null;
+  cardio_type?: string | null;
+  duration?: number | null;
+  distance?: number | null;
+  avg_pace?: number | null;
+  avg_heart_rate?: number | null;
+  avg_speed?: number | null;
+  max_heart_rate?: number | null;
+  max_pace?: number | null;
+  max_speed?: number | null;
+  avg_altitude?: number | null;
+  elevation_gain?: number | null;
+  calories_burned?: number | null;
+  notes?: string | null;
+  created_at: string;
 }
+
+interface WeightWorkout {
+  id: number;
+  workout_name: string;
+  workout_date?: string | null;
+  duration?: number | null;
+  num_exercises?: number | null;
+  notes?: string | null;
+  created_at: string;
+}
+
+interface HistoryTabProps {
+  cardioSessions?: CardioSession[];
+  weightWorkouts?: WeightWorkout[];
+}
+
+type SessionType = "Cardio" | "Weight";
+
+interface MergedSession {
+  type: SessionType;
+  date: string | undefined | null;
+  duration?: number | null;
+  distance?: number | null;           // for Cardio
+  cardio_name?: string;               // for Cardio
+  workout_name?: string;              // for Weight
+  num_exercises?: number | null;      // for Weight
+}
+
 
 export default function HistoryTab({ cardioSessions = [], weightWorkouts = [] }: HistoryTabProps) {
   // Merge cardio and weight workouts
-  const allSessions = [
+  const allSessions: MergedSession[] = [
     ...cardioSessions.map(c => ({ ...c, type: "Cardio", date: c.cardio_date })),
     ...weightWorkouts.map(w => ({ ...w, type: "Weight", date: w.workout_date })),
   ];
 
   // Sort descending by date
-  allSessions.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+  allSessions.sort((a, b) => new Date(b.date || 0).getTime() - new Date(a.date || 0).getTime());
 
   return (
     <div className="p-6">
@@ -30,7 +76,7 @@ export default function HistoryTab({ cardioSessions = [], weightWorkouts = [] }:
         <div className="space-y-3">
           {allSessions.map((session, idx) => {
             const isCardio = session.type === "Cardio";
-            
+
             return (
               <div 
                 key={idx} 
@@ -44,24 +90,26 @@ export default function HistoryTab({ cardioSessions = [], weightWorkouts = [] }:
                     </span>
                   </div>
                   <span className="text-xs text-gray-400 bg-gray-700 px-2 py-1 rounded">
-                    {format(new Date(session.date), "MMM d, yyyy")}
+                    {session.date ? format(new Date(session.date), "MMM d, yyyy") : "Unknown date"}
                   </span>
                 </div>
                 
                 <div className="flex gap-4 text-sm text-gray-400 ml-4">
-                  <div className="flex items-center gap-1">
-                    <span className="text-gray-500">⏱</span>
-                    <span>{session.duration} min</span>
-                  </div>
+                  {session.duration != null && (
+                    <div className="flex items-center gap-1">
+                      <span className="text-gray-500">⏱</span>
+                      <span>{session.duration} min</span>
+                    </div>
+                  )}
                   {isCardio ? (
-                    session.distance && (
+                    session.distance != null && (
                       <div className="flex items-center gap-1">
                         <span className="text-gray-500">📍</span>
                         <span>{session.distance} m</span>
                       </div>
                     )
                   ) : (
-                    session.num_exercises && (
+                    session.num_exercises != null && (
                       <div className="flex items-center gap-1">
                         <span className="text-gray-500">💪</span>
                         <span>{session.num_exercises} exercises</span>

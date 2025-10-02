@@ -29,14 +29,80 @@ ChartJS.register(
   Legend
 );
 
+interface HealthMetric {
+  created_at: string; // ISO date string
+  resting_hr?: number;
+  max_hr?: number;
+  vo2max?: number;
+  hrv_ms?: number;
+  systolic_bp?: number;
+  diastolic_bp?: number;
+  fat_mass?: number;
+  lean_body_mass?: number;
+  fev_1?: number;
+  fvc_ratio?: number;
+  o2_saturation?: number;
+}
+
+
 interface ClientMetricsTabProps {
   clientId: number;
   clientName: string;
   clientGender?: string | null;
   clientAge?: number | null;
-  metricsData: any; // { health_metrics, body_measurements, body_fat_skinfolds, fitness_tests }
+  metricsData: HealthMetric | null | undefined; // This matches Client's health_metrics property
 }
 
+interface BodyMeasurement {
+  weight_kg: number;
+  height_cm: number;
+  bmi: number;
+  waist_cm: number;
+  hip_cm: number;
+  waist_to_height_ratio: number;
+  body_fat_percentage: number;
+  created_at: string; // ISO date string
+}
+interface FitnessTest {
+  created_at: string; // ISO date string
+  sit_and_reach_cm: number;
+  hand_dynamometer_kg: number;
+  plank_hold_seconds: number;
+  wall_sit_seconds: number;
+  balance_test_seconds: number;
+  push_ups_test: number;
+  sit_ups_test: number;
+  pull_ups_test: number;
+  bench_press_1rm_kg: number;
+  leg_press_1rm_kg: number;
+}
+
+interface HealthMetricEntry {
+  created_at: string; // ISO date string
+  resting_hr?: number;
+  max_hr?: number;
+  vo2max?: number;
+  hrv_ms?: number;
+  systolic_bp?: number;
+  diastolic_bp?: number;
+  fat_mass?: number;
+  lean_body_mass?: number;
+  fev_1?: number;
+  fvc_ratio?: number;
+  o2_saturation?: number;
+}
+interface Skinfold {
+  created_at: string; // ISO date string
+  chest: number;
+  abdomen: number;
+  thigh: number;
+  triceps: number;
+  subscapular: number;
+  midaxillary: number;
+  biceps: number;
+  calf: number;
+  suprailiac: number;
+}
 export default function ClientMetricsTab({
   clientId,
   clientName,
@@ -100,17 +166,11 @@ export default function ClientMetricsTab({
 
   if (!metricsData) return <p>Loading metrics...</p>;
 
-  const formatDate = (dateString: string) =>
-    new Date(dateString).toLocaleDateString(undefined, {
-      month: "short",
-      day: "numeric",
-    });
-
   // -------------------- Chart Renderers --------------------
   const renderHealthChart = () => {
     if (!metricsData.health_metrics?.length) return <p>No health metrics recorded yet.</p>;
 
-    const labels = metricsData.health_metrics.map((m: any) =>
+    const labels = metricsData.health_metrics.map((m: HealthMetricEntry) =>
       new Date(m.created_at).toLocaleDateString(undefined, { month: "short", day: "numeric" })
     );
     let data: number[] = [];
@@ -118,27 +178,27 @@ export default function ClientMetricsTab({
 
     switch (activeHealthMetric) {
       case "resting_hr":
-        data = metricsData.health_metrics.map((m: any) => m.resting_hr);
+        data = metricsData.health_metrics.map((m: HealthMetricEntry) => m.resting_hr);
         label = "Resting Heart Rate (bpm)";
         break;
       case "max_hr":
-        data = metricsData.health_metrics.map((m: any) => m.max_hr);
+        data = metricsData.health_metrics.map((m: HealthMetricEntry) => m.max_hr);
         label = "Max HR (bpm)";
         break;
       case "vo2max":
-        data = metricsData.health_metrics.map((m: any) => m.vo2max);
+        data = metricsData.health_metrics.map((m: HealthMetricEntry) => m.vo2max);
         label = "VO₂max";
         break;
       case "hrv_ms":
-        data = metricsData.health_metrics.map((m: any) => m.hrv_ms);
+        data = metricsData.health_metrics.map((m: HealthMetricEntry) => m.hrv_ms);
         label = "HRV (ms)";
         break;
       case "systolic_bp":
-        data = metricsData.health_metrics.map((m: any) => m.systolic_bp);
+        data = metricsData.health_metrics.map((m: HealthMetricEntry) => m.systolic_bp);
         label = "Systolic BP";
         break;
       case "diastolic_bp":
-        data = metricsData.health_metrics.map((m: any) => m.diastolic_bp);
+        data = metricsData.health_metrics.map((m: HealthMetricEntry) => m.diastolic_bp);
         label = "Diastolic BP";
         break;
     }
@@ -168,11 +228,12 @@ export default function ClientMetricsTab({
     if (!metricsData.body_measurements?.length) return <p>No body measurements recorded yet.</p>;
 
     // Body Measurements x-axis
-    const labels = metricsData.body_measurements.map((m: any) =>
+    const labels = metricsData.body_measurements.map((m: BodyMeasurement) =>
       new Date(m.created_at).toLocaleDateString(undefined, { month: "short", day: "numeric" })
     );
-    const data = metricsData.body_measurements.map((m: any) => m[activeBodyMetric]);
-
+    const data = metricsData.body_measurements.map(
+      (m: BodyMeasurement) => m[activeBodyMetric]
+    );
     return (
       <Line
         data={{
@@ -195,10 +256,10 @@ export default function ClientMetricsTab({
     if (!metricsData.body_fat_skinfolds?.length) return <p>No skinfold measurements recorded yet.</p>;
 
     // Skinfolds x-axis
-    const labels = metricsData.body_fat_skinfolds.map((m: any) =>
+    const labels = metricsData.body_fat_skinfolds.map((m: Skinfold) =>
       new Date(m.created_at).toLocaleDateString(undefined, { month: "short", day: "numeric" })
     );
-    const data = metricsData.body_fat_skinfolds.map((m: any) => m[activeSkinfoldMetric]);
+    const data = metricsData.body_fat_skinfolds.map((m: Skinfold) => m[activeSkinfoldMetric]);
 
     return (
       <Line
@@ -222,10 +283,10 @@ export default function ClientMetricsTab({
     if (!metricsData.fitness_tests?.length) return <p>No fitness tests measurements recorded yet.</p>;
 
     // Skinfolds x-axis
-    const labels = metricsData.fitness_tests.map((m: any) =>
+    const labels = metricsData.fitness_tests.map((m: FitnessTest) =>
       new Date(m.created_at).toLocaleDateString(undefined, { month: "short", day: "numeric" })
     );
-    const data = metricsData.fitness_tests.map((m: any) => m[activeFitnessTests]);
+    const data = metricsData.fitness_tests.map((m: FitnessTest) => m[activeFitnessTests]);
 
     return (
       <Line

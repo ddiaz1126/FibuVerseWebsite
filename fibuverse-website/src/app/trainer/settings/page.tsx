@@ -20,13 +20,17 @@ export default function SettingsPage() {
   const handleLogout = async () => {
     try {
       const refreshToken = localStorage.getItem("refresh_token");
-      const accessToken = localStorage.getItem("access_token");
+      const accessToken = localStorage.getItem("access_token") ?? undefined; // convert null → undefined
 
       if (refreshToken) {
         await logoutTrainer(refreshToken, accessToken);
       }
-    } catch (err: any) {
-      console.error("Logout failed", err);
+    } catch (err: unknown) {
+      if (err instanceof Error) {
+        console.error("Logout failed", err);
+      } else {
+        console.error("Logout failed with unknown error", err);
+      }
     } finally {
       // Always clear local storage and redirect
       localStorage.removeItem("access_token");

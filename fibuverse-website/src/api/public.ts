@@ -63,7 +63,7 @@ export async function fetchCompositeAgentCount(): Promise<number> {
  * Run a public composite agent with given inputs.
  * Returns the workflow run result including run_id and outputs.
  */
-export async function runPublicCompositeAgent(agentId: number, inputs: Record<string, any>) {
+export async function runPublicCompositeAgent(agentId: number, inputs: Record<string, string>) {
   if (!API_URL) {
     throw new Error("API_URL is not defined in environment variables.");
   }

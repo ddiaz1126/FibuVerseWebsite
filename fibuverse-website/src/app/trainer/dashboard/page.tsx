@@ -148,17 +148,14 @@ export default function TrainerDashboard() {
         const age = Date.now() - parsed.timestamp;
 
         if (parsed.papers.length > 0 && age < CACHE_TTL) {
-          // ✅ Use cached papers if not expired
           setPapers(parsed.papers);
-          return; // stop, don’t re-run agent
+          return;
         }
       } catch (e) {
         console.error("Failed to parse cached papers", e);
-        // fallthrough to fetch
       }
     }
 
-    // Run agent if no cache or cache expired
     const autoRun = async () => {
       try {
         setRunning(true);
@@ -168,15 +165,13 @@ export default function TrainerDashboard() {
         formData.append("prompt", DEFAULT_PROMPT);
 
         const res: RunCompositeResponse = await runCompositeAgentFormData(formData);
-        const fetchedPapers: ResearchPaper[] = res.outputs?.final_papers || [];
+        const fetchedPapers = (res.outputs?.final_papers as unknown as ResearchPaper[]) || [];
 
-        // Save to state & cache with timestamp
         setPapers(fetchedPapers);
         localStorage.setItem(
           CACHE_KEY,
           JSON.stringify({ papers: fetchedPapers, timestamp: Date.now() })
         );
-
       } catch (err) {
         console.error("Auto run failed:", err);
       } finally {
@@ -185,7 +180,8 @@ export default function TrainerDashboard() {
     };
 
     autoRun();
-  }, []);
+  }, [CACHE_TTL, CACHE_KEY, AGENT_ID, DEFAULT_PROMPT]);
+
 
     // Refactor your auto-run function to accept a category
   const runResearchWorkflow = async (category: string) => {
@@ -196,7 +192,7 @@ export default function TrainerDashboard() {
       formData.append("prompt", category);
 
       const res: RunCompositeResponse = await runCompositeAgentFormData(formData);
-      const fetchedPapers: ResearchPaper[] = res.outputs?.final_papers || [];
+      const fetchedPapers = (res.outputs?.final_papers as unknown as ResearchPaper[]) || [];
       setPapers(fetchedPapers);
 
       localStorage.setItem(
@@ -253,20 +249,20 @@ export default function TrainerDashboard() {
     return <p className="text-gray-400">Loading chart...</p>;
   }
 
-  const labels = Array.from(
+  const labels: string[] = Array.from(
     new Set(
-      Object.values(currentData).flatMap((daily: any) =>
-        daily.map((d: any) => d.date)
+      Object.values(currentData).flatMap((daily: DailyMetric[]) =>
+        daily.map((d: DailyMetric) => d.date)
       )
     )
   ).sort();
 
   const datasets = Object.entries(currentData).map(
-    ([client, daily]: any, idx) => ({
+    ([client, daily]: [string, DailyMetric[]], idx: number) => ({
       label: client,
       data: daily
         .sort((a, b) => a.date.localeCompare(b.date))
-        .map((d) => d.total),
+        .map((d: DailyMetric) => d.total),
       backgroundColor: colors[idx % colors.length],
     })
   );
@@ -292,7 +288,7 @@ export default function TrainerDashboard() {
             </div>
 
             <div className="bg-gray-800 p-6 rounded-lg shadow flex flex-col items-center flex-1">
-              <h2 className="font-semibold text-lg mb-4">Today's Client Sessions</h2>
+              <h2 className="font-semibold text-lg mb-4">Today&apos;s Client Sessions</h2>
               <p className="text-5xl font-extrabold text-blue-500">
                 {metrics ? metrics.total_workouts_today : "Loading..."}
               </p>
@@ -399,8 +395,10 @@ export default function TrainerDashboard() {
                     <div key={idx} className="bg-gray-900 p-4 rounded-lg">
                       <h3 className="text-white font-bold text-md">{paper.title}</h3>
                       <p className="text-gray-400 text-sm">
-                        {paper.authors.slice(0, 3).join(", ")}
-                        {paper.authors.length > 3 ? " et al." : ""} • {paper.date}
+                        {Array.isArray(paper.authors)
+                          ? paper.authors.slice(0, 3).join(", ")
+                          : String(paper.authors)}
+                        {Array.isArray(paper.authors) && paper.authors.length > 3 ? " et al." : ""} • {paper.date}
                       </p>
                       <p className="text-gray-300 text-sm mt-2 line-clamp-3">
                         {paper.abstract || "No abstract available."}

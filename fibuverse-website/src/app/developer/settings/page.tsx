@@ -23,10 +23,14 @@ export default function DeveloperSettingsPage() {
       const accessToken = localStorage.getItem("access_token");
 
       if (refreshToken) {
-        await logoutTrainer(refreshToken, accessToken);
+        await logoutTrainer(refreshToken, accessToken ?? undefined);
       }
-    } catch (err: any) {
-      console.error("Logout failed", err);
+    } catch (err: unknown) {
+      if (err instanceof Error) {
+        console.error("Logout failed:", err.message);
+      } else {
+        console.error("Logout failed (unexpected error):", err);
+      }
     } finally {
       // Clear developer-specific storage and redirect
       localStorage.removeItem("access_token");
@@ -36,7 +40,6 @@ export default function DeveloperSettingsPage() {
       router.push("/developerlogin");
     }
   };
-
   return (
     <div className="flex h-full">
       {/* Left inner sidebar */}

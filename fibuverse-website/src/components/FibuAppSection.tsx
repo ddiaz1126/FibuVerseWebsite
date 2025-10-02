@@ -1,11 +1,10 @@
-import React, { useState, useEffect } from 'react';
-import { MessageCircle, Laptop, Zap, Brain, Target, TrendingUp, Users, Shield } from 'lucide-react';
+import React from 'react';
+import { MessageCircle, Laptop, Brain, Target, TrendingUp, Users } from 'lucide-react';
+import Image from "next/image";
 
 const screenshot = "/images/fibu_home.png";
 
 export default function FibuAppSection() {
-  const [particles, setParticles] = useState([]);
-
 
   const features = [
     {
@@ -108,11 +107,14 @@ export default function FibuAppSection() {
 
               {/* Screenshot container */}
                 <div className="relative overflow-hidden rounded-2xl shadow-xl transform transition-all duration-500 group-hover:scale-105 w-full max-w-xs">
-                <img
-                    src={screenshot}
+                  <Image
+                    src={screenshot}           // your image source
                     alt="Fibu App screenshot"
-                    className="w-full h-auto"
-                />
+                    width={1200}               // specify width
+                    height={800}               // specify height
+                    className="w-full h-auto"  // Tailwind classes still apply
+                    priority={true}            // optional: preload for LCP images
+                  />
 
                 {/* Overlay gradient */}
                 <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent pointer-events-none" />

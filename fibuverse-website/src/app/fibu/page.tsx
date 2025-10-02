@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useEffect } from "react";
 import Header from "@/components/Header";
 import { fetchPublicCompositeAgents, runPublicCompositeAgent } from "@/api/public";
 import { useSearchParams } from "next/navigation";
@@ -12,8 +12,8 @@ interface SubAgent {
   description: string;
   inputs: Record<string, { type: string; required?: boolean; description?: string }>;
   outputs: Record<string, { type: string; description?: string }>;
-  input_examples?: any[];
-  output_examples?: any[];
+  // input_examples?: any[];
+  // output_examples?: any[];
   allow_frontend: boolean;
 }
 
@@ -28,47 +28,21 @@ interface CompositeAgent {
   id: number;
   name: string;
   description: string;
-  requires_auth?: boolean;
-  auth_type?: "none" | "credentials" | "oauth2" | "apikey";
+  layers: CompositeLayer[];
+  subagents: SubAgent[];
   
-  // Add these for visualization
-  layers: CompositeLayer[];  // ordered list of layers with their subagents
-  subagents: SubAgent[];     // flat list of all subagents (optional, for convenience)
-  
-  // Optional metadata
-  inputs?: Record<string, { type: string; required?: boolean }>;
-  outputs?: Record<string, any>;
+  inputs?: Record<string, { type: string; required?: boolean; description?: string }>;
+  outputs?: Record<string, unknown>;
   public?: boolean;
   allow_frontend?: boolean;
 }
+
 
 // Network Visualization Component
 // Network Visualization Component - Horizontal Layout
 function AgentNetworkGraph({ agent }: { agent: CompositeAgent }) {
   const [activeNode, setActiveNode] = useState<string | null>(null);
   const [isExpanded, setIsExpanded] = useState(false);
-
-  // Generate connections between layers
-  const generateConnections = () => {
-    const connections = [];
-    for (let i = 0; i < agent.layers.length - 1; i++) {
-      const currentLayer = agent.layers[i];
-      const nextLayer = agent.layers[i + 1];
-      
-      currentLayer.subagents.forEach((fromAgent, fromIdx) => {
-        nextLayer.subagents.forEach((toAgent, toIdx) => {
-          connections.push({
-            from: `layer-${i}-agent-${fromIdx}`,
-            to: `layer-${i + 1}-agent-${toIdx}`,
-            delay: `${Math.random() * 2}s`
-          });
-        });
-      });
-    }
-    return connections;
-  };
-
-  const connections = generateConnections();
 
   const getAgentColor = (subagent: SubAgent, isActive: boolean) => {
     // You can customize colors based on subagent properties
@@ -258,6 +232,7 @@ return (
 }
 
 // Input Form Component
+
 function AgentInputForm({ 
   agent, 
   inputValues, 
@@ -271,12 +246,25 @@ function AgentInputForm({
   onSubmit: () => void;
   loading: boolean;
 }) {
+  const [showOptional, setShowOptional] = useState(false);
+
+  if (!agent.inputs) return null;
+
+  // Separate required vs optional
+  const requiredInputs = Object.entries(agent.inputs).filter(
+    ([, meta]) => meta.required
+  );
+  const optionalInputs = Object.entries(agent.inputs).filter(
+    ([, meta]) => !meta.required
+  );
+
   return (
     <div className="bg-gray-800 rounded-xl p-6 border border-gray-700">
       <h3 className="text-lg font-semibold mb-4">Inputs</h3>
       
       <div className="space-y-4">
-        {Object.entries(agent.inputs || {}).map(([key, meta]) => (
+        {/* Required Inputs */}
+        {requiredInputs.map(([key, meta]) => (
           <div key={key}>
             <label className="block text-sm font-medium text-gray-300 mb-2">
               {key}
@@ -296,6 +284,42 @@ function AgentInputForm({
           </div>
         ))}
 
+        {/* Toggle Optional Section */}
+        {optionalInputs.length > 0 && (
+          <div>
+            <button
+              type="button"
+              className="text-sm text-blue-400 hover:text-blue-300 font-medium"
+              onClick={() => setShowOptional(!showOptional)}
+            >
+              {showOptional ? "Hide Advanced Inputs" : "Show Advanced Inputs"}
+            </button>
+
+            {showOptional && (
+              <div className="mt-4 space-y-4">
+                {optionalInputs.map(([key, meta]) => (
+                  <div key={key}>
+                    <label className="block text-sm font-medium text-gray-300 mb-2">
+                      {key}
+                    </label>
+                    {meta.description && (
+                      <p className="text-xs text-gray-400 mb-2">{meta.description}</p>
+                    )}
+                    <input
+                      type={meta.type === "password" ? "password" : "text"}
+                      placeholder={`Enter ${key}`}
+                      value={inputValues[key] || ""}
+                      onChange={(e) => onInputChange(key, e.target.value)}
+                      className="w-full p-3 rounded-lg bg-gray-900 border border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500 text-white"
+                    />
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Submit */}
         <button
           onClick={onSubmit}
           disabled={loading}
@@ -308,8 +332,12 @@ function AgentInputForm({
   );
 }
 
+interface AgentOutputProps {
+  output: unknown;
+  loading: boolean;
+}
 // Output Display Component
-function AgentOutput({ output, loading }: { output: any; loading: boolean }) {
+function AgentOutput({ output, loading }: AgentOutputProps) {
   if (loading) {
     return (
       <div className="bg-gray-800 rounded-xl p-6 border border-gray-700">
@@ -350,7 +378,7 @@ export default function FibuPage() {
   const [loadingAgents, setLoadingAgents] = useState(true);
   const [selectedAgent, setSelectedAgent] = useState<CompositeAgent | null>(null);
   const [inputValues, setInputValues] = useState<Record<string, string>>({});
-  const [output, setOutput] = useState<any>(null);
+  const [output, setOutput] = useState<unknown>(null);
   const [running, setRunning] = useState(false);
 
   const searchParams = useSearchParams();
@@ -364,7 +392,7 @@ export default function FibuPage() {
       setLoadingAgents(false);
 
       if (initialAgentId) {
-        const agent = data.find(a => a.id === parseInt(initialAgentId));
+        const agent = data.find((a: CompositeAgent) => a.id === parseInt(initialAgentId));
         if (agent) handleSelectAgent(agent);
       }
     }

@@ -39,7 +39,7 @@ export default function CreateWorkflowPage() {
   // fetched agents from backend
   const [agents, setAgents] = useState<Agent[]>([]);
   // optional: track a selected agent object (not strictly needed)
-  const [selectedAgent, setSelectedAgent] = useState<Agent | null>(null);
+  const [, setSelectedAgent] = useState<Agent | null>(null);
 
   const minLayers = 2;
   const maxLayers = 8;
@@ -63,18 +63,28 @@ export default function CreateWorkflowPage() {
           router.push("/developer/login");
           return;
         }
-        const fetched = await fetchSubAgents(token);
-        // fetched expected to be an array of objects { id, name, ... }
-        const normalized: Agent[] = (fetched ?? []).map((a: any) => ({
-          id: a.id,
-          name: a.name,
-        }));
+
+        const fetched = await fetchSubAgents();
+        // Normalize fetched data safely
+        const normalized: Agent[] = (fetched ?? []).map((a: unknown) => {
+          const agent = a as Partial<Agent>; // assert partial Agent
+          return {
+            id: agent.id ?? 0,
+            name: agent.name ?? "Unknown",
+          };
+        });
+
         setAgents(normalized);
         setSelectedAgent(normalized.length ? normalized[0] : null);
-      } catch (err) {
-        console.error("Failed to load subagents:", err);
+      } catch (err: unknown) {
+        if (err instanceof Error) {
+          console.error("Failed to load subagents:", err.message);
+        } else {
+          console.error("Failed to load subagents (unexpected error):", err);
+        }
       }
     }
+
     loadAgents();
   }, [router]);
 
@@ -356,7 +366,9 @@ export default function CreateWorkflowPage() {
                 return (
                   <div
                     key={key}
-                    ref={(el) => (nodeRefs.current[key] = el)}
+                      ref={(el) => {
+                        nodeRefs.current[key] = el;
+                      }}
                     className="node bg-green-600 text-white p-1 rounded flex justify-between items-center text-sm"
                   >
                     <span className="truncate mr-2">{agent ? agent.name : `Agent ${agentId}`}</span>

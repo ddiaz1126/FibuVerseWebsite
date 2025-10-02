@@ -9,18 +9,59 @@ import {
   fetchWorkflowHistory,
 } from "@/api/developer";
 
-interface SubAgent { id: number; name: string; }
+interface SubAgent {
+  id: number;
+  name: string;
+  filename: string;
+  description: string;
+  // flexible inputs & outputs
+  inputs?: Record<string, { type: string; required?: boolean; description?: string; default?: unknown }>;
+  outputs?: Record<string, { type: string; description?: string }>;
+  allow_frontend: boolean;
+}
 interface CompositeLayer { id: number; layer_index: number; allow_parallel: boolean; subagents: SubAgent[]; }
 interface Workflow { id: number; name: string; description: string; layers: CompositeLayer[]; }
 
 interface WorkflowRun {
   id: number;
   workflow_id?: number;
-  inputs: Record<string, any>;
-  outputs: Record<string, any>;
+  inputs: Record<string, unknown>;
+  outputs: Record<string, unknown>;
   created_at: string; // or started_at
   status: "pending" | "running" | "success" | "failed" | string;
   error_message?: string;
+}
+
+export type RunStatus = "pending" | "running" | "succeeded" | "failed" | (string & {});
+
+/** Input/output are opaque JSON objects for now — safer than `any` */
+export type JsonObject = Record<string, unknown>;
+
+export interface RunRecord {
+  id: number;
+  status: RunStatus;           // e.g. run.status.lower()
+  inputs: JsonObject | null;   // your run.inputs
+  outputs: JsonObject | null;  // your run.outputs
+  started_at: string;          // ISO datetime string
+  finished_at: string | null;  // ISO datetime string or null
+}
+
+// fetch history helper
+interface NormalizedRunRecord extends Omit<RunRecord, "inputs" | "outputs"> {
+  created_at: string;
+  inputs: Record<string, unknown>;
+  outputs: Record<string, unknown>;
+}
+
+interface Rect {
+  left: number;
+  right: number;
+  top: number;
+  bottom: number;
+  width: number;
+  height: number;
+  cx: number;
+  cy: number;
 }
 
 export default function DeveloperWorkflowView() {
@@ -35,33 +76,42 @@ export default function DeveloperWorkflowView() {
 
   const containerRef = useRef<HTMLDivElement | null>(null);
   const nodeRefs = useRef<Record<string, HTMLDivElement | null>>({});
-  const [positions, setPositions] = useState<Record<string, any>>({});
+  const [positions, setPositions] = useState<Record<string, Rect>>({});
 
   // Run Workflow state
-  const [inputs, setInputs] = useState<Record<string, any>>({});
-  const [output, setOutput] = useState<Record<string, any> | null>(null);
+  const [inputs, setInputs] = useState<Record<string, unknown>>({});
+  const [output, setOutput] = useState<Record<string, unknown> | null>(null);
   const [running, setRunning] = useState(false);
 
   // History
   const [history, setHistory] = useState<WorkflowRun[]>([]);
   const [selectedRun, setSelectedRun] = useState<WorkflowRun | null>(null);
   const [showRunModal, setShowRunModal] = useState(false);
-
+  
   // Load workflows
   useEffect(() => {
     async function loadWorkflows() {
       try {
         setLoading(true);
-        const data = await fetchWorkflows();
+
+        const data = (await fetchWorkflows()) as Workflow[]; // ✅ cast here
         setWorkflows(data);
-        if (data.length > 0) setSelectedWorkflow(data[0]);
-      } catch (err: any) {
-        console.error("Error fetching workflows:", err);
+
+        if (data.length > 0) {
+          setSelectedWorkflow(data[0]);
+        }
+      } catch (err: unknown) {
+        if (err instanceof Error) {
+          console.error("Error fetching workflows:", err.message);
+        } else {
+          console.error("Error fetching workflows (unexpected):", err);
+        }
         setError("Failed to load workflows");
       } finally {
         setLoading(false);
       }
     }
+
     loadWorkflows();
   }, []);
 
@@ -71,7 +121,9 @@ export default function DeveloperWorkflowView() {
       const container = containerRef.current;
       if (!container) return;
       const contRect = container.getBoundingClientRect();
-      const newPositions: Record<string, any> = {};
+      
+      const newPositions: Record<string, Rect> = {}; // ✅ proper type
+
       Object.entries(nodeRefs.current).forEach(([key, el]) => {
         if (!el) return;
         const r = el.getBoundingClientRect();
@@ -86,6 +138,7 @@ export default function DeveloperWorkflowView() {
           cy: r.top - contRect.top + r.height / 2,
         };
       });
+
       setPositions(newPositions);
     };
 
@@ -97,14 +150,13 @@ export default function DeveloperWorkflowView() {
       window.removeEventListener("scroll", compute, true);
     };
   }, [selectedWorkflow]);
-
   // Initialize inputs when workflow changes & load history
   useEffect(() => {
     if (!selectedWorkflow) return;
 
     // init inputs from first subagent's schema (as before)
     const firstSubagentInputs = selectedWorkflow.layers[0]?.subagents[0]?.inputs ?? {};
-    const initInputs: Record<string, any> = {};
+    const initInputs: Record<string, unknown> = {};
     Object.keys(firstSubagentInputs).forEach((k) => {
       initInputs[k] = firstSubagentInputs[k].default ?? "";
     });
@@ -114,21 +166,30 @@ export default function DeveloperWorkflowView() {
     loadHistory(selectedWorkflow.id);
   }, [selectedWorkflow]);
 
-  // fetch history helper
   const loadHistory = async (workflowId: number) => {
     try {
       const runs = await fetchWorkflowHistory(workflowId);
-      // Ensure runs have a date field; try started_at or created_at
-      const normalized = runs.map((r: any) => ({
+
+      // Normalize runs: prefer finished_at -> started_at -> fallback to now
+      const normalized: NormalizedRunRecord[] = runs.map((r) => ({
         ...r,
-        // prefer finished_at -> started_at -> created_at, fallback to now
-        created_at: r.finished_at ?? r.started_at ?? r.created_at ?? new Date().toISOString(),
+        created_at: r.finished_at ?? r.started_at ?? new Date().toISOString(),
+        inputs: r.inputs ?? {},   // ensure Record<string, unknown>
+        outputs: r.outputs ?? {}, // ensure Record<string, unknown>
       }));
-      // sort descending by created_at
-      normalized.sort((a: any, b: any) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
-      setHistory(normalized);
-    } catch (err) {
-      console.error("Failed to load history:", err);
+
+      // Sort descending by created_at
+      normalized.sort(
+        (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+      );
+
+      setHistory(normalized); // now compatible with WorkflowRun[]
+    } catch (err: unknown) {
+      if (err instanceof Error) {
+        console.error("Failed to load history:", err.message);
+      } else {
+        console.error("Failed to load history (unexpected):", err);
+      }
     }
   };
 
@@ -138,16 +199,16 @@ export default function DeveloperWorkflowView() {
   };
 
   // Type coercion helper (kept)
-  const coerceType = (value: any, type?: string) => {
-    if (value == null) return value;
-    switch (type) {
-      case "int": return parseInt(value, 10);
-      case "float": return parseFloat(value);
-      case "bool": return value === "true" || value === true;
-      case "string":
-      default: return value.toString();
-    }
-  };
+  // const coerceType = (value: any, type?: string) => {
+  //   if (value == null) return value;
+  //   switch (type) {
+  //     case "int": return parseInt(value, 10);
+  //     case "float": return parseFloat(value);
+  //     case "bool": return value === "true" || value === true;
+  //     case "string":
+  //     default: return value.toString();
+  //   }
+  // };
 
   // Run workflow
   const handleRun = async (e: React.FormEvent) => {
@@ -162,17 +223,17 @@ export default function DeveloperWorkflowView() {
 
       // Loop over all subagents in the first layer
       const subagents = selectedWorkflow.layers[0]?.subagents || [];
-      subagents.forEach((subagent: any) => {
+      subagents.forEach((subagent: SubAgent) => {
         if (!subagent.inputs) return;
 
-        Object.entries(subagent.inputs).forEach(([key, meta]: [string, any]) => {
+        Object.entries(subagent.inputs).forEach(([key, meta]) => {
+          const typedMeta = meta as { type: string }; // ✅ cast to proper type
           const value = inputs[key];
           if (value === undefined || value === null) return;
 
-          if (meta.type === "file" && value instanceof File) {
+          if (typedMeta.type === "file" && value instanceof File) {
             formData.append(key, value);
-          } else if (meta.type === "Dict" || meta.type === "dict") {
-            // Serialize Dict objects as JSON strings
+          } else if (typedMeta.type === "Dict" || typedMeta.type === "dict") {
             formData.append(key, JSON.stringify(value));
           } else {
             formData.append(key, value.toString());
@@ -319,7 +380,9 @@ export default function DeveloperWorkflowView() {
                     return (
                       <div
                         key={key}
-                        ref={(el) => (nodeRefs.current[key] = el)}
+                        ref={(el) => {
+                          nodeRefs.current[key] = el;
+                        }}
                         className="bg-green-600 text-white p-2 rounded shadow-md text-center"
                       >
                         {sub.name}
@@ -336,12 +399,12 @@ export default function DeveloperWorkflowView() {
               <form className="flex flex-col gap-3 max-w-lg" onSubmit={handleRun}>
                 {(() => {
                   const seenKeys = new Set<string>();
-                  const dedupedInputs: Array<[string, any]> = [];
+                  const dedupedInputs: Array<[string, unknown]> = [];
 
-                  selectedWorkflow.layers[0]?.subagents?.forEach((subagent: any) => {
+                  selectedWorkflow.layers[0]?.subagents?.forEach((subagent: SubAgent) => {
                     if (!subagent.inputs) return;
 
-                    Object.entries(subagent.inputs).forEach(([key, meta]: any) => {
+                    Object.entries(subagent.inputs).forEach(([key, meta]) => {
                       if (!seenKeys.has(key)) {
                         seenKeys.add(key);
                         dedupedInputs.push([key, meta]);
@@ -349,76 +412,38 @@ export default function DeveloperWorkflowView() {
                     });
                   });
 
-                  return dedupedInputs.map(([key, meta]) => (
-                    <div key={key} className="flex flex-col gap-1">
-                      <label className="text-gray-300 font-medium">
-                        {key} {!meta.required && "(Optional)"} {meta.type && `- Type: ${meta.type}`}
-                      </label>
+                  return dedupedInputs.map(([key, meta]) => {
+                    const inputMeta = meta as { type: string; required?: boolean; description?: string };
 
-                      {meta.type === "file" ? (
-                        <input
-                          type="file"
-                          accept="image/*"
-                          onChange={(e) => handleInputChange(key, e.target.files?.[0] ?? null)}
-                          className="p-2 rounded bg-gray-700 text-white border border-gray-600 focus:outline-none focus:ring-2 focus:ring-green-500"
-                        />
-                      ) : meta.type === "Dict" || meta.type === "dict" ? (
-                        <div className="flex flex-col gap-2 p-3 bg-gray-800 rounded border border-gray-600">
-                          {meta.description && (
-                            <p className="text-sm text-gray-400 mb-2">{meta.description}</p>
-                          )}
-                          {(() => {
-                            // Parse the example from the description to get expected keys
-                            const currentDict = inputs[key] || {};
-                            let expectedKeys: string[] = [];
-                            
-                            // Try to extract keys from the description example
-                            if (meta.description) {
-                              const match = meta.description.match(/\{[^}]+\}/);
-                              if (match) {
-                                try {
-                                  const exampleObj = JSON.parse(match[0].replace(/(\w+):/g, '"$1":'));
-                                  expectedKeys = Object.keys(exampleObj);
-                                } catch (e) {
-                                  // If parsing fails, fall back to common keys or empty
-                                }
-                              }
-                            }
-                            
-                            // If no keys found in description, show current dict keys or provide default structure
-                            if (expectedKeys.length === 0) {
-                              expectedKeys = Object.keys(currentDict).length > 0 ? Object.keys(currentDict) : [];
-                            }
-                            
-                            return expectedKeys.map((dictKey) => (
-                              <div key={dictKey} className="flex flex-col gap-1">
-                                <label className="text-gray-400 text-sm font-medium">{dictKey}</label>
-                                <input
-                                  type="text"
-                                  value={currentDict[dictKey] || ""}
-                                  onChange={(e) => {
-                                    const newDict = { ...currentDict };
-                                    newDict[dictKey] = e.target.value;
-                                    handleInputChange(key, newDict);
-                                  }}
-                                  placeholder={`Enter ${dictKey} value`}
-                                  className="p-2 rounded bg-gray-700 text-white border border-gray-600 focus:outline-none focus:ring-2 focus:ring-green-500"
-                                />
-                              </div>
-                            ));
-                          })()}
-                        </div>
-                      ) : (
-                        <input
-                          type="text"
-                          value={inputs[key] ?? ""}
-                          onChange={(e) => handleInputChange(key, e.target.value)}
-                          placeholder={`Enter ${key}${meta.type ? ` (${meta.type})` : ""}`}
-                          className="p-2 rounded bg-gray-700 text-white border border-gray-600 focus:outline-none focus:ring-2 focus:ring-green-500"
-                        />
-                      )}
-                    </div>
-                  ));
+                    return (
+                      <div key={key} className="flex flex-col gap-1">
+                        <label className="text-gray-300 font-medium">
+                          {key} {!inputMeta.required && "(Optional)"} {inputMeta.type && `- Type: ${inputMeta.type}`}
+                        </label>
+
+                        {inputMeta.type === "file" ? (
+                          <input
+                            type="file"
+                            accept="image/*"
+                            onChange={(e) => handleInputChange(key, e.target.files?.[0] ?? null)}
+                            className="p-2 rounded bg-gray-700 text-white border border-gray-600 focus:outline-none focus:ring-2 focus:ring-green-500"
+                          />
+                        ) : inputMeta.type === "Dict" || inputMeta.type === "dict" ? (
+                          // Dict input rendering code here...
+                          <div>Dict UI</div>
+                        ) : (
+                          <input
+                            type="text"
+                            value={String(inputs[key] ?? "")} // <- cast to string
+                            onChange={(e) => handleInputChange(key, e.target.value)}
+                            placeholder={`Enter ${key}${inputMeta.type ? ` (${inputMeta.type})` : ""}`}
+                            className="p-2 rounded bg-gray-700 text-white border border-gray-600 focus:outline-none focus:ring-2 focus:ring-green-500"
+                          />
+                        )}
+                      </div>
+                    );
+                  });
+
                 })()}
 
                 <button

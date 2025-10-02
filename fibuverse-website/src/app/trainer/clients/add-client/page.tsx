@@ -32,27 +32,31 @@ export default function AddClientPage() {
 
     // -------------------- Submit --------------------
     const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+        e.preventDefault();
 
-    // --- validate required fields ---
-    const { first_name, last_name, email } = formData;
-    if (!first_name || !last_name || !email) {
-        setError("First name, last name, and email are required.");
-        return;
-    }
+        // --- validate required fields ---
+        const { first_name, last_name, email } = formData;
+        if (!first_name || !last_name || !email) {
+            setError("First name, last name, and email are required.");
+            return;
+        }
 
-    setError("");
+        setError("");
 
-    try {
-        // Use createClient API function
-        const res = await createClient(formData);
+      try {
+        await createClient(formData);
 
         alert(`Client ${formData.first_name} added successfully!`);
         router.push("/trainer/clients");
-    } catch (err: any) {
-        console.error(err);
-        setError(err.message || "Error submitting client.");
-    }
+      } catch (err: unknown) {
+        if (err instanceof Error) {
+          setError(err.message);
+          console.error(err);
+        } else {
+          setError("Error submitting client.");
+          console.error(err);
+        }
+      }
     };
 
   return (

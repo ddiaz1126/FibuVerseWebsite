@@ -27,14 +27,55 @@ ChartJS.register(
   Legend
 );
 
+interface WeekStat {
+  week: string; // ISO date string from TruncWeek
+  total?: number;             // for sessions_per_week
+  total_distance?: number;    // for distance_per_week
+  avg_pace?: number;          // for avg_pace_per_week
+  avg_hr?: number;            // for avg_hr_per_week
+  total_calories?: number;    // for calories_per_week
+}
+
+interface CardioTypeStat {
+  cardio_type: string;
+  count: number;
+}
+
+interface CardioMetadata {
+  sessions_per_week: WeekStat[];
+  distance_per_week: WeekStat[];
+  avg_pace_per_week: WeekStat[];
+  avg_hr_per_week: WeekStat[];
+  calories_per_week: WeekStat[];
+  cardio_types: CardioTypeStat[];
+}
+interface CardioSessionPoint {
+  cardio__cardio_name: string;
+  bucket_start: string;       // ISO datetime
+  avg_heart_rate?: number;
+  avg_pace?: number;
+  avg_speed?: number;
+  avg_altitude?: number;
+  avg_latitude?: number;
+  avg_longitude?: number;
+  points_count?: number;
+}
+
+interface CardioSessionInsights {
+  avg_heart_rate_over_time: Array<Pick<CardioSessionPoint, "cardio__cardio_name" | "bucket_start" | "avg_heart_rate">>;
+  avg_pace_over_time: Array<Pick<CardioSessionPoint, "cardio__cardio_name" | "bucket_start" | "avg_pace">>;
+  avg_speed_over_time: Array<Pick<CardioSessionPoint, "cardio__cardio_name" | "bucket_start" | "avg_speed">>;
+  avg_altitude_over_time: Array<Pick<CardioSessionPoint, "cardio__cardio_name" | "bucket_start" | "avg_altitude">>;
+  location_points: Array<Pick<CardioSessionPoint, "cardio__cardio_name" | "bucket_start" | "avg_latitude" | "avg_longitude">>;
+  points_count_over_time: Array<Pick<CardioSessionPoint, "cardio__cardio_name" | "bucket_start" | "points_count">>;
+}
+
 interface CardioAnalysisTabProps {
-  clientId: number;
-  cardioMeta: any; // high-level summaries (runs per week, avg pace, etc.)
-  cardioSessionInsights: any; // per-run/session details
+  cardioMeta: CardioMetadata | null;
+  cardioSessionInsights: CardioSessionInsights | null;
 }
 
 export default function CardioAnalysisTab({
-  clientId,
   cardioMeta,
   cardioSessionInsights,
 }: CardioAnalysisTabProps) {

@@ -58,13 +58,15 @@ export default function CardioPage() {
       <div className="w-64 border-r border-gray-700 p-4 flex flex-col">
         {/* Tabs */}
         <div className="flex mb-2">
-          {["Single", "Program"].map(tab => (
+          {(["Single", "Program"] as const).map((tab) => (
             <button
               key={tab}
               className={`flex-1 px-2 py-1 rounded ${
-                activeTab === tab ? "bg-blue-600 text-white" : "bg-gray-800 text-gray-300 hover:bg-gray-700"
+                activeTab === tab
+                  ? "bg-blue-600 text-white"
+                  : "bg-gray-800 text-gray-300 hover:bg-gray-700"
               }`}
-              onClick={() => setActiveTab(tab as any)}
+              onClick={() => setActiveTab(tab)} 
             >
               {tab}
             </button>

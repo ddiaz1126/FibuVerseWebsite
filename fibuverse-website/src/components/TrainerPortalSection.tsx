@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Monitor, BarChart3, Brain, Users, TrendingUp, Zap } from 'lucide-react';
+import { Monitor, BarChart3, Brain, Users, Zap } from 'lucide-react';
 
 export default function TrainerPortalSection() {
   const [activeCard, setActiveCard] = useState(0);

@@ -47,7 +47,7 @@ export default function CalendarPage() {
     async function fetchWorkouts() {
       try {
         setLoading(true);
-        const data = await getTrainerWorkouts(token);
+        const data = (await getTrainerWorkouts()) as Workout[]; // <-- type assertion
         setWorkouts(data);
       } catch (err) {
         console.error("Failed to load workouts:", err);

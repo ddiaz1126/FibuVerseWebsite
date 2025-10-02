@@ -19,11 +19,12 @@ interface SubAgent {
   name: string;
   filename: string;
   description: string;
-  inputs: Record<string, any>;
-  outputs: Record<string, any>;
-  input_examples?: any[];
-  output_examples?: any[];
+  inputs: Record<string, unknown>;                     // JSON object
+  outputs: Record<string, unknown>;                    // JSON object
+  input_examples?: Array<Record<string, unknown>>;     // list of JSON objects
+  output_examples?: Array<Record<string, unknown>>;    // list of JSON objects
 }
+
 
 interface CompositeLayer {
   layer_index: number;
@@ -38,19 +39,20 @@ interface CompositeAgent {
   requires_auth: boolean;
   auth_type: "none" | "credentials" | "oauth2" | "apikey";
   oauth_url?: string | null;
-  oauth_scopes?: any;
+  oauth_scopes?: Record<string, unknown> | Array<unknown>; // JSON object or array
   public: boolean;
-  
+
   // Network structure
   layers: CompositeLayer[];
-  subagents: SubAgent[];  // Flat list of all subagents
-  
-  // Merged inputs from all subagents (added by your view)
-  inputs: Record<string, any>;
-  
-  // Optional outputs if your backend provides it
-  outputs?: Record<string, any>;
+  subagents: SubAgent[]; // Flat list of all subagents
+
+  // Merged inputs from all subagents
+  inputs: Record<string, unknown>;
+
+  // Optional outputs if backend provides it
+  outputs?: Record<string, unknown>;
 }
+
 
 // Create a reusable animated section component
 function AnimatedSection({ children, delay = 0 }: { children: React.ReactNode; delay?: number }) {

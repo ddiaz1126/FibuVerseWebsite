@@ -20,12 +20,12 @@ const items = [
 export default function DeveloperSidebar({ collapsed, onToggle }: DeveloperSidebarProps) {
   return (
     <aside
-      className={`h-screen bg-gray-900 text-white shadow flex flex-col transition-all duration-200 ease-in-out ${
+      className={`h-screen bg-gray-900 text-white shadow flex flex-col transition-all duration-300 ease-in-out ${
         collapsed ? "w-16" : "w-64"
       }`}
     >
       {/* Top: logo + toggle */}
-      <div className="flex items-center justify-between p-3 border-b border-gray-800">
+      <div className="flex items-center justify-between p-3 border-b border-gray-800 relative">
         <div className="flex items-center gap-3">
           <div className="h-8 w-8 rounded-full bg-green-400 flex items-center justify-center font-bold text-gray-900">
             D
@@ -35,7 +35,7 @@ export default function DeveloperSidebar({ collapsed, onToggle }: DeveloperSideb
 
         <button
           onClick={onToggle}
-          className="p-2 rounded hover:bg-gray-800 active:bg-gray-700"
+          className="p-3 rounded hover:bg-gray-800 active:bg-gray-700 flex items-center justify-center z-10"
           aria-label="Toggle sidebar"
         >
           <Bars3Icon className="w-5 h-5 text-gray-300" />
@@ -55,7 +55,7 @@ export default function DeveloperSidebar({ collapsed, onToggle }: DeveloperSideb
               }`}
             >
               <Icon className="w-5 h-5 text-gray-300" />
-              {!collapsed && <span className="text-sm text-gray-100">{it.name}</span>}
+              {!collapsed && <span className="text-base text-gray-100 font-bold">{it.name}</span>}
             </Link>
           );
         })}

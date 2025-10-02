@@ -12,6 +12,70 @@ import {
   isSameMonth,
 } from "date-fns";
 import { getTrainerPrograms } from "@/api/trainer";
+import WorkoutEditor from "@/components/programs/WorkoutEditor";
+
+interface ProgramWorkoutSet {
+  reps?: number | null;
+  weight?: number | null;
+  rir?: number | null;
+  duration?: number | null;
+  sets_order?: number | null;
+  weight_unit?: string | null;
+  duration_or_velocity?: string | null;
+  rir_or_rpe?: number | null;
+  completed_at?: string | null;
+}
+
+interface ProgramWorkoutExercise {
+  id: number;
+  name: string;
+  description?: string | null;
+  duration?: number | null;
+  sets: ProgramWorkoutSet[];
+  set_structure?: string | null;
+  group_id?: number | null;
+  exercise_order?: number | null;
+}
+
+interface Workout {
+  id: number;
+  workout_name: string;
+  workout_date?: string | null;
+  duration?: number | null;
+  heart_rate?: number | null;
+  calories_burned?: number | null;
+  notes?: string | null;
+  workout_type?: string | null;
+  trainer_id?: number | null;
+  client_id?: number | null;
+  prebuilt_workout?: boolean;
+  session_data: ProgramWorkoutExercise[];
+}
+
+interface ProgramWorkout {
+  id: number;
+  program: number;
+  week_index?: number | null;
+  day_index?: number | null;
+  order?: number | null;
+  date?: string | null;
+  workout: Workout;
+}
+
+interface Program {
+  id: number;
+  name: string;
+  client_id?: number | null;
+  client_name?: string | null;
+  is_template: boolean;
+  description?: string | null;
+  start_date?: string | null;
+  end_date?: string | null;
+  workout_type?: string | null;
+  created_at?: string | null;
+  updated_at?: string | null;
+  program_workouts: ProgramWorkout[];
+}
 
 export default function ProgramsPage() {
   const today = new Date();
@@ -22,10 +86,10 @@ export default function ProgramsPage() {
   const [workoutNotes, setWorkoutNotes] = useState("");
 
   // ✅ Tabs state
-  const [activeTab, setActiveTab] = useState<"workouts" | "programs">("programs");
+  const [activeTab, setActiveTab] = useState<"workouts" | "programs">("workouts");
 
   // ✅ Programs state
-  const [programs, setPrograms] = useState<any[]>([]);
+  const [programs, setPrograms] = useState<Program[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -35,7 +99,7 @@ export default function ProgramsPage() {
   useEffect(() => {
     if (activeTab === "programs" && token) {
       setLoading(true);
-      getTrainerPrograms(token)
+      getTrainerPrograms()
         .then((data) => {
           setPrograms(data);
           setError(null);
@@ -60,19 +124,23 @@ export default function ProgramsPage() {
       {/* Left sidebar: Programs & Workouts */}
       <div className="w-64 border-r border-gray-800 flex flex-col">
         {/* Tabs */}
-        <div className="flex">
+        <div className="flex gap-2 bg-gray-800 p-0 rounded-lg">
           <button
             onClick={() => setActiveTab("workouts")}
-            className={`flex-1 p-3 border-b border-gray-800 ${
-              activeTab === "workouts" ? "bg-blue-600 text-white" : "hover:bg-gray-800"
+            className={`flex-1 py-2 px-4 rounded-md transition-all duration-200 font-medium ${
+              activeTab === "workouts" 
+                ? "bg-blue-600 text-white shadow-lg" 
+                : "text-gray-400 hover:bg-gray-700 hover:text-white"
             }`}
           >
             Workouts
           </button>
           <button
             onClick={() => setActiveTab("programs")}
-            className={`flex-1 p-3 border-b border-gray-800 ${
-              activeTab === "programs" ? "bg-blue-600 text-white" : "hover:bg-gray-800"
+            className={`flex-1 py-2 px-4 rounded-md transition-all duration-200 font-medium ${
+              activeTab === "programs" 
+                ? "bg-blue-600 text-white shadow-lg" 
+                : "text-gray-400 hover:bg-gray-700 hover:text-white"
             }`}
           >
             Programs
@@ -118,33 +186,7 @@ export default function ProgramsPage() {
       </div>
 
       {/* Middle column: Workout Editor */}
-      <div className="flex-1 border-r border-gray-800 p-6 overflow-y-auto">
-        <h2 className="text-2xl font-semibold mb-4">Workout Editor</h2>
-        <div className="space-y-4">
-          <div>
-            <label className="block text-sm mb-1">Workout Name</label>
-            <input
-              type="text"
-              className="w-full rounded bg-gray-800 p-2"
-              placeholder="Enter workout name"
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm mb-1">Exercises</label>
-            <div className="space-y-2">
-              <input
-                type="text"
-                className="w-full rounded bg-gray-800 p-2"
-                placeholder="Exercise name"
-              />
-              <button className="px-3 py-1 bg-blue-600 rounded text-sm hover:bg-blue-700">
-                + Add Exercise
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
+      <WorkoutEditor/>
 
       {/* Right column: Calendar + Workout Metadata */}
       <div className="w-96 flex flex-col border-l border-gray-800">

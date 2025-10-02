@@ -58,7 +58,7 @@ export default function TrainerSidebar({ collapsed, onToggle }: TrainerSidebarPr
       </div>
 
       {/* Navigation */}
-      <nav className="mt-4 flex-1 flex flex-col overflow-y-auto min-h-0">
+      <nav className="mt-4 flex-1 overflow-y-auto">
         {items.map((it) => {
           const Icon = it.icon;
           return (

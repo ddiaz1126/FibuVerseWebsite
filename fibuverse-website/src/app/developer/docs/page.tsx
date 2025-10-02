@@ -7,11 +7,11 @@ import { fetchSubAgents } from "@/api/developer";
 interface Agent {
   id: number;
   name: string;
-  description?: string | Record<string, any> | any[];
-  inputs?: Record<string, any> | any[];
-  input_examples?: any[];
-  outputs?: Record<string, any> | any[];
-  output_examples?: any[];
+  description?: string | Record<string, unknown>;           // text or JSON object
+  inputs?: Record<string, unknown>;                        // JSON dict
+  input_examples?: Array<Record<string, unknown>>;         // list of JSON dicts
+  outputs?: Record<string, unknown>;                       // JSON dict
+  output_examples?: Array<Record<string, unknown>>;        // list of JSON dicts
 }
 
 const workflows = ["Workout Generator", "Cardio Tracker"];
@@ -41,30 +41,40 @@ export default function DeveloperDocsView({ token }: { token?: string }) {
 
       try {
         setLoadingAgents(true);
-        const fetched = await fetchSubAgents(tokenToUse);
+        const fetched = await fetchSubAgents();
 
-        const normalized: Agent[] = (fetched ?? []).map((a: any) => ({
-          id: a.id,
-          name: a.name,
-          description: a.description ?? "",
-          inputs: a.inputs ?? {},
-          input_examples: a.input_examples ?? [],
-          outputs: a.outputs ?? {},
-          output_examples: a.output_examples ?? [],
-        }));
+        const normalized: Agent[] = (fetched ?? []).map((a: unknown) => {
+          const agent = a as Partial<Agent>; // assert it may have some Agent fields
+          return {
+            id: agent.id ?? 0,
+            name: agent.name ?? "Unknown",
+            description: agent.description ?? "",
+            inputs: agent.inputs ?? {},
+            input_examples: agent.input_examples ?? [],
+            outputs: agent.outputs ?? {},
+            output_examples: agent.output_examples ?? [],
+          };
+        });
 
         setAgents(normalized);
         setSelectedAgent(normalized.length ? normalized[0] : null);
-      } catch (err: any) {
-        console.error("Failed to fetch subagents:", err);
-        if (String(err?.message || "").toLowerCase().includes("401")) {
-          router.push("/developer/login");
+      } catch (err: unknown) {
+        // Narrow the unknown type safely
+        if (err instanceof Error) {
+          console.error("Failed to fetch subagents:", err.message);
+          if (err.message.toLowerCase().includes("401")) {
+            router.push("/developer/login");
+          }
+        } else {
+          console.error("Failed to fetch subagents (non-error):", err);
         }
+
         setAgents([]);
         setSelectedAgent(null);
       } finally {
         setLoadingAgents(false);
       }
+
     };
 
     loadAgents();
@@ -77,17 +87,24 @@ export default function DeveloperDocsView({ token }: { token?: string }) {
   );
 
   // Render any value nicely, including arrays of objects
-  const renderValue = (value: any, fallback = "—") => {
-    if (!value || (Array.isArray(value) && value.length === 0)) return <span className="text-gray-400">{fallback}</span>;
+  const renderValue = (value: unknown, fallback = "—") => {
+    // Handle null, undefined, or empty arrays
+    if (!value || (Array.isArray(value) && value.length === 0)) {
+      return <span className="text-gray-400">{fallback}</span>;
+    }
 
-    if (typeof value === "string") return <span className="text-gray-300 whitespace-pre-wrap">{value}</span>;
+    // String
+    if (typeof value === "string") {
+      return <span className="text-gray-300 whitespace-pre-wrap">{value}</span>;
+    }
 
+    // Array
     if (Array.isArray(value)) {
       return (
         <ul className="list-disc ml-5 text-gray-300">
           {value.map((it, i) => (
             <li key={i} className="break-words">
-              {typeof it === "object" ? (
+              {typeof it === "object" && it !== null ? (
                 <pre className="text-sm bg-gray-800 p-2 rounded">{JSON.stringify(it, null, 2)}</pre>
               ) : (
                 String(it)
@@ -98,15 +115,16 @@ export default function DeveloperDocsView({ token }: { token?: string }) {
       );
     }
 
-    if (typeof value === "object") {
+    // Object
+    if (typeof value === "object" && value !== null) {
       return (
         <pre className="text-sm bg-gray-800 p-2 rounded text-gray-300">{JSON.stringify(value, null, 2)}</pre>
       );
     }
 
+    // Fallback for numbers, booleans, etc.
     return <span className="text-gray-300">{String(value)}</span>;
   };
-
   return (
     <div className="flex h-full">
       {/* Left sidebar */}

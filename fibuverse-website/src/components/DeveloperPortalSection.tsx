@@ -1,6 +1,6 @@
 // DeveloperPortalSection.tsx
 import React, { useState, useEffect } from 'react';
-import { Mail, Code, GitBranch, Cpu, Network, Zap, Play, Book, Layers } from 'lucide-react';
+import { Mail, Code, GitBranch, Cpu, Network, Zap, Layers } from 'lucide-react';
 
 export default function DeveloperPortalSection() {
   const [agents, setAgents] = useState([]);

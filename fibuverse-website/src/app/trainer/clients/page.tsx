@@ -12,7 +12,7 @@ import {
   isSameDay,
   isSameMonth,
 } from "date-fns";
-import { getTrainerClients, getClientWeightsMetaData, getClientWeightsSessionData, getClientCardioMetaData, getClientCardioSessionData, getClientNutrittionData, getClientMetricsData } from "@/api/trainer";
+import { getTrainerClients, getClientWeightsMetaData, getClientWeightsSessionData, getClientCardioMetaData, getClientCardioSessionData, getClientMetricsData, getClientNutritionData } from "@/api/trainer";
 import WeightsAnalysisTab from "@/components/clients/WeightsAnalysisTab";
 import HistoryTab from "@/components/clients/HistoryTab";
 import ProgramsTab from "@/components/clients/ProgramsTab";
@@ -20,6 +20,90 @@ import CardioAnalysisTab from "@/components/clients/CardioAnalysisTab";
 import NutritionAnalysisTab from "@/components/clients/NutritionAnalysisTab";
 import ClientMetricsTab from "@/components/clients/ClientMetricsTab";
 import { useRouter } from "next/navigation"; 
+import Image from "next/image";
+
+interface HealthMetric {
+  created_at: string; // ISO date string
+  resting_hr?: number;
+  max_hr?: number;
+  vo2max?: number;
+  hrv_ms?: number;
+  systolic_bp?: number;
+  diastolic_bp?: number;
+  fat_mass?: number;
+  lean_body_mass?: number;
+  fev_1?: number;
+  fvc_ratio?: number;
+  o2_saturation?: number;
+}
+interface BodyMeasurement {
+  created_at: string; // ISO date string
+  weight_kg: number;
+  height_cm: number;
+  bmi: number;
+  waist_cm: number;
+  hip_cm: number;
+  waist_to_height_ratio: number;
+  body_fat_percentage: number;
+}
+interface Skinfold {
+  created_at: string; // ISO date string
+  chest: number;
+  abdomen: number;
+  thigh: number;
+  triceps: number;
+  subscapular: number;
+  midaxillary: number;
+  biceps: number;
+  calf: number;
+  suprailiac: number;
+}
+interface FitnessTest {
+  created_at: string; // ISO date string
+  sit_and_reach_cm: number;
+  hand_dynamometer_kg: number;
+  plank_hold_seconds: number;
+  wall_sit_seconds: number;
+  balance_test_seconds: number;
+  push_ups_test: number;
+  sit_ups_test: number;
+  pull_ups_test: number;
+  bench_press_1rm_kg: number;
+  leg_press_1rm_kg: number;
+}
+
+interface CardioSession {
+  id: number;
+  cardio_name: string;
+  cardio_date: string; // ISO date
+  cardio_start_time?: string | null;
+  cardio_end_time?: string | null;
+  cardio_type?: string | null;
+  duration?: number | null;
+  distance?: number | null;
+  avg_pace?: number | null;
+  avg_heart_rate?: number | null;
+  avg_speed?: number | null;
+  max_heart_rate?: number | null;
+  max_pace?: number | null;
+  max_speed?: number | null;
+  avg_altitude?: number | null;
+  elevation_gain?: number | null;
+  calories_burned?: number | null;
+  notes?: string | null;
+  created_at: string;
+}
+
+interface WeightWorkout {
+  id: number;
+  workout_name: string;
+  workout_date?: string | null;
+  duration?: number | null;
+  num_exercises?: number | null;
+  notes?: string | null;
+  created_at: string;
+}
+
 
 interface Client {
   id: number;
@@ -37,25 +121,158 @@ interface Client {
   fitness_goal?: string | null;
   training_status?: string | null;
   subscription_type?: string | null;
-  body_measurements?: any;
-  health_metrics?: any;
-  body_fat_skinfolds?: any;
-  activity_metrics?: any;
-  alerts?: any[];
-  cardio_sessions: req.cardio_sessions,     
-  weight_workouts: req.weight_workouts, 
+  body_measurements?: BodyMeasurement;
+  health_metrics?: HealthMetric;
+  body_fat_skinfolds?: Skinfold;
+  fitness_test?: FitnessTest;
+  activity_metrics?: Record<string, unknown>; // instead of any
+  alerts?: Array<Record<string, unknown>>; 
+  cardio_sessions?: CardioSession[];
+  weight_workouts?: WeightWorkout[];
 }
 
+interface WorkoutPerWeek {
+  week: string; // ISO date string
+  total: number;
+}
 
+interface AvgDurationByMonth {
+  month: string; // ISO date string
+  avg_duration: number;
+}
+
+interface ExercisesPerWorkout {
+  workout_date: string; // ISO date string
+  workout_name: string;
+  total_exercises: number;
+}
+
+interface MuscleOrEquipmentStat {
+  name: string;
+  count: number;
+}
+
+interface DifficultyStat {
+  difficulty: string;
+  total: number;
+}
+
+interface WeightsMeta {
+  workouts_per_week: WorkoutPerWeek[];
+  avg_duration: AvgDurationByMonth[];
+  exercises_per_workout: ExercisesPerWorkout[];
+  muscle_group_stats: MuscleOrEquipmentStat[];
+  equipment_stats: MuscleOrEquipmentStat[];
+  difficulty_stats: DifficultyStat[];
+}
+interface VolumePerExercise {
+  workout_id: number;
+  exercise__name: string;
+  total_session_load: number;
+}
+
+interface AvgEffortPerExercise {
+  workout_id: number;
+  exercise_name: string;
+  effort: number;
+}
+
+interface AvgRepsPerExercise {
+  [exercise_name: string]: number; // avg reps per exercise
+}
+
+interface WeightProgression {
+  exercise__name: string;
+  workout__workout_date: string; // ISO date string
+  avg_weight: number;
+}
+
+interface SetsPerExercise {
+  exercise__name: string;
+  total_sets: number;
+}
+
+interface WeightsSessionInsights {
+  volume_per_exercise: VolumePerExercise[];
+  avg_effort_per_exercise: AvgEffortPerExercise[];
+  avg_reps_per_exercise: AvgRepsPerExercise;
+  weight_progression: WeightProgression[];
+  sets_per_exercise: SetsPerExercise[];
+}
+interface WeekStat {
+  week: string; // ISO date string from TruncWeek
+  total?: number;             // for sessions_per_week
+  total_distance?: number;    // for distance_per_week
+  avg_pace?: number;          // for avg_pace_per_week
+  avg_hr?: number;            // for avg_hr_per_week
+  total_calories?: number;    // for calories_per_week
+}
+
+interface CardioTypeStat {
+  cardio_type: string;
+  count: number;
+}
+
+interface CardioMetadata {
+  sessions_per_week: WeekStat[];
+  distance_per_week: WeekStat[];
+  avg_pace_per_week: WeekStat[];
+  avg_hr_per_week: WeekStat[];
+  calories_per_week: WeekStat[];
+  cardio_types: CardioTypeStat[];
+}
+interface CaloriesPerWeek {
+  week: string; // ISO date string
+  total_calories: number;
+}
+
+interface AvgMacrosPerWeek {
+  week: string; // ISO date string
+  avg_protein: number;
+  avg_carbs: number;
+  avg_fat: number;
+}
+
+interface CaloriesPerMealType {
+  meal_type: string;
+  total_calories: number;
+}
+
+interface NutritionMetadata {
+  calories_per_week: CaloriesPerWeek[];
+  avg_macros_per_week: AvgMacrosPerWeek[];
+  calories_per_meal_type: CaloriesPerMealType[];
+  total_entries: number;
+}
+interface CardioSessionPoint {
+  cardio__cardio_name: string;
+  bucket_start: string;       // ISO datetime
+  avg_heart_rate?: number;
+  avg_pace?: number;
+  avg_speed?: number;
+  avg_altitude?: number;
+  avg_latitude?: number;
+  avg_longitude?: number;
+  points_count?: number;
+}
+
+interface CardioSessionInsights {
+  avg_heart_rate_over_time: Array<Pick<CardioSessionPoint, "cardio__cardio_name" | "bucket_start" | "avg_heart_rate">>;
+  avg_pace_over_time: Array<Pick<CardioSessionPoint, "cardio__cardio_name" | "bucket_start" | "avg_pace">>;
+  avg_speed_over_time: Array<Pick<CardioSessionPoint, "cardio__cardio_name" | "bucket_start" | "avg_speed">>;
+  avg_altitude_over_time: Array<Pick<CardioSessionPoint, "cardio__cardio_name" | "bucket_start" | "avg_altitude">>;
+  location_points: Array<Pick<CardioSessionPoint, "cardio__cardio_name" | "bucket_start" | "avg_latitude" | "avg_longitude">>;
+  points_count_over_time: Array<Pick<CardioSessionPoint, "cardio__cardio_name" | "bucket_start" | "points_count">>;
+}
 export default function ClientsPage() {
   const [clients, setClients] = useState<Client[]>([]);
   const [selectedClient, setSelectedClient] = useState<Client | null>(null);
-  const [weightsMeta, setWeightsMeta] = useState<any>(null); // store insights
-  const [weightsSessionInsights, setWeightsSessionInsights] = useState<any>(null);
-  const [cardioMeta, setCardioMeta] = useState<any>(null); // store insights
-  const [cardioSessionInsights, setCardioSessionInsights] = useState<any>(null);
-  const [nutritionMeta, setNutritionMeta] = useState<any>(null); // store insights
-  const [metricsData, setMetricsData] = useState<any>({});
+  const [weightsMeta, setWeightsMeta] = useState<WeightsMeta | null>(null);
+  const [weightsSessionInsights, setWeightsSessionInsights] = useState<WeightsSessionInsights | null>(null);
+  const [cardioMeta, setCardioMeta] = useState<CardioMetadata | null>(null);
+  const [cardioSessionInsights, setCardioSessionInsights] = useState<CardioSessionInsights | null>(null);
+  const [nutritionMeta, setNutritionMeta] = useState<NutritionMetadata | null>(null);
+  const [metricsData, setMetricsData] = useState<Client | null>(null);
 
   const [activeTab, setActiveTab] = useState<"Client Metrics" | "Weights Analysis" | "Cardio Analysis" | "History" | "Programs">("Client Metrics");
   const [loading, setLoading] = useState(true);
@@ -72,51 +289,29 @@ export default function ClientsPage() {
   const router = useRouter();
 
   // Extract session dates
-  const cardioDates = metricsData.cardio_sessions?.map((s: any) => s.cardio_date) || [];
-  const weightDates = metricsData.weight_workouts?.map((w: any) => w.workout_date) || [];
-
+  const cardioDates = metricsData?.cardio_sessions?.map((s: CardioSession) => s.cardio_date) || [];
+  const weightDates = metricsData?.weight_workouts?.map((w: WeightWorkout) => w.workout_date) || [];
   useEffect(() => {
     const token = localStorage.getItem("access_token");
     if (!token) return;
 
-    async function fetchClients() {
-      try {
-        setLoading(true);
-        const data = await getTrainerClients(token);
+  async function fetchClients() {
+    try {
+      setLoading(true);
+      const data = await getTrainerClients();
 
-        console.log("Raw API data:", data); // 🔹 Debug incoming data
+      console.log("Raw API data:", data);
 
-        const clientList: Client[] = data.map((req: any) => ({
-          id: req.id,
-          first_name: req.first_name,
-          last_name: req.last_name,
-          email: req.email,
-          city: req.city,
-          home_state: req.home_state,
-          country: req.country,
-          profile_image: req.profile_image,
-          gender: req.gender,
-          height: req.height,
-          body_weight: req.body_weight,
-          age: req.age,
-          fitness_goal: req.fitness_goal,
-          training_status: req.training_status,
-          subscription_type: req.subscription_type,
-          body_measurements: req.body_measurements,
-          health_metrics: req.health_metrics,
-          body_fat_skinfolds: req.body_fat_skinfolds,
-          activity_metrics: req.activity_metrics,
-          alerts: req.alerts,
-        }));
+      const clientList = data as Client[];
 
-        setClients(clientList);
-        setSelectedClient(clientList[0] || null);
-      } catch (err) {
-        console.error("Failed to load clients:", err);
-      } finally {
-        setLoading(false);
-      }
+      setClients(clientList);
+      setSelectedClient(clientList[0] || null);
+    } catch (err) {
+      console.error("Failed to load clients:", err);
+    } finally {
+      setLoading(false);
     }
+  }
 
     fetchClients();
   }, []);
@@ -125,12 +320,14 @@ export default function ClientsPage() {
   useEffect(() => {
     if (!selectedClient) return;
 
+    const clientId = selectedClient.id; // Store the id
+
     async function fetchWeightsMeta() {
       try {
         setLoading(true);
-        const data = await getClientWeightsMetaData(selectedClient.id);
+        const data = await getClientWeightsMetaData(clientId); // Use the stored id
         console.log("Weights metadata:", data);
-        setWeightsMeta(data.data); // assuming your API returns { status, data }
+        setWeightsMeta(data.data);
       } catch (err) {
         console.error("Failed to fetch client weights metadata:", err);
       } finally {
@@ -145,10 +342,12 @@ export default function ClientsPage() {
   useEffect(() => {
     if (!selectedClient) return;
 
+    const clientId = selectedClient.id; // Store the id
+
     async function fetchWeightsSessionInsights() {
       try {
         setLoading(true);
-        const data = await getClientWeightsSessionData(selectedClient.id); // your frontend function
+        const data = await getClientWeightsSessionData(clientId); // your frontend function
         console.log("Client weights session insights:", data);
         setWeightsSessionInsights(data.data); // assuming API returns { status, data }
       } catch (err) {
@@ -165,10 +364,12 @@ export default function ClientsPage() {
   useEffect(() => {
     if (!selectedClient) return;
 
+    const clientId = selectedClient.id;
+
     async function fetchCardioMeta() {
       try {
         setLoading(true);
-        const data = await getClientCardioMetaData(selectedClient.id);
+        const data = await getClientCardioMetaData(clientId);
         console.log("Cardio metadata:", data);
         setCardioMeta(data.data); // assuming your API returns { status, data }
       } catch (err) {
@@ -185,10 +386,12 @@ export default function ClientsPage() {
   useEffect(() => {
     if (!selectedClient) return;
 
+    const clientId = selectedClient.id;
+
     async function fetchCardioSessionInsights() {
       try {
         setLoading(true);
-        const data = await getClientCardioSessionData(selectedClient.id); // your frontend function
+        const data = await getClientCardioSessionData(clientId); // your frontend function
         console.log("Client weights session insights:", data);
         setCardioSessionInsights(data.data); // assuming API returns { status, data }
       } catch (err) {
@@ -205,10 +408,12 @@ export default function ClientsPage() {
   useEffect(() => {
     if (!selectedClient) return;
 
+    const clientId = selectedClient.id;
+
     async function fetchNutritionMeta() {
       try {
         setLoading(true);
-        const data = await getClientNutrittionData(selectedClient.id);
+        const data = await getClientNutritionData(clientId);
         console.log("Nutrition metadata:", data);
         setNutritionMeta(data.data); // assuming your API returns { status, data }
       } catch (err) {
@@ -225,12 +430,14 @@ export default function ClientsPage() {
     useEffect(() => {
       if (!selectedClient) return;
 
+      const clientId = selectedClient.id;
+
       async function fetchMetricsData() {
         try {
           setLoading(true);
-          const data = await getClientMetricsData(selectedClient.id);
-          console.log("Metrics metadata:", data);
-          setMetricsData(data); // assuming your API returns { status, data }
+          const response = await getClientMetricsData(clientId);
+          console.log("Metrics metadata:", response);
+          setMetricsData(response.data); // Extract the data property
         } catch (err) {
           console.error("Failed to fetch client metrics:", err);
         } finally {
@@ -265,8 +472,8 @@ export default function ClientsPage() {
       label: "History", 
       component: HistoryTab, 
       props: { 
-        cardioSessions: metricsData.cardio_sessions, 
-        weightWorkouts: metricsData.weight_workouts 
+        cardioSessions: metricsData?.cardio_sessions, 
+        weightWorkouts: metricsData?.weight_workouts 
       } 
     },
       { label: "Programs", component: ProgramsTab, props: {} },
@@ -322,11 +529,13 @@ export default function ClientsPage() {
             <div className="flex flex-col gap-4">
               {/* Top section: avatar + name */}
               <div className="flex items-center gap-4">
-                <img
-                  src={selectedClient.profile_image || "/placeholder-profile.png"}
-                  alt={`${selectedClient.first_name} ${selectedClient.last_name}`}
-                  className="w-16 h-16 rounded-full object-cover border border-gray-600"
-                />
+                  <Image
+                    src={selectedClient.profile_image || "/placeholder-profile.png"}
+                    alt={`${selectedClient.first_name} ${selectedClient.last_name}`}
+                    width={64}       // match your Tailwind w-16
+                    height={64}      // match your Tailwind h-16
+                    className="rounded-full object-cover border border-gray-600"
+                  />
                 <div>
                   <p className="text-lg font-semibold">
                     {selectedClient.first_name || "-"} {selectedClient.last_name || "-"}
@@ -351,16 +560,18 @@ export default function ClientsPage() {
                 <div className="bg-gray-700 p-3 rounded-lg">
                   <span className="block text-xs text-gray-400">Height</span>
                   <span className="font-medium">
-                    {metricsData.body_measurements?.[0]?.height_cm
-                      ? `${metricsData.body_measurements[0].height_cm} cm`
+                    {metricsData?.body_measurements?.height_cm
+                      ? `${metricsData.body_measurements.height_cm} cm`
                       : "-"}
                   </span>
                 </div>
                 <div className="bg-gray-700 p-3 rounded-lg">
                   <span className="block text-xs text-gray-400">Weight</span>
-                  <span className="font-medium">{metricsData.body_measurements?.[0]?.weight_kg
-                       ? `${metricsData.body_measurements?.[0]?.weight_kg
-                        } kg` : "-"}</span>
+                    <span className="font-medium">
+                      {metricsData?.body_measurements?.weight_kg
+                        ? `${metricsData.body_measurements.weight_kg} kg`
+                        : "-"}
+                    </span>
                 </div>
               </div>
 
@@ -374,9 +585,9 @@ export default function ClientsPage() {
               <div className="bg-gray-700 p-3 rounded-lg">
                 <span className="block text-xs text-gray-400 mb-1">Activity Metrics</span>
                 <div className="grid grid-cols-2 gap-2 text-sm">
-                  <span><strong>Workouts/wk:</strong> {selectedClient.activity_metrics?.workouts_per_week ?? "-"}</span>
-                  <span><strong>Runs/wk:</strong> {selectedClient.activity_metrics?.runs_per_week ?? "-"}</span>
-                  <span><strong>Steps/day:</strong> {selectedClient.activity_metrics?.average_daily_steps ?? "-"}</span>
+                  <span><strong>Workouts/wk:</strong> {String(selectedClient.activity_metrics?.workouts_per_week ?? "-")}</span>
+                  <span><strong>Runs/wk:</strong> {String(selectedClient.activity_metrics?.runs_per_week ?? "-")}</span>
+                  <span><strong>Steps/day:</strong> {String(selectedClient.activity_metrics?.average_daily_steps ?? "-")}</span>
                 </div>
               </div>
             </div>
@@ -467,7 +678,7 @@ export default function ClientsPage() {
             {tabs.map(({ label }) => (
               <button
                 key={label}
-                onClick={() => setActiveTab(label)}
+                onClick={() => setActiveTab(label as typeof activeTab)}
                 className={`px-4 py-2 rounded transition-colors duration-200 ${
                   activeTab === label
                     ? "bg-blue-600 text-white shadow-lg"
@@ -481,17 +692,44 @@ export default function ClientsPage() {
 
           {/* Tab content */}
           <div className="flex-1 overflow-auto bg-gray-800 p-4 rounded-2xl shadow-md">
-            {tabs.map(({ label, component: Component, props }) =>
-              activeTab === label && selectedClient ? (
-                <Component
-                  key={label}
-                  clientId={selectedClient.id}
-                  clientName={`${selectedClient.first_name} ${selectedClient.last_name}`}
-                  clientGender={selectedClient.gender}
-                  clientAge={selectedClient.age}
-                  {...props}
-                />
-              ) : null
+            {activeTab === "Client Metrics" && selectedClient && (
+              <ClientMetricsTab
+                key="Client Metrics"
+                clientId={selectedClient.id}
+                clientName={`${selectedClient.first_name} ${selectedClient.last_name}`}
+                clientGender={selectedClient.gender}
+                clientAge={selectedClient.age}
+                metricsData={metricsData?.health_metrics}
+              />
+            )}
+            {activeTab === "Weights Analysis" && selectedClient && (
+              <WeightsAnalysisTab
+                key="Weights Analysis"
+                weightsMeta={weightsMeta}
+                weightsSessionInsights={weightsSessionInsights}
+              />
+            )}
+            {activeTab === "Cardio Analysis" && selectedClient && (
+              <CardioAnalysisTab
+                key="Cardio Analysis"
+                cardioMeta={cardioMeta}
+                cardioSessionInsights={cardioSessionInsights}
+              />
+            )}
+            {activeTab === "History" && selectedClient && (
+              <HistoryTab
+                key="History"
+                cardioSessions={metricsData?.cardio_sessions || []}
+                weightWorkouts={metricsData?.weight_workouts || []}
+              />
+            )}
+            {activeTab === "Programs" && selectedClient && (
+              <ProgramsTab
+                key="Programs"
+                clientName={`${selectedClient.first_name} ${selectedClient.last_name}`}
+                clientGender={selectedClient.gender}
+                clientAge={selectedClient.age}
+              />
             )}
           </div>
         </div>

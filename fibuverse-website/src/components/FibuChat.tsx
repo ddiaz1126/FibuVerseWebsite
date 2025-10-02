@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
 
 interface FibuChatProps {
   open: boolean;
@@ -34,26 +34,29 @@ export default function FibuChat({ open, onClose, width, setWidth }: FibuChatPro
     dragging.current = true;
     e.preventDefault();
   };
-  const stopDrag = () => {
+
+  const stopDrag = useCallback(() => {
     dragging.current = false;
-  };
-  const onDrag = (e: MouseEvent) => {
+  }, []);
+
+  const onDrag = useCallback((e: MouseEvent) => {
     if (!dragging.current) return;
     const newWidth = window.innerWidth - e.clientX;
     const min = 320;
     const max = Math.min(900, window.innerWidth - 200);
     const clamped = Math.max(min, Math.min(max, newWidth));
     setWidth(clamped);
-  };
+  }, [setWidth]);
 
   useEffect(() => {
     window.addEventListener("mousemove", onDrag);
     window.addEventListener("mouseup", stopDrag);
+
     return () => {
       window.removeEventListener("mousemove", onDrag);
       window.removeEventListener("mouseup", stopDrag);
     };
-  }, []);
+  }, [onDrag, stopDrag]); 
 
   if (!open) return null;
 
@@ -83,7 +86,7 @@ export default function FibuChat({ open, onClose, width, setWidth }: FibuChatPro
           <h3 className="text-lg font-semibold">Fibu</h3>
         </div>
         <button
-          className="text-gray-300 px-2 py-1 rounded hover:bg-gray-700"
+          className="text-gray-300 px-2 py-1 rounded hover:bg-gray-700 text-3xl"
           onClick={onClose}
           aria-label="Close chat"
         >

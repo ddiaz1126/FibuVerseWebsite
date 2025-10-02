@@ -31,7 +31,7 @@ export default function MessagesPage() {
         const token = localStorage.getItem("access_token");
         if (!token) return;
 
-        const history = await getTrainerChatHistory(token);
+        const history = await getTrainerChatHistory();
         setClients(history);
         if (history.length > 0) {
           setSelectedClient(history[0]);
