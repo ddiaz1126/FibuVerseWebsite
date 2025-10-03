@@ -14,21 +14,13 @@ import {
   isSameMonth,
 } from "date-fns";
 import { getTrainerWorkouts } from "@/api/trainer";
-
-interface Workout {
-  id: number;
-  client_name: string;
-  workout_name: string;
-  workout_date: string; // ISO string
-  workout_start_time?: string;
-  workout_end_time?: string;
-}
+import { WorkoutListItem } from '@/api/trainerTypes';
 
 export default function CalendarPage() {
   const today = new Date();
   const [selectedDate, setSelectedDate] = useState(today);
   const [currentMonth, setCurrentMonth] = useState(startOfMonth(today));
-  const [workouts, setWorkouts] = useState<Workout[]>([]);
+  const [workouts, setWorkouts] = useState<WorkoutListItem[]>([]);
   const [loading, setLoading] = useState(true);
 
   const monthStart = startOfMonth(currentMonth);
@@ -47,7 +39,7 @@ export default function CalendarPage() {
     async function fetchWorkouts() {
       try {
         setLoading(true);
-        const data = (await getTrainerWorkouts()) as Workout[]; // <-- type assertion
+        const data = (await getTrainerWorkouts()) as WorkoutListItem[]; // <-- type assertion
         setWorkouts(data);
       } catch (err) {
         console.error("Failed to load workouts:", err);
@@ -81,7 +73,7 @@ export default function CalendarPage() {
             getWorkoutsForDay(selectedDate).map((w) => (
               <div key={w.id} className="p-2 bg-gray-700 rounded">
                 <p className="font-semibold">{w.workout_name}</p>
-                <p className="text-gray-300 text-sm">{w.client_name}</p>
+                {/* <p className="text-gray-300 text-sm">{w.client_name}</p> */}
               </div>
             ))
           ) : (

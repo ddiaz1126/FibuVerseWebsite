@@ -43,14 +43,51 @@ interface HealthMetric {
   fvc_ratio?: number;
   o2_saturation?: number;
 }
-
+interface CardioSession {
+  id: number;
+  cardio_name: string;
+  cardio_date: string; // ISO date
+  cardio_start_time?: string | null;
+  cardio_end_time?: string | null;
+  cardio_type?: string | null;
+  duration?: number | null;
+  distance?: number | null;
+  avg_pace?: number | null;
+  avg_heart_rate?: number | null;
+  avg_speed?: number | null;
+  max_heart_rate?: number | null;
+  max_pace?: number | null;
+  max_speed?: number | null;
+  avg_altitude?: number | null;
+  elevation_gain?: number | null;
+  calories_burned?: number | null;
+  notes?: string | null;
+  created_at: string;
+}
+interface WeightWorkout {
+  id: number;
+  workout_name: string;
+  workout_date?: string | null;
+  duration?: number | null;
+  num_exercises?: number | null;
+  notes?: string | null;
+  created_at: string;
+}
+interface ClientMetricsData {
+  body_measurements?: BodyMeasurement[];  // <-- array
+  health_metrics?: HealthMetric[];        // <-- array
+  body_fat_skinfolds?: Skinfold[];       // <-- array
+  fitness_tests?: FitnessTest[];         // <-- array
+  cardio_sessions?: CardioSession[];
+  weight_workouts?: WeightWorkout[];
+}
 
 interface ClientMetricsTabProps {
   clientId: number;
   clientName: string;
   clientGender?: string | null;
   clientAge?: number | null;
-  metricsData: HealthMetric | null | undefined; // This matches Client's health_metrics property
+  metricsData?: ClientMetricsData | null; 
 }
 
 interface BodyMeasurement {
@@ -77,20 +114,6 @@ interface FitnessTest {
   leg_press_1rm_kg: number;
 }
 
-interface HealthMetricEntry {
-  created_at: string; // ISO date string
-  resting_hr?: number;
-  max_hr?: number;
-  vo2max?: number;
-  hrv_ms?: number;
-  systolic_bp?: number;
-  diastolic_bp?: number;
-  fat_mass?: number;
-  lean_body_mass?: number;
-  fev_1?: number;
-  fvc_ratio?: number;
-  o2_saturation?: number;
-}
 interface Skinfold {
   created_at: string; // ISO date string
   chest: number;
@@ -164,47 +187,54 @@ export default function ClientMetricsTab({
     | "leg_press_1rm_kg"
   >("sit_and_reach_cm");
 
-  if (!metricsData) return <p>Loading metrics...</p>;
+  const healthMetrics = metricsData?.health_metrics ?? [];
+  const bodyMeasurements = metricsData?.body_measurements ?? [];
+  const skinfolds = metricsData?.body_fat_skinfolds ?? [];
+  const fitnessTests = metricsData?.fitness_tests ?? [];
+
+
+  if (!healthMetrics) return <p>Loading metrics...</p>;
 
   // -------------------- Chart Renderers --------------------
   const renderHealthChart = () => {
-    if (!metricsData.health_metrics?.length) return <p>No health metrics recorded yet.</p>;
 
-    const labels = metricsData.health_metrics.map((m: HealthMetricEntry) =>
+    if (!healthMetrics.length) return <p>No health metrics recorded yet.</p>;
+
+    const labels = healthMetrics.map(m =>
       new Date(m.created_at).toLocaleDateString(undefined, { month: "short", day: "numeric" })
     );
+
     let data: number[] = [];
     let label = "";
 
     switch (activeHealthMetric) {
       case "resting_hr":
-        data = metricsData.health_metrics.map((m: HealthMetricEntry) => m.resting_hr);
+        data = healthMetrics.map(m => m.resting_hr ?? 0);
         label = "Resting Heart Rate (bpm)";
         break;
       case "max_hr":
-        data = metricsData.health_metrics.map((m: HealthMetricEntry) => m.max_hr);
+        data = healthMetrics.map(m => m.max_hr ?? 0);
         label = "Max HR (bpm)";
         break;
       case "vo2max":
-        data = metricsData.health_metrics.map((m: HealthMetricEntry) => m.vo2max);
+        data = healthMetrics.map(m => m.vo2max ?? 0);
         label = "VO₂max";
         break;
       case "hrv_ms":
-        data = metricsData.health_metrics.map((m: HealthMetricEntry) => m.hrv_ms);
+        data = healthMetrics.map(m => m.hrv_ms ?? 0);
         label = "HRV (ms)";
         break;
       case "systolic_bp":
-        data = metricsData.health_metrics.map((m: HealthMetricEntry) => m.systolic_bp);
+        data = healthMetrics.map(m => m.systolic_bp ?? 0);
         label = "Systolic BP";
         break;
       case "diastolic_bp":
-        data = metricsData.health_metrics.map((m: HealthMetricEntry) => m.diastolic_bp);
+        data = healthMetrics.map(m => m.diastolic_bp ?? 0);
         label = "Diastolic BP";
         break;
     }
 
-    const ChartComponent =
-      activeHealthMetric === "max_hr" || activeHealthMetric.includes("bp") ? Bar : Line;
+    const ChartComponent = activeHealthMetric === "max_hr" || activeHealthMetric.includes("bp") ? Bar : Line;
 
     return (
       <ChartComponent
@@ -224,16 +254,20 @@ export default function ClientMetricsTab({
     );
   };
 
-  const renderBodyChart = () => {
-    if (!metricsData.body_measurements?.length) return <p>No body measurements recorded yet.</p>;
 
-    // Body Measurements x-axis
-    const labels = metricsData.body_measurements.map((m: BodyMeasurement) =>
+  const renderBodyChart = () => {
+    if (!bodyMeasurements.length) return <p>No body measurements recorded yet.</p>;
+
+    // x-axis labels
+    const labels = bodyMeasurements.map((m: BodyMeasurement) =>
       new Date(m.created_at).toLocaleDateString(undefined, { month: "short", day: "numeric" })
     );
-    const data = metricsData.body_measurements.map(
-      (m: BodyMeasurement) => m[activeBodyMetric]
+
+    // y-axis data
+    const data: number[] = bodyMeasurements.map(
+      (m: BodyMeasurement) => m[activeBodyMetric] ?? 0
     );
+
     return (
       <Line
         data={{
@@ -253,13 +287,17 @@ export default function ClientMetricsTab({
   };
 
   const renderSkinfoldChart = () => {
-    if (!metricsData.body_fat_skinfolds?.length) return <p>No skinfold measurements recorded yet.</p>;
+    if (!skinfolds.length) return <p>No skinfold measurements recorded yet.</p>;
 
-    // Skinfolds x-axis
-    const labels = metricsData.body_fat_skinfolds.map((m: Skinfold) =>
+    // x-axis labels
+    const labels = skinfolds.map((m: Skinfold) =>
       new Date(m.created_at).toLocaleDateString(undefined, { month: "short", day: "numeric" })
     );
-    const data = metricsData.body_fat_skinfolds.map((m: Skinfold) => m[activeSkinfoldMetric]);
+
+    // y-axis data
+    const data: number[] = skinfolds.map(
+      (m: Skinfold) => m[activeSkinfoldMetric] ?? 0
+    );
 
     return (
       <Line
@@ -279,14 +317,18 @@ export default function ClientMetricsTab({
     );
   };
     // -------------------- Fitness Tests Chart Renderer --------------------
-    const renderFitnessTestsChart = () => {
-    if (!metricsData.fitness_tests?.length) return <p>No fitness tests measurements recorded yet.</p>;
+  const renderFitnessTestsChart = () => {
+    if (!fitnessTests.length) return <p>No fitness test measurements recorded yet.</p>;
 
-    // Skinfolds x-axis
-    const labels = metricsData.fitness_tests.map((m: FitnessTest) =>
+    // x-axis labels
+    const labels = fitnessTests.map((m: FitnessTest) =>
       new Date(m.created_at).toLocaleDateString(undefined, { month: "short", day: "numeric" })
     );
-    const data = metricsData.fitness_tests.map((m: FitnessTest) => m[activeFitnessTests]);
+
+    // y-axis data
+    const data: number[] = fitnessTests.map(
+      (m: FitnessTest) => m[activeFitnessTests] ?? 0
+    );
 
     return (
       <Line

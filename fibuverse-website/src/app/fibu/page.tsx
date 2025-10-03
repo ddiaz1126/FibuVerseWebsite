@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import Header from "@/components/Header";
 import { fetchPublicCompositeAgents, runPublicCompositeAgent } from "@/api/public";
 import { useSearchParams } from "next/navigation";
@@ -35,6 +35,159 @@ interface CompositeAgent {
   outputs?: Record<string, unknown>;
   public?: boolean;
   allow_frontend?: boolean;
+}
+
+// Extract the component that uses useSearchParams
+function FibuPageContent() {
+  const [agents, setAgents] = useState<CompositeAgent[]>([]);
+  const [loadingAgents, setLoadingAgents] = useState(true);
+  const [selectedAgent, setSelectedAgent] = useState<CompositeAgent | null>(null);
+  const [inputValues, setInputValues] = useState<Record<string, string>>({});
+  const [output, setOutput] = useState<unknown>(null);
+  const [running, setRunning] = useState(false);
+
+  const searchParams = useSearchParams();
+  const initialAgentId = searchParams.get("agentId");
+
+  // Load agents
+  useEffect(() => {
+    async function loadAgents() {
+      const data = await fetchPublicCompositeAgents();
+      setAgents(data);
+      setLoadingAgents(false);
+
+      if (initialAgentId) {
+        const agent = data.find((a: CompositeAgent) => a.id === parseInt(initialAgentId));
+        if (agent) handleSelectAgent(agent);
+      }
+    }
+    loadAgents();
+  }, [initialAgentId]);
+
+  // Select agent and initialize inputs
+  const handleSelectAgent = (agent: CompositeAgent) => {
+    setSelectedAgent(agent);
+    setOutput(null);
+    
+    // Initialize input values
+    const initialInputs: Record<string, string> = {};
+    Object.keys(agent.inputs || {}).forEach((key) => {
+      initialInputs[key] = "";
+    });
+    setInputValues(initialInputs);
+  };
+
+  // Handle input change
+  const handleInputChange = (key: string, value: string) => {
+    setInputValues(prev => ({ ...prev, [key]: value }));
+  };
+
+  // Run agent
+  const handleRunAgent = async () => {
+    if (!selectedAgent) return;
+
+    setRunning(true);
+    setOutput(null);
+
+    try {
+      const result = await runPublicCompositeAgent(selectedAgent.id, inputValues);
+      console.log("Agent result:", result);
+      setOutput(result);
+    } catch (err) {
+      console.error("Agent run failed:", err);
+      setOutput({ error: "Failed to run agent. Please try again." });
+    } finally {
+      setRunning(false);
+    }
+  };
+
+  return (
+    <div className="flex flex-col h-screen bg-gray-900 text-white">
+      {/* Header */}
+      <Header logoSrc="/images/logo.png" />
+
+      <div className="flex flex-1 overflow-hidden">
+        {/* Sidebar */}
+        <aside className="w-72 bg-gray-900 border-r border-gray-800 p-6 overflow-y-auto">
+          <h2 className="text-gray-400 text-xs font-semibold uppercase tracking-wide mb-4">
+            Available Agents
+          </h2>
+
+          {loadingAgents ? (
+            <p className="text-gray-500 text-sm">Loading agents...</p>
+          ) : (
+            <nav className="flex flex-col gap-2">
+              {agents.map(agent => (
+                <button
+                  key={agent.id}
+                  onClick={() => handleSelectAgent(agent)}
+                  className={`text-left px-4 py-3 rounded-lg transition-all ${
+                    selectedAgent?.id === agent.id 
+                      ? "bg-blue-600 text-white" 
+                      : "bg-gray-800 hover:bg-gray-750 text-gray-300"
+                  }`}
+                >
+                  <div className="font-medium">{agent.name}</div>
+                </button>
+              ))}
+            </nav>
+          )}
+        </aside>
+
+        {/* Main content */}
+        <main className="flex-1 overflow-y-auto p-8">
+          {selectedAgent ? (
+            <div className="max-w-7xl mx-auto space-y-6">
+              {/* Agent Header */}
+              <div>
+                <h1 className="text-3xl font-bold mb-2">{selectedAgent.name}</h1>
+                <p className="text-gray-400">{selectedAgent.description}</p>
+              </div>
+
+              {/* Network Visualization */}
+              <AgentNetworkGraph agent={selectedAgent} />
+
+              {/* Input Form */}
+              <AgentInputForm
+                agent={selectedAgent}
+                inputValues={inputValues}
+                onInputChange={handleInputChange}
+                onSubmit={handleRunAgent}
+                loading={running}
+              />
+
+              {/* Output Section */}
+              <AgentOutput output={output} loading={running} />
+            </div>
+          ) : (
+            <div className="flex items-center justify-center h-full">
+              <div className="text-center">
+                <div className="text-gray-500 text-6xl mb-4">🤖</div>
+                <h2 className="text-2xl font-semibold mb-2">Select an Agent</h2>
+                <p className="text-gray-400">
+                  Choose an agent from the sidebar to get started
+                </p>
+              </div>
+            </div>
+          )}
+        </main>
+      </div>
+    </div>
+  );
+}
+
+// Main export wrapped in Suspense
+export default function FibuPage() {
+  return (
+    <Suspense fallback={
+      <div className="flex flex-col h-screen bg-gray-900 text-white items-center justify-center">
+        <div className="text-gray-500 text-6xl mb-4">🤖</div>
+        <p className="text-gray-400">Loading...</p>
+      </div>
+    }>
+      <FibuPageContent />
+    </Suspense>
+  );
 }
 
 
@@ -373,143 +526,3 @@ function AgentOutput({ output, loading }: AgentOutputProps) {
   );
 }
 
-export default function FibuPage() {
-  const [agents, setAgents] = useState<CompositeAgent[]>([]);
-  const [loadingAgents, setLoadingAgents] = useState(true);
-  const [selectedAgent, setSelectedAgent] = useState<CompositeAgent | null>(null);
-  const [inputValues, setInputValues] = useState<Record<string, string>>({});
-  const [output, setOutput] = useState<unknown>(null);
-  const [running, setRunning] = useState(false);
-
-  const searchParams = useSearchParams();
-  const initialAgentId = searchParams.get("agentId");
-
-  // Load agents
-  useEffect(() => {
-    async function loadAgents() {
-      const data = await fetchPublicCompositeAgents();
-      setAgents(data);
-      setLoadingAgents(false);
-
-      if (initialAgentId) {
-        const agent = data.find((a: CompositeAgent) => a.id === parseInt(initialAgentId));
-        if (agent) handleSelectAgent(agent);
-      }
-    }
-    loadAgents();
-  }, [initialAgentId]);
-
-  // Select agent and initialize inputs
-  const handleSelectAgent = (agent: CompositeAgent) => {
-    setSelectedAgent(agent);
-    setOutput(null);
-    
-    // Initialize input values
-    const initialInputs: Record<string, string> = {};
-    Object.keys(agent.inputs || {}).forEach((key) => {
-      initialInputs[key] = "";
-    });
-    setInputValues(initialInputs);
-  };
-
-  // Handle input change
-  const handleInputChange = (key: string, value: string) => {
-    setInputValues(prev => ({ ...prev, [key]: value }));
-  };
-
-  // Run agent
-  const handleRunAgent = async () => {
-    if (!selectedAgent) return;
-
-    setRunning(true);
-    setOutput(null);
-
-    try {
-      const result = await runPublicCompositeAgent(selectedAgent.id, inputValues);
-      console.log("Agent result:", result);
-      setOutput(result);
-    } catch (err) {
-      console.error("Agent run failed:", err);
-      setOutput({ error: "Failed to run agent. Please try again." });
-    } finally {
-      setRunning(false);
-    }
-  };
-
-  return (
-    <div className="flex flex-col h-screen bg-gray-900 text-white">
-      {/* Header */}
-      <Header logoSrc="/images/logo.png" />
-
-      <div className="flex flex-1 overflow-hidden">
-        {/* Sidebar */}
-        <aside className="w-72 bg-gray-900 border-r border-gray-800 p-6 overflow-y-auto">
-          <h2 className="text-gray-400 text-xs font-semibold uppercase tracking-wide mb-4">
-            Available Agents
-          </h2>
-
-          {loadingAgents ? (
-            <p className="text-gray-500 text-sm">Loading agents...</p>
-          ) : (
-            <nav className="flex flex-col gap-2">
-              {agents.map(agent => (
-                <button
-                  key={agent.id}
-                  onClick={() => handleSelectAgent(agent)}
-                  className={`text-left px-4 py-3 rounded-lg transition-all ${
-                    selectedAgent?.id === agent.id 
-                      ? "bg-blue-600 text-white" 
-                      : "bg-gray-800 hover:bg-gray-750 text-gray-300"
-                  }`}
-                >
-                  <div className="font-medium">{agent.name}</div>
-                  {/* <div className="text-xs text-gray-400 mt-1 line-clamp-2">
-                    {agent.description}
-                  </div> */}
-                </button>
-              ))}
-            </nav>
-          )}
-        </aside>
-
-        {/* Main content */}
-        <main className="flex-1 overflow-y-auto p-8">
-          {selectedAgent ? (
-            <div className="max-w-7xl mx-auto space-y-6">
-              {/* Agent Header */}
-              <div>
-                <h1 className="text-3xl font-bold mb-2">{selectedAgent.name}</h1>
-                <p className="text-gray-400">{selectedAgent.description}</p>
-              </div>
-
-              {/* Network Visualization */}
-              <AgentNetworkGraph agent={selectedAgent} />
-
-              {/* Input Form */}
-              <AgentInputForm
-                agent={selectedAgent}
-                inputValues={inputValues}
-                onInputChange={handleInputChange}
-                onSubmit={handleRunAgent}
-                loading={running}
-              />
-
-              {/* Output Section */}
-              <AgentOutput output={output} loading={running} />
-            </div>
-          ) : (
-            <div className="flex items-center justify-center h-full">
-              <div className="text-center">
-                <div className="text-gray-500 text-6xl mb-4">🤖</div>
-                <h2 className="text-2xl font-semibold mb-2">Select an Agent</h2>
-                <p className="text-gray-400">
-                  Choose an agent from the sidebar to get started
-                </p>
-              </div>
-            </div>
-          )}
-        </main>
-      </div>
-    </div>
-  );
-}

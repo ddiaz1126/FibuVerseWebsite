@@ -2,14 +2,31 @@
 import React, { useState, useEffect } from 'react';
 import { Mail, Code, GitBranch, Cpu, Network, Zap, Layers } from 'lucide-react';
 
+type AgentType = "fitness" | "nutrition" | "wellness" | "coach" | "analytics" | "core";
+
+interface AgentNode {
+  id: number;
+  x: number;
+  y: number;
+  type: AgentType;
+  active: boolean;
+  delay: string;
+}
+
+interface AgentConnection {
+  from: number;
+  to: number;
+  delay: string;
+}
+
 export default function DeveloperPortalSection() {
-  const [agents, setAgents] = useState([]);
-  const [connections, setConnections] = useState([]);
+  const [agents, setAgents] = useState<AgentNode[]>([]);
+  const [connections, setConnections] = useState<AgentConnection[]>([]);
   const [activeNode, setActiveNode] = useState(0);
 
   useEffect(() => {
     // Create AI agent nodes
-    const agentNodes = [
+    const agentNodes: AgentNode[] = [
       { id: 0, x: 50, y: 30, type: 'fitness', active: false, delay: '0s' },
       { id: 1, x: 20, y: 60, type: 'nutrition', active: false, delay: '0.5s' },
       { id: 2, x: 80, y: 60, type: 'wellness', active: false, delay: '1s' },
@@ -18,8 +35,7 @@ export default function DeveloperPortalSection() {
       { id: 5, x: 50, y: 50, type: 'core', active: true, delay: '0s' }, // Central hub
     ];
 
-    // Create connections between agents
-    const agentConnections = [
+    const agentConnections: AgentConnection[] = [
       { from: 5, to: 0, delay: '0s' },
       { from: 5, to: 1, delay: '0.3s' },
       { from: 5, to: 2, delay: '0.6s' },
@@ -42,26 +58,28 @@ export default function DeveloperPortalSection() {
     return () => clearInterval(interval);
   }, []);
 
-  const getAgentColor = (type, isActive) => {
-    const colors = {
+  type AgentType = "fitness" | "nutrition" | "wellness" | "coach" | "analytics" | "core";
+
+  const getAgentColor = (type: AgentType, isActive: boolean) => {
+    const colors: Record<AgentType, string> = {
       fitness: isActive ? 'bg-blue-400' : 'bg-blue-600/50',
       nutrition: isActive ? 'bg-green-400' : 'bg-green-600/50',
       wellness: isActive ? 'bg-purple-400' : 'bg-purple-600/50',
       coach: isActive ? 'bg-orange-400' : 'bg-orange-600/50',
       analytics: isActive ? 'bg-cyan-400' : 'bg-cyan-600/50',
-      core: isActive ? 'bg-yellow-400' : 'bg-yellow-500/70'
+      core: isActive ? 'bg-yellow-400' : 'bg-yellow-500/70',
     };
     return colors[type] || 'bg-gray-500';
   };
 
-  const getAgentIcon = (type) => {
-    const icons = {
+  const getAgentIcon = (type: AgentType) => {
+    const icons: Record<AgentType, string> = {
       fitness: '💪',
       nutrition: '🥗',
       wellness: '🧘',
       coach: '👨‍💼',
       analytics: '📊',
-      core: '🧠'
+      core: '🧠',
     };
     return icons[type] || '🤖';
   };

@@ -1,36 +1,56 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Plus, X, GripVertical, Link2, Search } from 'lucide-react';
-import { searchExerciseLibrary } from "@/api/trainer";
+import { searchExerciseLibrary, getTrainerClients, sendTrainerWorkout } from "@/api/trainer";
+import { SessionData, Exercise, ExerciseSet, Client, WorkoutPayload} from "@/api/trainerTypes";
+
+/*
+Structure
+-----------
+1. Exercises are ordered primarily by exerciseOrder (index)
+2. Exercises are then grouped by setStructure of 0 (single), 1 (superset), or 2 (circuit)
+3. Groups are then ordered by groupId that is the order of group in the workout
+- Group Ids are given but not updated during, still unique so groups stay intact, will be updated at the end. 
+*/
+
 
 export default function WorkoutEditor() {
-  const [workoutName, setWorkoutName] = useState('');
-  const [exercises, setExercises] = useState([]);
-  const [draggedIndex, setDraggedIndex] = useState(null);
-  const [uploadedFile, setUploadedFile] = useState(null);
+  const [exercises, setExercises] = useState<SessionData[]>([]);
+  const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
+  const [draggedGroupId, setDraggedGroupId] = useState<number | null>(null);
+  const [uploadedFile, ] = useState(null);
   const [isRecording, setIsRecording] = useState(false);
   const [isAIGeneratorOpen, setIsAIGeneratorOpen] = useState(false);
   const [showExerciseSearch, setShowExerciseSearch] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
-  const [searchResults, setSearchResults] = useState([]);
+  const [searchResults, setSearchResults] = useState<Exercise[]>([]);
   const [selectedMuscleGroup, setSelectedMuscleGroup] = useState<string | null>(null);
   const [selectedEquipment, setSelectedEquipment] = useState<string | null>(null);
   const muscleGroups = ["Chest", "Upper Back", "Legs", "Shoulders", "Biceps", "Triceps", "Abs", "Quadriceps", "Glutes", "Hamstrings", "Lats"];
   const equipmentOptions = ["Barbell", "Dumbbell", "Machine", "Bodyweight", "Cable", "Smith Machine"];
-  const [isSearching, setIsSearching] = useState(false);
+  const [, setIsSearching] = useState(false);
+  const [loading, setLoading] = useState(true);
+
+  // Workout Variables
+  const [workoutName, setWorkoutName] = useState('');       // For workout name input
+  const [workoutType, setWorkoutType] = useState('');       // For workout type dropdown
+  const [workoutDate, setWorkoutDate] = useState<string | null>(null); // For workout date
+  const [notes, setNotes] = useState('');   
+  const [clients, setClients] = useState<Client[]>([]);
+  const [showModal, setShowModal] = useState(false);
 
   // refs for debounce/abort
   const debounceRef = useRef<number | null>(null);
   const abortCtrlRef = useRef<AbortController | null>(null);
 
 
-  const handleFileUpload = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      setUploadedFile(file);
-      console.log('File uploaded:', file.name);
-      // TODO: Send file to backend for processing
-    }
-  };
+//   const handleFileUpload = (e) => {
+//     const file = e.target.files[0];
+//     if (file) {
+//       setUploadedFile(file);
+//       console.log('File uploaded:', file.name);
+//       // TODO: Send file to backend for processing
+//     }
+//   };
 
   const handleAudioRecord = () => {
     setIsRecording(!isRecording);
@@ -50,42 +70,47 @@ export default function WorkoutEditor() {
     // The backend will process and return workout data
   };
 
-  const searchExercises = async (query: string) => {
-    // Don't block if query is empty — filters alone can trigger search
-    if (!query.trim() && !selectedMuscleGroup && !selectedEquipment) {
+    const searchExercises = useCallback(
+    async (query: string) => {
+        if (!query.trim() && !selectedMuscleGroup && !selectedEquipment) {
         setSearchResults([]);
         return;
-    }
+        }
 
-    try {
-        // Call your backend API with query + optional filters
+        try {
         const results = await searchExerciseLibrary(
-        query,
-        selectedMuscleGroup,
-        selectedEquipment
+            query,
+            selectedMuscleGroup,
+            selectedEquipment
         );
-
         setSearchResults(results);
-    } catch (err) {
+        } catch (err) {
+        console.error("[WorkoutEditor] searchExercises error:", err);
+        setSearchResults([]);
+        }
+    },
+    [selectedMuscleGroup, selectedEquipment] // ✅ dependencies
+    );
+
+
+  // Core search logic — called by the effect below
+    const runSearch = async (
+    query: string,
+    muscle?: string | null,
+    equipment?: string
+    ) => {
+    try {
+        const results = await searchExerciseLibrary(query, muscle, equipment);
+        setSearchResults(results);
+    } catch (err: unknown) {
+        if (err instanceof DOMException && err.name === "AbortError") {
+        // fetch aborted — ignore
+        return;
+        }
         console.error("[WorkoutEditor] searchExercises error:", err);
         setSearchResults([]);
     }
     };
-
-  // Core search logic — called by the effect below
-  const runSearch = async (query: string, muscle?: string | null, equipment?: string) => {
-    try {
-      const results = await searchExerciseLibrary(query, muscle, equipment);
-      setSearchResults(results);
-    } catch (err: unknown) {
-      if ((err as any)?.name === "AbortError") {
-        // fetch aborted — ignore
-        return;
-      }
-      console.error("[WorkoutEditor] searchExercises error:", err);
-      setSearchResults([]);
-    }
-  };
 
   // When query or filters change — debounce the query but also handle filter clicks
   useEffect(() => {
@@ -110,7 +135,7 @@ export default function WorkoutEditor() {
     // If you want filter clicks to be instant, use a very small debounce (0-150ms).
     // Keep 200-300ms for user typing. Here I use 200ms.
     debounceRef.current = window.setTimeout(() => {
-      runSearch(searchQuery, selectedMuscleGroup, selectedEquipment, controller.signal)
+      runSearch(searchQuery, selectedMuscleGroup, selectedEquipment ?? undefined)
         .finally(() => {
           setIsSearching(false);
         });
@@ -123,164 +148,559 @@ export default function WorkoutEditor() {
     };
   }, [searchQuery, selectedMuscleGroup, selectedEquipment]);
 
-  // Toggle handlers for filter buttons (they update state — effect will run)
-  const toggleMuscleGroup = (group: string) => {
-    setSelectedMuscleGroup(prev => (prev === group ? null : group));
-  };
+    const selectExercise = (selectedExercise: Exercise) => {
+    // Determine groupId for a new exercise
+    let groupId: number;
 
-  const toggleEquipment = (eq: string) => {
-    setSelectedEquipment(prev => (prev === eq ? null : eq));
-  };
+    if (groupAddContext) {
+        const base = exercises.find(e => e.id === groupAddContext.baseExerciseId);
+        if (base) {
+        // Reuse existing groupId or assign a new one
+        groupId = base.groupId ?? exercises.length + 1;
 
+        // Update all exercises in the group to the new setStructure
+        const updatedExercises = exercises.map(ex =>
+            ex.groupId === groupId
+            ? { ...ex, setStructure: groupAddContext.setStructure }
+            : ex
+        );
+        setExercises(updatedExercises);
+        } else {
+        groupId = exercises.length + 1;
+        }
+    } else {
+        groupId = exercises.length + 1; // new single group
+    }
 
-  const selectExercise = (selectedExercise) => {
-    const newExercise = {
-      id: Date.now(),
-      exerciseId: selectedExercise.id,
-      name: selectedExercise.name,
-      category: selectedExercise.category,
-      equipment: selectedExercise.equipment,
-      sets: 3,
-      reps: 10,
-      weight: '',
-      rir: 2,
-      intensityType: 'RIR',
-      groupId: null
+    const newSession: SessionData = {
+        id: Date.now(),
+        exerciseId: selectedExercise,
+        exerciseOrder: exercises.length + 1,
+        setStructure: groupAddContext?.setStructure ?? 0, // 0 = single
+        groupId,
+        sets: [
+            {
+            setsOrder: 1,
+            reps: '10',
+            rir: 2,
+            rirOrRpe: 0,
+            weight: '',
+            weightUnit: 0,
+            durationOrVelocity: 0,
+            duration: null,
+            },
+        ],
     };
-    
-    setExercises([...exercises, newExercise]);
+
+    // If adding to a group, assign new exercise to that group
+    if (groupAddContext) {
+        newSession.groupId = groupId;
+        newSession.setStructure = groupAddContext.setStructure;
+        setGroupAddContext(null);
+    }
+
+    setExercises(prev => [...prev, newSession]);
     setShowExerciseSearch(false);
     setSearchQuery('');
     setSearchResults([]);
-  };
+    };
 
   const addExercise = () => {
     setShowExerciseSearch(true);
   };
 
   // Debounced search
-  useEffect(() => {
+    useEffect(() => {
     const timer = setTimeout(() => {
-      searchExercises(searchQuery);
+        searchExercises(searchQuery);
     }, 300);
-    
+
     return () => clearTimeout(timer);
-  }, [searchQuery]);
+    }, [searchQuery, searchExercises]);
 
-  const removeExercise = (id) => {
+
+    const removeExercise = (id: number) => {
     const exerciseToRemove = exercises.find(ex => ex.id === id);
+    if (!exerciseToRemove) return;
+
     const updatedExercises = exercises.filter(ex => ex.id !== id);
-    
-    // Clean up groups - if removing leaves only 1 exercise in group, ungroup it
-    if (exerciseToRemove?.groupId) {
-      const remainingInGroup = updatedExercises.filter(ex => ex.groupId === exerciseToRemove.groupId);
-      if (remainingInGroup.length === 1) {
-        setExercises(updatedExercises.map(ex => 
-          ex.groupId === exerciseToRemove.groupId ? { ...ex, groupId: null } : ex
-        ));
+
+    if (exerciseToRemove.groupId !== null && exerciseToRemove.groupId !== undefined) {
+        // find others in same group
+        const remainingInGroup = updatedExercises.filter(
+        ex => ex.groupId === exerciseToRemove.groupId
+        );
+
+        if (remainingInGroup.length === 1) {
+        // Only one left, reset it to a single
+        const lone = remainingInGroup[0];
+        setExercises(
+            updatedExercises.map(ex =>
+            ex.id === lone.id
+                ? { ...ex, setStructure: 0, groupId: null } // back to single
+                : ex
+            )
+        );
         return;
-      }
+        }
     }
-    
+
     setExercises(updatedExercises);
-  };
-
-  const updateExercise = (id, field, value) => {
-    setExercises(exercises.map(ex => 
-      ex.id === id ? { ...ex, [field]: value } : ex
-    ));
-  };
-
-  const createGroup = (exerciseId, type = 'superset') => {
-    const exerciseIndex = exercises.findIndex(ex => ex.id === exerciseId);
-    const exercise = exercises[exerciseIndex];
-    
-    // If already in a group, add to that group
-    const groupId = exercise.groupId || `group-${Date.now()}`;
-    
-    const newExercise = {
-      id: Date.now() + 1,
-      name: '',
-      sets: 3,
-      reps: 10,
-      weight: '',
-      rir: 2,
-      intensityType: 'RIR',
-      groupId: groupId
     };
 
-    const updatedExercises = [...exercises];
-    if (!exercise.groupId) {
-      updatedExercises[exerciseIndex] = { ...updatedExercises[exerciseIndex], groupId };
+    // const updateExercise = <K extends keyof SessionData>(
+    //     id: number,
+    //     field: K,
+    //     value: SessionData[K]
+    //     ) => {
+    //     setExercises(exercises.map(ex =>
+    //         ex.id === id ? { ...ex, [field]: value } : ex
+    //     ));
+    // };
+
+    // Drag start
+    const handleDragStart = (e: React.DragEvent<HTMLDivElement>, index: number) => {
+        setDraggedIndex(index);
+        setDraggedGroupId(exercises[index].groupId ?? exercises[index].id); // singles use their own id as group
+        e.dataTransfer.effectAllowed = 'move';
+    };
+
+    // Drag over
+    const handleDragOver = (e: React.DragEvent<HTMLDivElement>, index: number) => {
+        e.preventDefault();
+        if (draggedIndex === null || draggedIndex === index) return;
+
+        const draggedExercise = exercises[draggedIndex];
+        const targetExercise = exercises[index];
+
+        // Only allow moving within same group
+        const draggedGroup = draggedExercise.groupId ?? draggedExercise.id;
+        const targetGroup = targetExercise.groupId ?? targetExercise.id;
+        if (draggedGroup !== targetGroup) return;
+
+        const newExercises = [...exercises];
+        newExercises.splice(draggedIndex, 1);
+        newExercises.splice(index, 0, draggedExercise);
+
+        setDraggedIndex(index);
+        setExercises(newExercises);
+    };
+
+    // Drag end
+    const handleDragEnd = () => {
+        setDraggedIndex(null);
+        setDraggedGroupId(null);
+    };
+
+    // Returns all exercises in the same group
+    const getGroupExercises = (groupId: number) => {
+        return exercises.filter(ex => (ex.groupId ?? ex.id) === groupId);
+    };
+
+    const handleGroupDragStart = (e: React.DragEvent<HTMLDivElement>, groupId: number) => {
+        setDraggedGroupId(groupId);
+        e.dataTransfer.effectAllowed = 'move';
+    };
+
+    const handleGroupDragOver = (e: React.DragEvent<HTMLDivElement>, targetGroupId: number) => {
+        e.preventDefault();
+        if (draggedGroupId === null || draggedGroupId === targetGroupId) return;
+
+        const draggedGroupExercises = getGroupExercises(draggedGroupId);
+        const otherExercises = exercises.filter(ex => (ex.groupId ?? ex.id) !== draggedGroupId);
+
+        // Find target group index
+        const targetIndex = otherExercises.findIndex(ex => (ex.groupId ?? ex.id) === targetGroupId);
+
+        const newExercises = [
+            ...otherExercises.slice(0, targetIndex),
+            ...draggedGroupExercises,
+            ...otherExercises.slice(targetIndex),
+        ];
+
+        setExercises(newExercises);
+    };
+
+    const handleGroupDragEnd = () => setDraggedGroupId(null);
+
+    // Check if this exercise is the first in its group
+    const isFirstInGroup = (exercise: SessionData) => {
+        const groupId = exercise.groupId ?? exercise.id;
+        const groupExercises = getGroupExercises(groupId);
+        return groupExercises[0]?.id === exercise.id;
+    };
+
+    // Context for adding exercises to a group (superset or circuit)
+    const [groupAddContext, setGroupAddContext] = useState<{
+    baseExerciseId: number;             // exercise.id of the base exercise
+    setStructure: 0 | 1 | 2;           // 0=single, 1=superset, 2=circuit
+    } | null>(null);
+
+    // -------- Sets Handling -----------
+    // Add a set
+    const addSet = (exerciseId: number) => {
+    setExercises(exercises.map(ex => {
+        if (ex.id === exerciseId) {
+        // Get the last set's setsOrder, default to 0 if none
+        const lastOrder = ex.sets.length > 0 ? ex.sets[ex.sets.length - 1].setsOrder : 0;
+
+        const newSet: ExerciseSet = {
+            setsOrder: lastOrder + 1, // increment
+            reps: '10',
+            rir: 2,
+            rirOrRpe: 0,
+            weight: '',
+            weightUnit: 0,
+            durationOrVelocity: 0,
+            duration: null
+        };
+
+        return { ...ex, sets: [...ex.sets, newSet] };
+        }
+        return ex;
+    }));
+    };
+
+
+    // Remove a set
+    const removeSet = (exerciseId: number, setIndex: number) => {
+    setExercises(exercises.map(ex => {
+        if (ex.id === exerciseId) {
+        const newSets = ex.sets
+            .filter((_, i) => i !== setIndex)
+            .map((s, i) => ({ ...s, setsOrder: i + 1 })); // re-number
+        return { ...ex, sets: newSets };
+        }
+        return ex;
+    }));
+    };
+
+    // Update a field in a set
+    const updateSetField = <K extends keyof ExerciseSet>(
+    exerciseId: number,
+    setIndex: number,
+    field: K,
+    value: ExerciseSet[K]
+    ) => {
+    setExercises(exercises.map(ex => {
+        if (ex.id === exerciseId) {
+        const newSets = ex.sets.map((s, i) => i === setIndex ? { ...s, [field]: value } : s);
+        return { ...ex, sets: newSets };
+        }
+        return ex;
+    }));
+    };
+    const updateAllSetsField = <K extends keyof ExerciseSet>(
+        exerciseId: number,
+        field: K,
+        value: ExerciseSet[K]
+        ) => {
+        setExercises(exercises.map(ex => {
+            if (ex.id === exerciseId) {
+            const updatedSets = ex.sets.map(set => ({
+                ...set,
+                [field]: value,
+            }));
+            return { ...ex, sets: updatedSets };
+            }
+            return ex;
+        }));
+    };
+
+    const handleArrowNavigation = (
+        e: React.KeyboardEvent<HTMLInputElement>,
+        exerciseId: number,
+        setIndex: number,
+        colIndex: number
+        ) => {
+        const totalCols = 4; // reps, weight, rir, duration
+        const exercise = exercises.find(ex => ex.id === exerciseId);
+        if (!exercise) return;
+
+        let nextSetIndex = setIndex;
+        let nextColIndex = colIndex;
+
+        switch (e.key) {
+            case 'ArrowRight':
+            case 'Enter':
+                nextColIndex = (colIndex + 1) % totalCols;
+                break;
+            case 'ArrowLeft':
+                nextColIndex = (colIndex - 1 + totalCols) % totalCols;
+                break;
+            case 'ArrowDown':
+                nextSetIndex = Math.min(setIndex + 1, exercise.sets.length - 1);
+                break;
+                case 'ArrowUp':
+            nextSetIndex = Math.max(setIndex - 1, 0);
+                break;
+                default:
+                return;
+        }
+
+        e.preventDefault();
+        const nextTabIndex = nextSetIndex * totalCols + nextColIndex;
+        const nextInput = document.querySelector<HTMLInputElement>(`[tabindex='${nextTabIndex}']`);
+        nextInput?.focus();
+    };
+
+    const handleSaveClients = async () => {
+    // Create a workout payload for each selected client
+    const workoutPayloads: WorkoutPayload[] = selectedClientsWithDates.map((clientWithDate) => ({
+        workout_data: {
+        client_id: clientWithDate.clientId,
+        workout_name: workoutName || 'Default Workout',
+        workout_date: clientWithDate.date,
+        workout_start_time: new Date(clientWithDate.date).toISOString(),
+        workout_end_time: new Date(new Date(clientWithDate.date).getTime() + 60 * 60 * 1000).toISOString(),
+        workout_type: workoutType || 'General',
+        duration: 60,
+        prebuilt_workout: 1,
+        exercises: exercises.map(ex => ({
+            id: typeof ex.exerciseId === 'object' ? ex.exerciseId.id : ex.exerciseId,
+            exercise_order: ex.exerciseOrder,
+            group_id: ex.groupId ?? 0,
+            set_structure: ex.setStructure ?? 0,
+            sets: ex.sets.map(s => ({
+            sets_order: s.setsOrder,
+            weight: s.weight ?? 0,
+            reps: s.reps ?? '0',
+            rir: s.rir ?? null,
+            weight_unit: s.weightUnit ?? null,
+            duration_or_velocity: s.durationOrVelocity ?? null,
+            rir_or_rpe: s.rirOrRpe ?? null,
+            duration: s.duration ?? null
+            }))
+        }))
+        }
+    }));
+
+    // Add the template workout with client_id: 0
+    const templatePayload: WorkoutPayload = {
+        workout_data: {
+        client_id: 0,
+        workout_name: workoutName || 'Default Workout',
+        workout_date: workoutDate 
+            ? new Date(workoutDate).toISOString().split('T')[0] 
+            : new Date().toISOString().split('T')[0],
+        workout_start_time: new Date().toISOString(),
+        workout_end_time: new Date(new Date().getTime() + 60 * 60 * 1000).toISOString(),
+        workout_type: workoutType || 'General',
+        duration: 60,
+        prebuilt_workout: 1, // Mark as template
+        exercises: exercises.map(ex => ({
+            id: typeof ex.exerciseId === 'object' ? ex.exerciseId.id : ex.exerciseId,
+            exercise_order: ex.exerciseOrder,
+            group_id: ex.groupId ?? 0,
+            set_structure: ex.setStructure ?? 0,
+            sets: ex.sets.map(s => ({
+            sets_order: s.setsOrder,
+            weight: s.weight ?? 0,
+            reps: s.reps ?? '0',
+            rir: s.rir ?? null,
+            weight_unit: s.weightUnit ?? null,
+            duration_or_velocity: s.durationOrVelocity ?? null,
+            rir_or_rpe: s.rirOrRpe ?? null,
+            duration: s.duration ?? null
+            }))
+        }))
+        }
+    };
+
+    // Add template to the payloads array
+    workoutPayloads.push(templatePayload);
+
+    console.log('Workout payloads for all clients + template:', workoutPayloads);
+
+    try {
+        // Send each workout individually, but all in parallel
+        await Promise.all(
+        workoutPayloads.map(payload => sendTrainerWorkout(payload))
+        );
+        
+        alert(`Successfully assigned workout to ${selectedClientsWithDates.length} client(s) and saved as template!`);
+        setShowModal(false);
+        setSelectedClientsWithDates([]);
+    } catch (error) {
+        console.error('Error saving workouts:', error);
+        alert('Failed to save one or more workouts');
     }
-    updatedExercises.splice(exerciseIndex + 1, 0, newExercise);
-    
-    setExercises(updatedExercises);
-  };
+    };
 
-  const handleDragStart = (e, index) => {
-    setDraggedIndex(index);
-    e.dataTransfer.effectAllowed = 'move';
-  };
+    // Add state for selected clients with dates
+    const [selectedClientsWithDates, setSelectedClientsWithDates] = useState<{
+    clientId: number;
+    date: string;
+    }[]>([]);
 
-  const handleDragOver = (e, index) => {
-    e.preventDefault();
-    if (draggedIndex === null || draggedIndex === index) return;
-
-    const newExercises = [...exercises];
-    const draggedItem = newExercises[draggedIndex];
-    newExercises.splice(draggedIndex, 1);
-    newExercises.splice(index, 0, draggedItem);
-    
-    setDraggedIndex(index);
-    setExercises(newExercises);
-  };
-
-  const handleDragEnd = () => {
-    setDraggedIndex(null);
-    
-    // Clean up any groups with only 1 exercise after drag
-    const groupCounts = {};
-    exercises.forEach(ex => {
-      if (ex.groupId) {
-        groupCounts[ex.groupId] = (groupCounts[ex.groupId] || 0) + 1;
-      }
+    // Handle checkbox toggle
+    const handleClientToggle = (clientId: number) => {
+    setSelectedClientsWithDates((prev) => {
+        const exists = prev.find((c) => c.clientId === clientId);
+        if (exists) {
+        // Remove if already selected
+        return prev.filter((c) => c.clientId !== clientId);
+        } else {
+        // Add with today's date as default
+        return [...prev, { clientId, date: new Date().toISOString().split('T')[0] }];
+        }
     });
-    
-    const cleanedExercises = exercises.map(ex => {
-      if (ex.groupId && groupCounts[ex.groupId] === 1) {
-        return { ...ex, groupId: null };
-      }
-      return ex;
-    });
-    
-    setExercises(cleanedExercises);
-  };
+    };
 
-  const getGroupExercises = (groupId) => {
-    return exercises.filter(ex => ex.groupId === groupId);
-  };
+    // Handle date change
+    const handleDateChange = (clientId: number, newDate: string) => {
+    setSelectedClientsWithDates((prev) =>
+        prev.map((c) => (c.clientId === clientId ? { ...c, date: newDate } : c))
+    );
+    };
 
-  const getGroupType = (groupId) => {
-    const groupExercises = getGroupExercises(groupId);
-    if (groupExercises.length === 2) return 'Superset';
-    if (groupExercises.length >= 3) return 'Circuit';
-    return '';
-  };
+    // Check if client is selected
+    const isClientSelected = (clientId: number) => {
+    return selectedClientsWithDates.some((c) => c.clientId === clientId);
+    };
 
-  const isFirstInGroup = (exercise) => {
-    if (!exercise.groupId) return false;
-    const groupExercises = getGroupExercises(exercise.groupId);
-    return groupExercises[0]?.id === exercise.id;
-  };
+    // Get date for a client
+    const getClientDate = (clientId: number) => {
+    return selectedClientsWithDates.find((c) => c.clientId === clientId)?.date || '';
+    };
+    async function fetchClients() {
+    try {
+        setLoading(true);
+        const data = await getTrainerClients();
+        console.log("Raw API data:", data);
+        const clientList = data as Client[];
+        setClients(clientList); // ← important: set state here
+    } catch (err) {
+        console.error("Failed to load clients:", err);
+    } finally {
+        setLoading(false);
+    }
+    }
+
+    const assignAndSaveWorkout = () => {
+        setShowModal(true);
+        fetchClients(); // load clients when modal opens
+    };
+
+    // const cancelWorkout = () => {
+    //     console.log('Cancel Workout clicked');
+    // };
+
+    const saveWorkout = async () => {
+        const payload = formatWorkoutForSend();
+        console.log("Current Workout:", payload);
+        
+        try {
+            const response = await sendTrainerWorkout(payload);
+            console.log("Workout saved successfully:", response);
+            alert("Workout saved successfully!");
+            
+            // Optional: Clear the form or redirect
+            // resetWorkoutForm();
+            // router.push('/workouts');
+        } catch (error) {
+            console.error("Failed to save workout:", error);
+            alert("Failed to save workout. Please try again.");
+        }
+    };
+
+    const formatWorkoutForSend = () => {
+        const formattedWorkout = {
+            workout_data: {
+            client_id: 0, // or null
+            workout_name: workoutName || 'Default Workout',
+            workout_date: workoutDate 
+            ? new Date(workoutDate).toISOString().split('T')[0] 
+            : new Date().toISOString().split('T')[0],
+            workout_start_time: new Date().toISOString(),
+            workout_end_time: new Date(new Date().getTime() + 60 * 60 * 1000).toISOString(),
+            workout_type: workoutType || 'General',
+            duration: 60,
+            prebuilt_workout: 1,
+            exercises: exercises.map(ex => ({
+                id: typeof ex.exerciseId === 'object' ? ex.exerciseId.id : ex.exerciseId,
+                exercise_order: ex.exerciseOrder,
+                group_id: ex.groupId ?? 0,
+                set_structure: ex.setStructure ?? 0,
+                sets: ex.sets.map(s => ({
+                sets_order: s.setsOrder,
+                weight: s.weight ?? 0,
+                reps: s.reps ?? '0',
+                rir: s.rir ?? null,
+                weight_unit: s.weightUnit ?? null,
+                duration_or_velocity: s.durationOrVelocity ?? null,
+                rir_or_rpe: s.rirOrRpe ?? null,
+                duration: s.duration ?? null
+                }))
+            }))
+            }
+        };
+
+        console.log('Formatted Workout Payload:', formattedWorkout);
+        return formattedWorkout;
+    };
+
 
   return (
     <div className="flex-1 border-r border-gray-800 overflow-y-auto bg-gray-900">
       <div className="max-w-3xl mx-auto p-6">
         {/* Header */}
-        <div className="mb-8">
+        <div className="mb-2">
           <h2 className="text-3xl font-bold mb-2">Create Workout</h2>
-          <p className="text-gray-400 text-sm">Build your perfect workout routine</p>
+        </div>
+          {/* Workout Name */}
+        <div className="mb-4">
+            <label className="block text-sm font-medium text-gray-400 mb-1">Workout Name</label>
+            <input
+            type="text"
+            value={workoutName}
+            onChange={(e) => setWorkoutName(e.target.value)}
+            placeholder="Enter workout name"
+            className="w-full bg-gray-900 border border-gray-700 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            />
+        </div>
+
+        {/* Workout Type + Date */}
+        <div className="flex gap-4 mb-4">
+            {/* Type Dropdown */}
+            <div className="flex-1">
+            <label className="block text-sm font-medium text-gray-400 mb-1">Workout Type</label>
+            <select
+                value={workoutType}
+                onChange={(e) => setWorkoutType(e.target.value)}
+                className="w-full bg-gray-900 border border-gray-700 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            >
+                <option value="">Select type</option>
+                <option value="General">General</option>
+                <option value="Strength">Strength</option>
+                <option value="Hypertrophy">Hypertrophy</option>
+                <option value="Powerlifting">Powerlifting</option>
+                <option value="HIIT">HIIT</option>
+            </select>
+            </div>
+
+            {/* Date Picker */}
+            <div className="flex-1">
+            <label className="block text-sm font-medium text-gray-400 mb-1">Workout Date (Optional)</label>
+            <input
+                type="date"
+                value={workoutDate ?? ''}
+                onChange={(e) => setWorkoutDate(e.target.value)}
+                className="w-full bg-gray-900 border border-gray-700 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            />
+            </div>
+        </div>
+
+        {/* Notes */}
+        <div className="mb-4">
+            <label className="block text-sm font-medium text-gray-400 mb-1">Notes</label>
+            <textarea
+            value={notes}
+            onChange={(e) => setNotes(e.target.value)}
+            placeholder="Add any notes..."
+            rows={3}
+            className="w-full bg-gray-900 border border-gray-700 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            />
         </div>
 
         {/* AI Generation Section */}
@@ -315,7 +735,7 @@ export default function WorkoutEditor() {
                     id="file-upload"
                     className="hidden"
                     accept="image/*,.pdf,.txt,.doc,.docx"
-                    onChange={handleFileUpload}
+                    // onChange={handleFileUpload}
                   />
                   <label htmlFor="file-upload" className="cursor-pointer flex flex-col items-center justify-center py-3">
                     {uploadedFile ? (
@@ -323,7 +743,7 @@ export default function WorkoutEditor() {
                         <svg className="w-10 h-10 text-green-400 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                         </svg>
-                        <p className="text-sm font-medium text-green-400 mb-1">{uploadedFile.name}</p>
+                        {/* <p className="text-sm font-medium text-green-400 mb-1">{uploadedFile.name}</p> */}
                         <p className="text-xs text-gray-500">Click to change file</p>
                       </>
                     ) : (
@@ -495,18 +915,121 @@ export default function WorkoutEditor() {
 
         {/* Exercises Section */}
         <div className="mb-6">
-          <div className="flex items-center justify-between mb-4">
-            <label className="text-sm font-medium text-gray-300">
-              Exercises ({exercises.length})
-            </label>
-            <button
-              onClick={addExercise}
-              className="flex items-center gap-2 px-4 py-2 bg-blue-600 rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors shadow-lg hover:shadow-xl"
-            >
-              <Plus size={16} />
-              Add Exercise
-            </button>
-          </div>
+            <div className="flex items-center justify-between mb-4">
+                <label className="text-sm font-medium text-gray-300">
+                Exercises ({exercises.length})
+                </label>
+
+                <div className="flex items-center gap-3">
+                {/* Only show these if there’s at least one exercise */}
+                {exercises.length > 0 && (
+                    <>
+                    <button
+                        onClick={saveWorkout}
+                        className="px-4 py-2 bg-green-600 rounded-lg text-sm font-medium hover:bg-green-700 transition-colors shadow-lg"
+                    >
+                        Save Workout
+                    </button>
+
+                    <button
+                    onClick={() => assignAndSaveWorkout()}
+                    className="px-4 py-2 bg-blue-600 rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors shadow-lg"
+                    >
+                    Assign & Save
+                    </button>
+
+                        {showModal && (
+                        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+                            <div className="bg-gray-900 rounded-xl border border-gray-700 w-full max-w-2xl max-h-[80vh] flex flex-col">
+                            {/* Header */}
+                            <div className="p-6 border-b border-gray-800">
+                                <div className="flex items-center justify-between">
+                                <h3 className="text-2xl font-bold">Select Clients</h3>
+                                <button
+                                    onClick={() => setShowModal(false)}
+                                    className="p-2 hover:bg-gray-800 rounded-lg transition-colors"
+                                >
+                                    <X size={24} />
+                                </button>
+                                </div>
+                            </div>
+
+                            {/* Client List */}
+                            <div className="flex-1 overflow-y-auto p-6">
+                            {loading ? (
+                                <div className="text-center py-12">
+                                <p className="text-gray-400">Loading clients...</p>
+                                </div>
+                            ) : clients.length > 0 ? (
+                                <div className="space-y-3">
+                                {clients.map((client) => (
+                                    <div key={client.id} className="space-y-2">
+                                    <label className="flex items-center gap-3 p-4 bg-gray-800 hover:bg-gray-750 rounded-lg border border-gray-700 hover:border-blue-500 transition-all cursor-pointer group">
+                                        <input
+                                        type="checkbox"
+                                        checked={isClientSelected(client.id)}
+                                        onChange={() => handleClientToggle(client.id)}
+                                        className="w-4 h-4 rounded border-gray-600 text-blue-600 focus:ring-blue-500 focus:ring-offset-gray-900"
+                                        />
+                                        <span className="text-white group-hover:text-blue-400 transition-colors">
+                                        {client.first_name} {client.last_name}
+                                        </span>
+                                    </label>
+                                    
+                                    {/* Date picker - only show if client is selected */}
+                                    {isClientSelected(client.id) && (
+                                        <div className="ml-7 pl-4 border-l-2 border-gray-700">
+                                        <label className="block text-sm text-gray-400 mb-1">
+                                            Assign Date:
+                                        </label>
+                                        <input
+                                            type="date"
+                                            value={getClientDate(client.id)}
+                                            onChange={(e) => handleDateChange(client.id, e.target.value)}
+                                            className="px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                        />
+                                        </div>
+                                    )}
+                                    </div>
+                                ))}
+                                </div>
+                            ) : (
+                                <div className="text-center py-12">
+                                <p className="text-gray-400">No clients found</p>
+                                </div>
+                            )}
+                            </div>
+
+                            {/* Footer Actions */}
+                            <div className="p-6 border-t border-gray-800 flex justify-end gap-3">
+                                <button
+                                onClick={() => setShowModal(false)}
+                                className="px-4 py-2 bg-gray-800 text-gray-300 rounded-lg hover:bg-gray-700 transition-colors border border-gray-700"
+                                >
+                                Cancel
+                                </button>
+                                <button
+                                onClick={handleSaveClients}
+                                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                                >
+                                Save
+                                </button>
+                            </div>
+                            </div>
+                        </div>
+                        )}
+                    </>
+                    )}
+                    {/* Always show Add Exercise */}
+                    <button
+                        onClick={addExercise}
+                        className="flex items-center gap-2 px-4 py-2 bg-blue-600 rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors shadow-lg hover:shadow-xl"
+                    >
+                        <Plus size={16} />
+                        Add Exercise
+                    </button>
+                </div>
+            </div>
 
           {/* Exercise List */}
           <div className="space-y-3">
@@ -517,33 +1040,50 @@ export default function WorkoutEditor() {
                   onClick={addExercise}
                   className="text-blue-500 hover:text-blue-400 text-sm font-medium"
                 >
-                  Click "Add Exercise" to get started
+                    Click &quot;Add Exercise&quot; to get started
                 </button>
               </div>
             ) : (
               exercises.map((exercise, index) => (
                 <div key={exercise.id}>
                   {/* Group Label */}
-                  {isFirstInGroup(exercise) && (
-                    <div className="mb-2 flex items-center gap-2 text-sm font-medium text-purple-400">
-                      <Link2 size={16} />
-                      {getGroupType(exercise.groupId)}
+                    {isFirstInGroup(exercise) || exercise.setStructure === 0 ? (
+                    <div
+                        draggable
+                        onDragStart={(e) => handleGroupDragStart(e, exercise.groupId ?? exercise.id)}
+                        onDragOver={(e) => handleGroupDragOver(e, exercise.groupId ?? exercise.id)}
+                        onDragEnd={handleGroupDragEnd}
+                        className={`mb-2 flex items-center gap-2 text-sm font-medium cursor-move ${
+                        exercise.setStructure === 1
+                            ? 'text-purple-400'
+                            : exercise.setStructure === 2
+                            ? 'text-green-400'
+                            : 'text-gray-400'
+                        }`}
+                    >
+                        <Link2 size={16} />
+                        {exercise.setStructure === 1
+                        ? 'Superset'
+                        : exercise.setStructure === 2
+                        ? 'Circuit'
+                        : 'Single'}
                     </div>
-                  )}
-                  
-                  <div
+                    ) : null}
+                    <div
                     draggable
                     onDragStart={(e) => handleDragStart(e, index)}
                     onDragOver={(e) => handleDragOver(e, index)}
                     onDragEnd={handleDragEnd}
                     className={`bg-gray-800 rounded-lg p-4 border transition-all ${
-                      exercise.groupId 
-                        ? 'border-purple-500/50 ml-4' 
+                        exercise.setStructure === 1
+                        ? 'border-purple-500/50 ml-4'
+                        : exercise.setStructure === 2
+                        ? 'border-green-500/50 ml-4'
                         : 'border-gray-700'
-                    } ${
-                      draggedIndex === index ? 'opacity-50' : 'hover:border-gray-600'
-                    }`}
-                  >
+                    }  ${
+                    draggedIndex === index ? 'opacity-50' : 'hover:border-gray-600'
+                }`}
+                >
                     <div className="flex items-start gap-3">
                       {/* Drag Handle */}
                       <div className="mt-3 text-gray-600 cursor-move hover:text-gray-400">
@@ -560,87 +1100,183 @@ export default function WorkoutEditor() {
                             {index + 1}
                           </div>
                           <div className="flex-1">
-                            <div className="font-semibold text-white">{exercise.name}</div>
-                            {exercise.category && (
+                            <div className="font-semibold text-white">{exercise.exerciseId.name}</div>
+                            {exercise.exerciseId.category && (
                               <div className="text-xs text-gray-400 mt-0.5">
-                                {exercise.category} • {exercise.equipment}
+                                {exercise.exerciseId.category} • {exercise.exerciseId.equipment}
                               </div>
                             )}
                           </div>
                         </div>
 
-                        {/* Sets, Reps, Weight, RIR/RPE */}
-                        <div className="grid grid-cols-4 gap-3">
-                          <div>
-                            <label className="block text-xs text-gray-400 mb-1">Sets</label>
-                            <input
-                              type="number"
-                              value={exercise.sets}
-                              onChange={(e) => updateExercise(exercise.id, 'sets', e.target.value)}
-                              className="w-full bg-gray-900 border border-gray-700 rounded-lg px-3 py-2 text-center focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                              min="1"
-                            />
-                          </div>
-                          <div>
-                            <label className="block text-xs text-gray-400 mb-1">Reps</label>
-                            <input
-                              type="number"
-                              value={exercise.reps}
-                              onChange={(e) => updateExercise(exercise.id, 'reps', e.target.value)}
-                              className="w-full bg-gray-900 border border-gray-700 rounded-lg px-3 py-2 text-center focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                              min="1"
-                            />
-                          </div>
-                          <div>
-                            <label className="block text-xs text-gray-400 mb-1">Weight</label>
-                            <input
-                              type="text"
-                              value={exercise.weight}
-                              onChange={(e) => updateExercise(exercise.id, 'weight', e.target.value)}
-                              className="w-full bg-gray-900 border border-gray-700 rounded-lg px-3 py-2 text-center focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                              placeholder="0"
-                            />
-                          </div>
-                          <div>
-                            <label className="block text-xs text-gray-400 mb-1">
-                              <select
-                                value={exercise.intensityType}
-                                onChange={(e) => updateExercise(exercise.id, 'intensityType', e.target.value)}
-                                className="bg-transparent text-xs text-gray-400 focus:outline-none cursor-pointer"
-                              >
-                                <option value="RIR">RIR</option>
-                                <option value="RPE">RPE</option>
-                              </select>
-                            </label>
-                            <input
-                              type="number"
-                              value={exercise.rir}
-                              onChange={(e) => updateExercise(exercise.id, 'rir', e.target.value)}
-                              className="w-full bg-gray-900 border border-gray-700 rounded-lg px-3 py-2 text-center focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                              min="0"
-                              max="10"
-                            />
-                          </div>
+                        {/* Sets Section */}
+                        <div className="mt-3 space-y-2">
+                        {/* Header Row */}
+                        <div className="grid grid-cols-[40px_1fr_1fr_1fr_1fr_60px] gap-2 items-center mb-2 font-semibold text-gray-400">
+                            <div className="text-center">Set</div>
+                            <div className="text-center">Reps</div>
+
+                            {/* Weight header as dropdown */}
+                            <div className="text-center">
+                                <select
+                                value={exercise.sets[0]?.weightUnit ?? 0}
+                                onChange={(e) =>
+                                    updateAllSetsField(exercise.id, 'weightUnit', e.target.value === '1' ? 1 : 0)
+                                }
+                                className="w-full bg-transparent text-gray-400 text-sm text-center focus:outline-none cursor-pointer"
+                                >
+                                <option value={0}>Weight (lbs)</option>
+                                <option value={1}>Weight (kg)</option>
+                                </select>
+                            </div>
+
+                            {/* RIR/RPE header as dropdown */}
+                            <div className="text-center">
+                                <select
+                                value={exercise.sets[0]?.rirOrRpe ?? 0}
+                                onChange={(e) =>
+                                    updateAllSetsField(
+                                    exercise.id,
+                                    'rirOrRpe',
+                                    e.target.value === '1' ? 1 : 0
+                                    )
+                                }
+                                className="w-full bg-transparent text-gray-400 text-sm text-center focus:outline-none cursor-pointer"
+                                >
+                                <option value={0}>RIR</option>
+                                <option value={1}>RPE</option>
+                                </select>
+                            </div>
+
+                            {/* Duration/Velocity header as dropdown */}
+                            <div className="text-center">
+                                <select
+                                value={exercise.sets[0]?.durationOrVelocity ?? 0}
+                                onChange={(e) =>
+                                    updateAllSetsField(
+                                    exercise.id,
+                                    'durationOrVelocity',
+                                    e.target.value === '1' ? 1 : 0
+                                    )
+                                }
+                                className="w-full bg-transparent text-gray-400 text-sm text-center focus:outline-none cursor-pointer"
+                                >
+                                <option value={0}>Duration</option>
+                                <option value={1}>Velocity</option>
+                                </select>
+                            </div>
+
+                            <div className="text-center">Actions</div>
                         </div>
 
+                        {/* Sets Rows */}
+                        {exercise.sets.map((set, setIndex) => (
+                            <div key={setIndex} className="grid grid-cols-[40px_1fr_1fr_1fr_1fr_60px] gap-2 items-center mb-2">
+                            <div className="text-center font-semibold">{setIndex + 1}</div>
+
+                            <input
+                            type="number"
+                            value={set.reps}
+                            onChange={(e) => updateSetField(exercise.id, setIndex, 'reps', e.target.value)}
+                            className="w-full bg-gray-900 border border-gray-700 rounded-lg px-2 py-1 text-center focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            tabIndex={setIndex * 4 + 0} // column 0 = reps
+                            onKeyDown={(e) => handleArrowNavigation(e, exercise.id, setIndex, 0)}
+                            />
+
+                            <input
+                            type="text"
+                            value={set.weight}
+                            onChange={(e) => updateSetField(exercise.id, setIndex, 'weight', e.target.value)}
+                            className="w-full bg-gray-900 border border-gray-700 rounded-lg px-2 py-1 text-center focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            tabIndex={setIndex * 4 + 1} // column 1 = weight
+                            onKeyDown={(e) => handleArrowNavigation(e, exercise.id, setIndex, 1)}
+                            />
+
+                            <input
+                            type="number"
+                            value={set.rir}
+                            onChange={(e) => updateSetField(exercise.id, setIndex, 'rir', Number(e.target.value))}
+                            className="w-full bg-gray-900 border border-gray-700 rounded-lg px-2 py-1 text-center focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            tabIndex={setIndex * 4 + 2} // column 2 = RIR
+                            onKeyDown={(e) => handleArrowNavigation(e, exercise.id, setIndex, 2)}
+                            />
+
+                            <input
+                            type="number"
+                            value={set.duration ?? ''}
+                            onChange={(e) => updateSetField(exercise.id, setIndex, 'duration', e.target.value ? Number(e.target.value) : null)}
+                            className="w-full bg-gray-900 border border-gray-700 rounded-lg px-2 py-1 text-center focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            tabIndex={setIndex * 4 + 3} // column 3 = duration
+                            onKeyDown={(e) => handleArrowNavigation(e, exercise.id, setIndex, 3)}
+                            />
+
+                            <button
+                                onClick={() => removeSet(exercise.id, setIndex)}
+                                className="text-2xl text-red-500 px-2 py-1 rounded hover:bg-red-500/10"
+                            >
+                                -
+                            </button>
+                            </div>
+                        ))}
+
+                        {/* Add Set Button */}
+                        <div className="text-right">
+                            <button
+                            onClick={() => addSet(exercise.id)}
+                            className="text-sm px-3 py-1 bg-blue-600/20 text-blue-400 rounded-md hover:bg-blue-600/30 transition-colors mt-2"
+                            >
+                            + Add Set
+                            </button>
+                        </div>
+                        </div>
                         {/* Group Actions */}
                         <div className="flex gap-2">
-                          <button
-                            onClick={() => createGroup(exercise.id, 'superset')}
-                            className="text-xs px-3 py-1 bg-purple-600/20 text-purple-400 rounded-md hover:bg-purple-600/30 transition-colors"
-                          >
-                            {exercise.groupId ? '+ Add to Group' : '+ Superset/Circuit'}
-                          </button>
-                        </div>
-                      </div>
+                        {exercise.setStructure === 0 && (
+                            <button
+                            onClick={() => {
+                                setGroupAddContext({ baseExerciseId: exercise.id, setStructure: 1 });
+                                setShowExerciseSearch(true);
+                            }}
+                            className="text-sm px-3 py-1 bg-purple-600/20 text-purple-400 rounded-md hover:bg-purple-600/30 transition-colors"
+                            >
+                            + Start Superset
+                            </button>
+                        )}
 
+                        {exercise.setStructure === 1 && (
+                            <button
+                            onClick={() => {
+                                setGroupAddContext({ baseExerciseId: exercise.id, setStructure: 2 });
+                                setShowExerciseSearch(true);
+                            }}
+                            className="text-sm px-3 py-1 bg-green-600/20 text-green-400 rounded-md hover:bg-green-600/30 transition-colors"
+                            >
+                            + Create Circuit
+                            </button>
+                        )}
+
+                        {exercise.setStructure === 2 && (
+                            <button
+                            onClick={() => {
+                                setGroupAddContext({ baseExerciseId: exercise.id, setStructure: 2 });
+                                setShowExerciseSearch(true);
+                            }}
+                            className="text-sm px-3 py-1 bg-green-600/20 text-green-400 rounded-md hover:bg-green-600/30 transition-colors"
+                            >
+                            + Add to Circuit
+                            </button>
+                        )}
+                        </div>
+
+
+                      </div>
                       {/* Remove Button */}
-                      <button
-                        onClick={() => removeExercise(exercise.id)}
+                        <button
+                        onClick={() => removeExercise(exercise.id)} // use the session id
                         className="mt-3 p-2 text-gray-500 hover:text-red-500 hover:bg-red-500/10 rounded-lg transition-colors"
-                      >
+                        >
                         <X size={20} />
-                      </button>
+                        </button>
                     </div>
                   </div>
                 </div>
@@ -648,18 +1284,6 @@ export default function WorkoutEditor() {
             )}
           </div>
         </div>
-
-        {/* Action Buttons */}
-        {exercises.length > 0 && (
-          <div className="flex gap-3 pt-6 border-t border-gray-800">
-            <button className="flex-1 py-3 bg-blue-600 rounded-lg font-medium hover:bg-blue-700 transition-colors shadow-lg">
-              Save Workout
-            </button>
-            <button className="px-6 py-3 bg-gray-800 rounded-lg font-medium hover:bg-gray-700 transition-colors border border-gray-700">
-              Cancel
-            </button>
-          </div>
-        )}
       </div>
     </div>
   );

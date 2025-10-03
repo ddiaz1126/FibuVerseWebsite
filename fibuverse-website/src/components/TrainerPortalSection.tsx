@@ -1,19 +1,27 @@
 import React, { useState, useEffect } from 'react';
 import { Monitor, BarChart3, Brain, Users, Zap } from 'lucide-react';
 
+interface Particle {
+  id: number;
+  left: string;
+  top: string;
+  duration: string;
+  delay: string;
+}
+
 export default function TrainerPortalSection() {
   const [activeCard, setActiveCard] = useState(0);
-  const [particles, setParticles] = useState([]);
+  const [particles, setParticles] = useState<Particle[]>([]);
 
   useEffect(() => {
     // Initialize subtle floating particles
-    setParticles([...Array(30)].map((_, i) => ({
-      id: i,
-      left: `${Math.random() * 100}%`,
-      top: `${Math.random() * 100}%`,
-      duration: `${12 + Math.random() * 8}s`,
-      delay: `${Math.random() * 6}s`
-    })));
+  setParticles([...Array(30)].map((_, i) => ({
+    id: i,
+    left: `${Math.random() * 100}%`,
+    top: `${Math.random() * 100}%`,
+    duration: `${12 + Math.random() * 8}s`,
+    delay: `${Math.random() * 6}s`,
+  })));
 
     // Auto-cycle through cards
     const interval = setInterval(() => {

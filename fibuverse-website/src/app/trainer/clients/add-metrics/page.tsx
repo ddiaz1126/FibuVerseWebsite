@@ -1,202 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { sendHealthMetricsData, sendBodyMeasurementData, sendBodyFatData, sendFitnessTestsData } from "@/api/trainer";
 import fitnessMetadata from "@/app/data/fitness_metric_metadata.json";
 
-interface MetricGaugeProps {
-  label: string;
-  value: number;
-  onChange?: (val: number) => void;
-  ranges?: { min: number; max: number; color: string }[];
-  minValue: number;
-  maxValue: number;
-  ticks?: number[];
-  description?: string;
-  tableData?: {
-    [gender: string]: {
-      [ageRange: string]: {
-        [metric: string]: number;
-      };
-    };
-  };
-  expandedMetric?: string | null;
-  setExpandedMetric?: (metric: string | null) => void;
-}
-const MetricGauge: React.FC<MetricGaugeProps> = ({
-  label,
-  value,
-  onChange,
-  ranges,
-  minValue,
-  maxValue,
-  ticks = [],
-  description,
-  tableData,
-  expandedMetric,
-  setExpandedMetric,
-}) => {
-  const calculateMarkerPosition = () => {
-    const num = Number(value);
-    if (!num && num !== 0) return 0;
-    const pct = ((num - minValue) / (maxValue - minValue)) * 100;
-    return Math.min(Math.max(pct, 0), 100);
-  };
-
-  const toPct = (abs: number) => ((abs - minValue) / (maxValue - minValue)) * 100;
-
-  const labelColors: Record<string, string> = {};
-  ranges?.forEach((r) => {
-    // e.g., use min-max as key
-    const key = `${r.min}-${r.max}`;
-    labelColors[key] = r.color;
-  });
-
-  const formattedLabel = label.replace(/_/g, " ").toUpperCase();
-
-  return (
-    <div className="flex flex-col gap-6 w-full p-6 bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 rounded-xl shadow-2xl border border-gray-700">
-      <div className="flex items-center gap-6 w-full">
-        {/* Input Section */}
-        <div className="flex flex-col w-1/2 gap-2">
-          <label className="text-sm font-semibold text-gray-300 tracking-wide">
-            {formattedLabel}
-          </label>
-            <input
-              type="number"
-              step="any"
-              value={value ?? ""}
-              onChange={(e) => onChange?.(Number(e.target.value))} // safe call with optional chaining
-              className="px-4 py-3 rounded-lg bg-gray-800/50 text-white border border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 backdrop-blur-sm"
-              placeholder="Enter value..."
-            />
-        </div>
-
-        {/* Gauge Section */}
-        <div className="flex flex-col w-1/2 self-end"> {/* <-- self-end lowers the gauge */}
-          {/* Gauge Bar */}
-          <div className="relative h-8 w-full rounded-lg bg-gray-800/80 overflow-hidden shadow-inner border border-gray-700/50">
-            {/* Colored ranges */}
-            {ranges?.map((r) => {
-              const left = toPct(r.min);
-              const width = toPct(r.max) - toPct(r.min);
-              return (
-                <div
-                  key={`${r.min}-${r.max}`} // safer key if label is not present
-                  className={`${r.color} absolute top-0 h-full transition-all duration-300`}
-                  style={{ left: `${left}%`, width: `${width}%` }}
-                />
-              );
-            })}
-
-            {/* Marker for current value */}
-            <div
-              className="absolute top-0 h-full w-1 bg-white shadow-lg transition-all duration-300 z-10"
-              style={{ left: `${calculateMarkerPosition()}%`, transform: 'translateX(-50%)' }}
-            >
-              <div className="absolute -top-2 left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-b-4 border-transparent border-b-white"></div>
-            </div>
-
-            {/* Vertical tick lines */}
-            {ticks.map((t, i) => {
-              const left = toPct(t);
-              return (
-                <div
-                  key={`tick-${i}`}
-                  className="absolute top-0 h-full w-px bg-white/20"
-                  style={{ left: `${left}%` }}
-                />
-              );
-            })}
-            <div className="absolute top-0 h-full w-px bg-white/20" style={{ right: 0 }} />
-          </div>
-
-          {/* Tick labels */}
-          <div className="relative w-full h-4">
-            {ticks.map((t, i) => (
-              <span
-                key={`tick-label-${i}`}
-                className="absolute text-sm font-medium text-gray-200"
-                style={{ left: `${toPct(t)}%`, transform: "translateX(-50%)" }}
-              >
-                {t}
-              </span>
-            ))}
-            <span className="absolute text-sm font-medium text-gray-200 right-0">
-              {maxValue}
-            </span>
-          </div>
-        </div>
-      </div>
-
-      {/* Dropdown Details Section */}
-      {description && (
-        <div className="border-t border-gray-700 pt-4">
-          <button
-            type="button"
-            className="flex items-center gap-2 text-sm font-medium text-blue-400 hover:text-blue-300 transition-colors duration-200"
-            onClick={() => setExpandedMetric && setExpandedMetric(expandedMetric === label ? null : label)}
-          >
-            <svg 
-              className={`w-4 h-4 transition-transform duration-200 ${expandedMetric === label ? 'rotate-180' : ''}`}
-              fill="none" 
-              stroke="currentColor" 
-              viewBox="0 0 24 24"
-            >
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-            </svg>
-            {expandedMetric === label ? "Hide Details" : "Show Details"}
-          </button>
-
-          {expandedMetric === label && tableData && (
-            <div className="bg-gray-950/50 p-5 rounded-lg mt-4 border border-gray-700/50 backdrop-blur-sm animate-fadeIn">
-              <p className="mb-4 text-sm text-gray-300 leading-relaxed">{description}</p>
-              <div className="overflow-x-auto rounded-lg border border-gray-700">
-                <table className="w-full text-xs">
-                  <thead>
-                    <tr className="bg-gray-800/80">
-                      <th className="border-b border-r border-gray-700 px-4 py-3 text-left font-semibold text-gray-300">Gender</th>
-                      <th className="border-b border-r border-gray-700 px-4 py-3 text-left font-semibold text-gray-300">Age Range</th>
-                      {Object.keys(tableData?.["male"]?.[Object.keys(tableData["male"])[0]] || {}).map((metricKey) => (
-                        <th
-                          key={metricKey}
-                          className={`border-b border-r border-gray-700 px-4 py-3 text-left font-semibold ${labelColors[metricKey]}`}
-                        >
-                          {metricKey}
-                        </th>
-                      ))}
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {Object.entries(tableData).map(([gender, ageGroups]) =>
-                      Object.entries(ageGroups).map(([ageRange, values]) => (
-                        <tr key={`${gender}-${ageRange}`} className="hover:bg-gray-800/40 transition-colors duration-150">
-                          <td className="border-b border-r border-gray-700/50 px-4 py-3 text-gray-200 capitalize">{gender}</td>
-                          <td className="border-b border-r border-gray-700/50 px-4 py-3 text-gray-200">{ageRange}</td>
-                          {Object.keys(values).map((metricKey) => (
-                            <td
-                              key={metricKey}
-                              className={`border-b border-r border-gray-700/50 px-4 py-3 ${labelColors[metricKey]}`}
-                            >
-                              {values[metricKey] ?? "-"}
-                            </td>
-                          ))}
-                        </tr>
-                      ))
-                    )}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          )}
-        </div>
-      )}
-    </div>
-  );
-};
-
-export default function Page() {
+function MetricsContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const clientId = Number(searchParams.get("clientId")) || 1;
@@ -786,4 +595,208 @@ export default function Page() {
       </form>
     </div>
   );
+}
+
+interface MetricGaugeProps {
+  label: string;
+  value: number;
+  onChange?: (val: number) => void;
+  ranges?: { min: number; max: number; color: string }[];
+  minValue: number;
+  maxValue: number;
+  ticks?: number[];
+  description?: string;
+  tableData?: {
+    [gender: string]: {
+      [ageRange: string]: {
+        [metric: string]: number;
+      };
+    };
+  };
+  expandedMetric?: string | null;
+  setExpandedMetric?: (metric: string | null) => void;
+}
+const MetricGauge: React.FC<MetricGaugeProps> = ({
+  label,
+  value,
+  onChange,
+  ranges,
+  minValue,
+  maxValue,
+  ticks = [],
+  description,
+  tableData,
+  expandedMetric,
+  setExpandedMetric,
+}) => {
+  const calculateMarkerPosition = () => {
+    const num = Number(value);
+    if (!num && num !== 0) return 0;
+    const pct = ((num - minValue) / (maxValue - minValue)) * 100;
+    return Math.min(Math.max(pct, 0), 100);
+  };
+
+  const toPct = (abs: number) => ((abs - minValue) / (maxValue - minValue)) * 100;
+
+  const labelColors: Record<string, string> = {};
+  ranges?.forEach((r) => {
+    // e.g., use min-max as key
+    const key = `${r.min}-${r.max}`;
+    labelColors[key] = r.color;
+  });
+
+  const formattedLabel = label.replace(/_/g, " ").toUpperCase();
+
+  return (
+    <div className="flex flex-col gap-6 w-full p-6 bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 rounded-xl shadow-2xl border border-gray-700">
+      <div className="flex items-center gap-6 w-full">
+        {/* Input Section */}
+        <div className="flex flex-col w-1/2 gap-2">
+          <label className="text-sm font-semibold text-gray-300 tracking-wide">
+            {formattedLabel}
+          </label>
+            <input
+              type="number"
+              step="any"
+              value={value ?? ""}
+              onChange={(e) => onChange?.(Number(e.target.value))} // safe call with optional chaining
+              className="px-4 py-3 rounded-lg bg-gray-800/50 text-white border border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 backdrop-blur-sm"
+              placeholder="Enter value..."
+            />
+        </div>
+
+        {/* Gauge Section */}
+        <div className="flex flex-col w-1/2 self-end"> {/* <-- self-end lowers the gauge */}
+          {/* Gauge Bar */}
+          <div className="relative h-8 w-full rounded-lg bg-gray-800/80 overflow-hidden shadow-inner border border-gray-700/50">
+            {/* Colored ranges */}
+            {ranges?.map((r) => {
+              const left = toPct(r.min);
+              const width = toPct(r.max) - toPct(r.min);
+              return (
+                <div
+                  key={`${r.min}-${r.max}`} // safer key if label is not present
+                  className={`${r.color} absolute top-0 h-full transition-all duration-300`}
+                  style={{ left: `${left}%`, width: `${width}%` }}
+                />
+              );
+            })}
+
+            {/* Marker for current value */}
+            <div
+              className="absolute top-0 h-full w-1 bg-white shadow-lg transition-all duration-300 z-10"
+              style={{ left: `${calculateMarkerPosition()}%`, transform: 'translateX(-50%)' }}
+            >
+              <div className="absolute -top-2 left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-b-4 border-transparent border-b-white"></div>
+            </div>
+
+            {/* Vertical tick lines */}
+            {ticks.map((t, i) => {
+              const left = toPct(t);
+              return (
+                <div
+                  key={`tick-${i}`}
+                  className="absolute top-0 h-full w-px bg-white/20"
+                  style={{ left: `${left}%` }}
+                />
+              );
+            })}
+            <div className="absolute top-0 h-full w-px bg-white/20" style={{ right: 0 }} />
+          </div>
+
+          {/* Tick labels */}
+          <div className="relative w-full h-4">
+            {ticks.map((t, i) => (
+              <span
+                key={`tick-label-${i}`}
+                className="absolute text-sm font-medium text-gray-200"
+                style={{ left: `${toPct(t)}%`, transform: "translateX(-50%)" }}
+              >
+                {t}
+              </span>
+            ))}
+            <span className="absolute text-sm font-medium text-gray-200 right-0">
+              {maxValue}
+            </span>
+          </div>
+        </div>
+      </div>
+
+      {/* Dropdown Details Section */}
+      {description && (
+        <div className="border-t border-gray-700 pt-4">
+          <button
+            type="button"
+            className="flex items-center gap-2 text-sm font-medium text-blue-400 hover:text-blue-300 transition-colors duration-200"
+            onClick={() => setExpandedMetric && setExpandedMetric(expandedMetric === label ? null : label)}
+          >
+            <svg 
+              className={`w-4 h-4 transition-transform duration-200 ${expandedMetric === label ? 'rotate-180' : ''}`}
+              fill="none" 
+              stroke="currentColor" 
+              viewBox="0 0 24 24"
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+            </svg>
+            {expandedMetric === label ? "Hide Details" : "Show Details"}
+          </button>
+
+          {expandedMetric === label && tableData && (
+            <div className="bg-gray-950/50 p-5 rounded-lg mt-4 border border-gray-700/50 backdrop-blur-sm animate-fadeIn">
+              <p className="mb-4 text-sm text-gray-300 leading-relaxed">{description}</p>
+              <div className="overflow-x-auto rounded-lg border border-gray-700">
+                <table className="w-full text-xs">
+                  <thead>
+                    <tr className="bg-gray-800/80">
+                      <th className="border-b border-r border-gray-700 px-4 py-3 text-left font-semibold text-gray-300">Gender</th>
+                      <th className="border-b border-r border-gray-700 px-4 py-3 text-left font-semibold text-gray-300">Age Range</th>
+                      {Object.keys(tableData?.["male"]?.[Object.keys(tableData["male"])[0]] || {}).map((metricKey) => (
+                        <th
+                          key={metricKey}
+                          className={`border-b border-r border-gray-700 px-4 py-3 text-left font-semibold ${labelColors[metricKey]}`}
+                        >
+                          {metricKey}
+                        </th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {Object.entries(tableData).map(([gender, ageGroups]) =>
+                      Object.entries(ageGroups).map(([ageRange, values]) => (
+                        <tr key={`${gender}-${ageRange}`} className="hover:bg-gray-800/40 transition-colors duration-150">
+                          <td className="border-b border-r border-gray-700/50 px-4 py-3 text-gray-200 capitalize">{gender}</td>
+                          <td className="border-b border-r border-gray-700/50 px-4 py-3 text-gray-200">{ageRange}</td>
+                          {Object.keys(values).map((metricKey) => (
+                            <td
+                              key={metricKey}
+                              className={`border-b border-r border-gray-700/50 px-4 py-3 ${labelColors[metricKey]}`}
+                            >
+                              {values[metricKey] ?? "-"}
+                            </td>
+                          ))}
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+};
+
+export default function Page() {
+  return (
+  <Suspense fallback={
+      <div className="flex flex-col h-screen bg-gray-900 text-white items-center justify-center">
+        <div className="text-gray-500 text-6xl mb-4">🤖</div>
+        <p className="text-gray-400">Loading...</p>
+      </div>
+    }>
+      <MetricsContent />
+    </Suspense>
+  )
 }

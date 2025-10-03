@@ -155,9 +155,13 @@ export default function NutritionAnalysisTab({ nutritionMeta }: NutritionAnalysi
           <button className="bg-gray-800 text-white px-4 py-2 rounded shadow hover:bg-gray-700">
             Total Entries: {nutritionMeta.total_entries}
           </button>
-          <button className="bg-gray-800 text-white px-4 py-2 rounded shadow hover:bg-gray-700">
-            Avg Calories per Week: {Math.round(nutritionMeta.avg_calories_per_week || 0)}
-          </button>
+            <button className="bg-gray-800 text-white px-4 py-2 rounded shadow hover:bg-gray-700">
+              Avg Calories per Week:{" "}
+              {Math.round(
+                nutritionMeta.calories_per_week.reduce((sum, week) => sum + week.total_calories, 0) /
+                  (nutritionMeta.calories_per_week.length || 1)
+              )}
+            </button>
         </div>
       </section>
 

@@ -87,13 +87,26 @@ interface SetsPerExercise {
   total_sets: number;
 }
 
+interface Recent3Weeks {
+  cutoff_date: string;
+  total_workouts: number;
+  workouts_per_week: number;
+  sets_per_muscle_group: { exercise__muscle_group: string; total_sets: number }[];
+  sets_per_exercise: { exercise__name: string; total_sets: number }[];
+  equipment_usage: { exercise__equipment: string; usage_count: number }[];
+  volume_per_muscle_group: { muscle_group: string; total_volume: number }[];
+  weight_progression: { exercise_name: string; workout_date: string | null; avg_weight: number }[];
+}
+
 interface WeightsSessionInsights {
   volume_per_exercise: VolumePerExercise[];
   avg_effort_per_exercise: AvgEffortPerExercise[];
   avg_reps_per_exercise: AvgRepsPerExercise;
   weight_progression: WeightProgression[];
   sets_per_exercise: SetsPerExercise[];
+  recent_3_weeks: Recent3Weeks;  // Add this
 }
+
 
 interface WeightsAnalysisTabProps {
   weightsMeta: WeightsMeta | null;
@@ -123,6 +136,15 @@ export default function WeightsAnalysisTab({ weightsMeta, weightsSessionInsights
     | "weight_progression"
     | "sets_per_exercise"
   >("volume_per_exercise");
+
+    // New handler for 3-week recent data
+  const [activeRecentMetric, setActiveRecentMetric] = useState<
+    | "sets_per_muscle_group"
+    | "sets_per_exercise"
+    | "equipment_usage"
+    | "volume_per_muscle_group"
+    | "weight_progression"
+  >("sets_per_muscle_group");
 
   const colors = [
     "rgba(255, 99, 132, 0.6)",
@@ -370,6 +392,135 @@ export default function WeightsAnalysisTab({ weightsMeta, weightsSessionInsights
     }
   };
 
+  const renderRecentMetricsChart = () => {
+    if (!weightsSessionInsights?.recent_3_weeks) return <p>Loading recent metrics...</p>;
+
+    const recentData = weightsSessionInsights.recent_3_weeks;
+
+    switch (activeRecentMetric) {
+      case "sets_per_muscle_group":
+        return (
+          <Bar
+            data={{
+              labels: recentData.sets_per_muscle_group.map(
+                (m) => m.exercise__muscle_group || "Unknown"
+              ),
+              datasets: [
+                {
+                  label: "Sets per Muscle Group (Last 3 Weeks)",
+                  data: recentData.sets_per_muscle_group.map((m) => m.total_sets),
+                  backgroundColor: "rgba(54, 162, 235, 0.6)",
+                },
+              ],
+            }}
+            options={{
+              plugins: {
+                title: {
+                  display: true,
+                  text: `Total Workouts: ${recentData.total_workouts} (${recentData.workouts_per_week}/week)`,
+                },
+              },
+            }}
+          />
+        );
+
+      case "sets_per_exercise":
+        return (
+          <Bar
+            data={{
+              labels: recentData.sets_per_exercise.map((e) => e.exercise__name),
+              datasets: [
+                {
+                  label: "Sets per Exercise (Last 3 Weeks)",
+                  data: recentData.sets_per_exercise.map((e) => e.total_sets),
+                  backgroundColor: "rgba(255, 99, 132, 0.6)",
+                },
+              ],
+            }}
+          />
+        );
+
+      case "equipment_usage":
+        return (
+          <Bar
+            data={{
+              labels: recentData.equipment_usage.map(
+                (eq) => eq.exercise__equipment || "Bodyweight"
+              ),
+              datasets: [
+                {
+                  label: "Equipment Usage Frequency (Last 3 Weeks)",
+                  data: recentData.equipment_usage.map((eq) => eq.usage_count),
+                  backgroundColor: "rgba(75, 192, 192, 0.6)",
+                },
+              ],
+            }}
+          />
+        );
+
+      case "volume_per_muscle_group":
+        return (
+          <Bar
+            data={{
+              labels: recentData.volume_per_muscle_group.map(
+                (v) => v.muscle_group || "Unknown"
+              ),
+              datasets: [
+                {
+                  label: "Total Volume per Muscle Group (Last 3 Weeks)",
+                  data: recentData.volume_per_muscle_group.map((v) => v.total_volume),
+                  backgroundColor: "rgba(153, 102, 255, 0.6)",
+                },
+              ],
+            }}
+          />
+        );
+
+    case "weight_progression":
+      return (
+        <Line
+          data={{
+            labels: recentData.weight_progression.map((w) =>
+              w.workout_date ? new Date(w.workout_date).toLocaleDateString() : "N/A"
+            ),
+            datasets: recentData.weight_progression.reduce<
+              {
+                label: string;
+                data: number[];
+                borderColor: string;
+                fill: boolean;
+              }[]
+            >((acc, w) => {
+              const existing = acc.find((d) => d.label === w.exercise_name);
+              if (existing) {
+                existing.data.push(w.avg_weight);
+              } else {
+                acc.push({
+                  label: w.exercise_name,
+                  data: [w.avg_weight],
+                  borderColor: colors[acc.length % colors.length],
+                  fill: false,
+                });
+              }
+              return acc;
+            }, []),
+          }}
+          options={{
+            plugins: {
+              title: {
+                display: true,
+                text: "Weight Progression (Last 3 Weeks)",
+              },
+            },
+          }}
+        />
+      );
+
+      default:
+        return null;
+    }
+  };
+
   return (
     <div className="p-4 space-y-10">
       {/* ----------------- Overview Section ----------------- */}
@@ -398,13 +549,52 @@ export default function WeightsAnalysisTab({ weightsMeta, weightsSessionInsights
           <button className="bg-gray-800 text-white px-4 py-2 rounded shadow hover:bg-gray-700">
             Total Exercises: --
           </button>
-          <button className="bg-gray-800 text-white px-4 py-2 rounded shadow hover:bg-gray-700">
-            Nutrition Score: --
-          </button>
-          <button className="bg-gray-800 text-white px-4 py-2 rounded shadow hover:bg-gray-700">
-            Cardio Hours: --
-          </button>
         </div>
+      </section>
+
+      {/* ----------------- Recent Training Summary (Last 3 Weeks) ----------------- */}
+      <section>
+        <h2 className="text-2xl font-bold mb-4">Recent Training Summary (Last 3 Weeks)</h2>
+        {weightsSessionInsights?.recent_3_weeks && (
+          <div className="mb-4 text-sm text-gray-400">
+            <span>Total Workouts: {weightsSessionInsights.recent_3_weeks.total_workouts}</span>
+            <span className="ml-4">Average: {weightsSessionInsights.recent_3_weeks.workouts_per_week} workouts/week</span>
+            <span className="ml-4">Period: {new Date(weightsSessionInsights.recent_3_weeks.cutoff_date).toLocaleDateString()} - Today</span>
+          </div>
+        )}
+        
+        <div className="flex gap-2 mb-4 flex-wrap">
+          {[
+            "sets_per_muscle_group",
+            "sets_per_exercise",
+            "equipment_usage",
+            "volume_per_muscle_group",
+            "weight_progression",
+          ].map((metric) => (
+            <button
+              key={metric}
+              onClick={() =>
+                setActiveRecentMetric(
+                  metric as
+                    | "sets_per_muscle_group"
+                    | "sets_per_exercise"
+                    | "equipment_usage"
+                    | "volume_per_muscle_group"
+                    | "weight_progression"
+                )
+              }
+              className={`px-3 py-1 rounded ${
+                activeRecentMetric === metric
+                  ? "bg-blue-600 text-white"
+                  : "bg-gray-800 text-gray-300 hover:bg-gray-700"
+              }`}
+            >
+              {metric.replace(/_/g, " ").toUpperCase()}
+            </button>
+          ))}
+        </div>
+
+        <div className="bg-gray-900 p-4 rounded shadow">{renderRecentMetricsChart()}</div>
       </section>
 
       {/* ----------------- Workout Metrics Section ----------------- */}

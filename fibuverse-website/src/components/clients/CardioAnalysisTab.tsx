@@ -121,12 +121,12 @@ export default function CardioAnalysisTab({
           <Line
             data={{
               labels: cardioMeta.distance_per_week.map((m) =>
-                new Date(m.month).toLocaleDateString()
+                new Date(m.week).toLocaleDateString()
               ),
               datasets: [
                 {
                   label: "Avg Distance (km)",
-                  data: cardioMeta.distance_per_week.map((m) => m.distance_per_week),
+                  data: cardioMeta.distance_per_week.map((m) => m.total_distance ?? 0),
                   borderColor: "rgba(75, 192, 192, 1)",
                   backgroundColor: "rgba(75, 192, 192, 0.2)",
                 },
@@ -140,12 +140,12 @@ export default function CardioAnalysisTab({
           <Line
             data={{
               labels: cardioMeta.avg_pace_per_week.map((m) =>
-                new Date(m.month).toLocaleDateString()
+                new Date(m.week).toLocaleDateString()
               ),
               datasets: [
                 {
                   label: "Avg Pace (min/km)",
-                  data: cardioMeta.avg_pace_per_week.map((m) => m.avg_pace_per_week),
+                  data: cardioMeta.avg_pace_per_week.map((m) => m.avg_pace),
                   borderColor: "rgba(255, 99, 132, 1)",
                   backgroundColor: "rgba(255, 99, 132, 0.2)",
                 },
@@ -178,19 +178,21 @@ export default function CardioAnalysisTab({
   };
 
   const renderSessionChart = () => {
+      if (!cardioSessionInsights) return <p>Loading session data...</p>;
+
     switch (activeSessionMetric) {
       case "avg_speed_over_time":
         return (
           <Line
             data={{
               labels: cardioSessionInsights.avg_speed_over_time.map((d) =>
-                new Date(d.date).toLocaleDateString()
+                new Date(d.bucket_start).toLocaleDateString()
               ),
               datasets: [
                 {
                   label: "Distance (km)",
                   data: cardioSessionInsights.avg_speed_over_time.map(
-                    (d) => d.distance
+                    (d) => d.avg_speed ?? 0
                   ),
                   borderColor: "rgba(54, 162, 235, 1)",
                   backgroundColor: "rgba(54, 162, 235, 0.2)",
@@ -205,13 +207,13 @@ export default function CardioAnalysisTab({
           <Line
             data={{
               labels: cardioSessionInsights.avg_pace_over_time.map((d) =>
-                new Date(d.date).toLocaleDateString()
+                new Date(d.bucket_start).toLocaleDateString()
               ),
               datasets: [
                 {
                   label: "Pace (min/km)",
                   data: cardioSessionInsights.avg_pace_over_time.map(
-                    (d) => d.pace
+                    (d) => d.avg_pace ?? 0
                   ),
                   borderColor: "rgba(255, 99, 132, 1)",
                   backgroundColor: "rgba(255, 99, 132, 0.2)",
@@ -226,13 +228,13 @@ export default function CardioAnalysisTab({
           <Line
             data={{
               labels: cardioSessionInsights.avg_heart_rate_over_time.map((d) =>
-                new Date(d.date).toLocaleDateString()
+                new Date(d.bucket_start).toLocaleDateString()
               ),
               datasets: [
                 {
                   label: "Avg Heart Rate (bpm)",
                   data: cardioSessionInsights.avg_heart_rate_over_time.map(
-                    (d) => d.avg_hr
+                    (d) => d.avg_heart_rate ?? 0
                   ),
                   borderColor: "rgba(75, 192, 192, 1)",
                   backgroundColor: "rgba(75, 192, 192, 0.2)",
@@ -247,13 +249,13 @@ export default function CardioAnalysisTab({
           <Bar
             data={{
               labels: cardioSessionInsights.avg_altitude_over_time.map((d) =>
-                new Date(d.date).toLocaleDateString()
+                new Date(d.bucket_start).toLocaleDateString()
               ),
               datasets: [
                 {
                   label: "Calories Burned",
                   data: cardioSessionInsights.avg_altitude_over_time.map(
-                    (d) => d.calories
+                    (d) => d.avg_altitude ?? 0
                   ),
                   backgroundColor: "rgba(255, 159, 64, 0.6)",
                 },
@@ -272,12 +274,12 @@ export default function CardioAnalysisTab({
         <h2 className="text-2xl font-bold mb-4">🏃 Cardio Overview</h2>
         <div className="flex gap-4 flex-wrap">
           <button className="bg-gray-800 text-white px-4 py-2 rounded shadow hover:bg-gray-700">
-            Total Runs: {cardioMeta.sessions_per_week.reduce((s, r) => s + r.total, 0)}
+            Total Runs: {cardioMeta.sessions_per_week.reduce((s, r) => s + (r.total ?? 0), 0)}
           </button>
           <button className="bg-gray-800 text-white px-4 py-2 rounded shadow hover:bg-gray-700">
             Avg Distance:{" "}
             {Math.round(
-              cardioMeta.distance_per_week.reduce((s, d) => s + d.distance_per_week, 0) /
+                cardioMeta.distance_per_week.reduce((s, d) => s + (d.total_distance ?? 0), 0) /
                 cardioMeta.distance_per_week.length
             )}{" "}
             km
@@ -285,7 +287,7 @@ export default function CardioAnalysisTab({
           <button className="bg-gray-800 text-white px-4 py-2 rounded shadow hover:bg-gray-700">
             Avg Pace:{" "}
             {(
-              cardioMeta.avg_pace_per_week.reduce((s, d) => s + d.avg_pace_per_week, 0) /
+              cardioMeta.avg_pace_per_week.reduce((s, d) => s + (d.avg_pace ?? 0), 0) /
               cardioMeta.avg_pace_per_week.length
             ).toFixed(2)}{" "}
             min/km

@@ -12,12 +12,14 @@ import {
   isSameDay,
   isSameMonth,
 } from "date-fns";
-import { getTrainerClients, getClientWeightsMetaData, getClientWeightsSessionData, getClientCardioMetaData, getClientCardioSessionData, getClientMetricsData, getClientNutritionData } from "@/api/trainer";
+
+import { getTrainerClients, getClientWeightsMetaData, getClientWeightsSessionData, getClientCardioMetaData, getClientCardioSessionData, getClientMetricsData } from "@/api/trainer";
+import { Client, WeightsMeta, WeightsSessionInsights } from '@/api/trainerTypes';
 import WeightsAnalysisTab from "@/components/clients/WeightsAnalysisTab";
 import HistoryTab from "@/components/clients/HistoryTab";
 import ProgramsTab from "@/components/clients/ProgramsTab";
 import CardioAnalysisTab from "@/components/clients/CardioAnalysisTab";
-import NutritionAnalysisTab from "@/components/clients/NutritionAnalysisTab";
+// import NutritionAnalysisTab from "@/components/clients/NutritionAnalysisTab";
 import ClientMetricsTab from "@/components/clients/ClientMetricsTab";
 import { useRouter } from "next/navigation"; 
 import Image from "next/image";
@@ -36,6 +38,7 @@ interface HealthMetric {
   fvc_ratio?: number;
   o2_saturation?: number;
 }
+
 interface BodyMeasurement {
   created_at: string; // ISO date string
   weight_kg: number;
@@ -104,101 +107,15 @@ interface WeightWorkout {
   created_at: string;
 }
 
-
-interface Client {
-  id: number;
-  first_name: string;
-  last_name: string;
-  email: string;
-  city?: string | null;
-  home_state?: string | null;
-  country?: string | null;
-  profile_image?: string | null;
-  gender?: string | null;
-  height?: number | null;
-  body_weight?: number | null;
-  age?: number | null;
-  fitness_goal?: string | null;
-  training_status?: string | null;
-  subscription_type?: string | null;
-  body_measurements?: BodyMeasurement;
-  health_metrics?: HealthMetric;
-  body_fat_skinfolds?: Skinfold;
-  fitness_test?: FitnessTest;
-  activity_metrics?: Record<string, unknown>; // instead of any
-  alerts?: Array<Record<string, unknown>>; 
+interface ClientMetricsData {
+  body_measurements?: BodyMeasurement[];  // <-- array
+  health_metrics?: HealthMetric[];        // <-- array
+  body_fat_skinfolds?: Skinfold[];       // <-- array
+  fitness_tests?: FitnessTest[];         // <-- array
   cardio_sessions?: CardioSession[];
   weight_workouts?: WeightWorkout[];
 }
 
-interface WorkoutPerWeek {
-  week: string; // ISO date string
-  total: number;
-}
-
-interface AvgDurationByMonth {
-  month: string; // ISO date string
-  avg_duration: number;
-}
-
-interface ExercisesPerWorkout {
-  workout_date: string; // ISO date string
-  workout_name: string;
-  total_exercises: number;
-}
-
-interface MuscleOrEquipmentStat {
-  name: string;
-  count: number;
-}
-
-interface DifficultyStat {
-  difficulty: string;
-  total: number;
-}
-
-interface WeightsMeta {
-  workouts_per_week: WorkoutPerWeek[];
-  avg_duration: AvgDurationByMonth[];
-  exercises_per_workout: ExercisesPerWorkout[];
-  muscle_group_stats: MuscleOrEquipmentStat[];
-  equipment_stats: MuscleOrEquipmentStat[];
-  difficulty_stats: DifficultyStat[];
-}
-interface VolumePerExercise {
-  workout_id: number;
-  exercise__name: string;
-  total_session_load: number;
-}
-
-interface AvgEffortPerExercise {
-  workout_id: number;
-  exercise_name: string;
-  effort: number;
-}
-
-interface AvgRepsPerExercise {
-  [exercise_name: string]: number; // avg reps per exercise
-}
-
-interface WeightProgression {
-  exercise__name: string;
-  workout__workout_date: string; // ISO date string
-  avg_weight: number;
-}
-
-interface SetsPerExercise {
-  exercise__name: string;
-  total_sets: number;
-}
-
-interface WeightsSessionInsights {
-  volume_per_exercise: VolumePerExercise[];
-  avg_effort_per_exercise: AvgEffortPerExercise[];
-  avg_reps_per_exercise: AvgRepsPerExercise;
-  weight_progression: WeightProgression[];
-  sets_per_exercise: SetsPerExercise[];
-}
 interface WeekStat {
   week: string; // ISO date string from TruncWeek
   total?: number;             // for sessions_per_week
@@ -221,29 +138,7 @@ interface CardioMetadata {
   calories_per_week: WeekStat[];
   cardio_types: CardioTypeStat[];
 }
-interface CaloriesPerWeek {
-  week: string; // ISO date string
-  total_calories: number;
-}
 
-interface AvgMacrosPerWeek {
-  week: string; // ISO date string
-  avg_protein: number;
-  avg_carbs: number;
-  avg_fat: number;
-}
-
-interface CaloriesPerMealType {
-  meal_type: string;
-  total_calories: number;
-}
-
-interface NutritionMetadata {
-  calories_per_week: CaloriesPerWeek[];
-  avg_macros_per_week: AvgMacrosPerWeek[];
-  calories_per_meal_type: CaloriesPerMealType[];
-  total_entries: number;
-}
 interface CardioSessionPoint {
   cardio__cardio_name: string;
   bucket_start: string;       // ISO datetime
@@ -271,8 +166,8 @@ export default function ClientsPage() {
   const [weightsSessionInsights, setWeightsSessionInsights] = useState<WeightsSessionInsights | null>(null);
   const [cardioMeta, setCardioMeta] = useState<CardioMetadata | null>(null);
   const [cardioSessionInsights, setCardioSessionInsights] = useState<CardioSessionInsights | null>(null);
-  const [nutritionMeta, setNutritionMeta] = useState<NutritionMetadata | null>(null);
-  const [metricsData, setMetricsData] = useState<Client | null>(null);
+  // const [nutritionMeta, setNutritionMeta] = useState<NutritionMetadata | null>(null);
+  const [metricsData, setMetricsData] = useState<ClientMetricsData | null>(null);
 
   const [activeTab, setActiveTab] = useState<"Client Metrics" | "Weights Analysis" | "Cardio Analysis" | "History" | "Programs">("Client Metrics");
   const [loading, setLoading] = useState(true);
@@ -405,26 +300,26 @@ export default function ClientsPage() {
   }, [selectedClient]);
 
   // Retrieve Client Nutrition Workout Data
-  useEffect(() => {
-    if (!selectedClient) return;
+  // useEffect(() => {
+  //   if (!selectedClient) return;
 
-    const clientId = selectedClient.id;
+  //   const clientId = selectedClient.id;
 
-    async function fetchNutritionMeta() {
-      try {
-        setLoading(true);
-        const data = await getClientNutritionData(clientId);
-        console.log("Nutrition metadata:", data);
-        setNutritionMeta(data.data); // assuming your API returns { status, data }
-      } catch (err) {
-        console.error("Failed to fetch client Nutrition:", err);
-      } finally {
-        setLoading(false);
-      }
-    }
+  //   async function fetchNutritionMeta() {
+  //     try {
+  //       setLoading(true);
+  //       const data = await getClientNutritionData(clientId);
+  //       console.log("Nutrition metadata:", data);
+  //       setNutritionMeta(data.data); // assuming your API returns { status, data }
+  //     } catch (err) {
+  //       console.error("Failed to fetch client Nutrition:", err);
+  //     } finally {
+  //       setLoading(false);
+  //     }
+  //   }
 
-    fetchNutritionMeta();
-  }, [selectedClient]);
+  //   fetchNutritionMeta();
+  // }, [selectedClient]);
 
     // Retrieve Client Metrics Workout Data
     useEffect(() => {
@@ -435,9 +330,8 @@ export default function ClientsPage() {
       async function fetchMetricsData() {
         try {
           setLoading(true);
-          const response = await getClientMetricsData(clientId);
-          console.log("Metrics metadata:", response);
-          setMetricsData(response.data); // Extract the data property
+          const data = await getClientMetricsData(clientId);
+          setMetricsData(data);
         } catch (err) {
           console.error("Failed to fetch client metrics:", err);
         } finally {
@@ -449,35 +343,13 @@ export default function ClientsPage() {
     }, [selectedClient]);
 
   const tabs = [
-    { label: "Client Metrics",
-      component: ClientMetricsTab,
-      props: { metricsData }, 
-    },
-    {
-      label: "Weights Analysis",
-      component: WeightsAnalysisTab,
-      props: { weightsMeta, weightsSessionInsights },
-    },
-    {
-      label: "Cardio Analysis",
-      component: CardioAnalysisTab,
-      props: { cardioMeta, cardioSessionInsights },
-    },
-    {
-      label: "Nutrition Analysis",
-      component: NutritionAnalysisTab,
-      props: { nutritionMeta }
-    },
-    { 
-      label: "History", 
-      component: HistoryTab, 
-      props: { 
-        cardioSessions: metricsData?.cardio_sessions, 
-        weightWorkouts: metricsData?.weight_workouts 
-      } 
-    },
-      { label: "Programs", component: ProgramsTab, props: {} },
-    ];
+    { label: "Client Metrics" },
+    { label: "Weights Analysis" },
+    { label: "Cardio Analysis" },
+    { label: "Nutrition Analysis" },
+    { label: "History" },
+    { label: "Programs" },
+  ];
 
   return (
     <div className="flex h-full min-h-screen bg-gray-900 text-white">
@@ -559,19 +431,19 @@ export default function ClientsPage() {
                 </div>
                 <div className="bg-gray-700 p-3 rounded-lg">
                   <span className="block text-xs text-gray-400">Height</span>
-                  <span className="font-medium">
-                    {metricsData?.body_measurements?.height_cm
-                      ? `${metricsData.body_measurements.height_cm} cm`
-                      : "-"}
-                  </span>
+              <span className="font-medium">
+                {metricsData?.body_measurements?.[0]?.height_cm
+                  ? `${metricsData.body_measurements[0].height_cm} cm`
+                  : "-"}
+              </span>
                 </div>
                 <div className="bg-gray-700 p-3 rounded-lg">
                   <span className="block text-xs text-gray-400">Weight</span>
-                    <span className="font-medium">
-                      {metricsData?.body_measurements?.weight_kg
-                        ? `${metricsData.body_measurements.weight_kg} kg`
-                        : "-"}
-                    </span>
+                  <span className="font-medium">
+                    {metricsData?.body_measurements?.[0]?.weight_kg
+                      ? `${metricsData.body_measurements[0].weight_kg} kg`
+                      : "-"}
+                  </span>
                 </div>
               </div>
 
@@ -693,14 +565,17 @@ export default function ClientsPage() {
           {/* Tab content */}
           <div className="flex-1 overflow-auto bg-gray-800 p-4 rounded-2xl shadow-md">
             {activeTab === "Client Metrics" && selectedClient && (
-              <ClientMetricsTab
-                key="Client Metrics"
-                clientId={selectedClient.id}
-                clientName={`${selectedClient.first_name} ${selectedClient.last_name}`}
-                clientGender={selectedClient.gender}
-                clientAge={selectedClient.age}
-                metricsData={metricsData?.health_metrics}
-              />
+              <>
+                {console.log("About to render ClientMetricsTab with metricsData:", metricsData)}
+                <ClientMetricsTab
+                  key="Client Metrics"
+                  clientId={selectedClient.id}
+                  clientName={`${selectedClient.first_name} ${selectedClient.last_name}`}
+                  clientGender={selectedClient.gender}
+                  clientAge={selectedClient.age}
+                  metricsData={metricsData}
+                />
+              </>
             )}
             {activeTab === "Weights Analysis" && selectedClient && (
               <WeightsAnalysisTab

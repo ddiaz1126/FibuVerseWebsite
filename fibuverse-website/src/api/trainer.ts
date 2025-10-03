@@ -1,4 +1,5 @@
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
+import { WorkoutPayload, Program, WorkoutListItem } from "@/api/trainerTypes";
 
 // ------------------ Refresh Token API Wrapper Functions
 interface RefreshResponse {
@@ -257,11 +258,11 @@ export async function getTrainerClients() {
     }
   }
 }
-
-export async function getTrainerWorkouts() {
+// Get Trainer Workouts
+export async function getTrainerWorkouts(): Promise<WorkoutListItem[]> {
   try {
     const data = await fetchWithAutoRefresh("/trainers/trainer-workouts/");
-    return data;
+    return data as WorkoutListItem[];
   } catch (err: unknown) {
     if (err instanceof Error) {
       console.error("[getTrainerWorkouts] error:", err);
@@ -360,68 +361,6 @@ export async function getTrainerDashboardMetrics(): Promise<TrainerMetrics> {
   }
 }
 
-interface ProgramWorkoutSet {
-  reps?: number | null;
-  weight?: number | null;
-  rir?: number | null;
-  duration?: number | null;
-  sets_order?: number | null;
-  weight_unit?: string | null;
-  duration_or_velocity?: string | null;
-  rir_or_rpe?: number | null;
-  completed_at?: string | null;
-}
-
-interface ProgramWorkoutExercise {
-  id: number;
-  name: string;
-  description?: string | null;
-  duration?: number | null;
-  sets: ProgramWorkoutSet[];
-  set_structure?: string | null;
-  group_id?: number | null;
-  exercise_order?: number | null;
-}
-
-interface Workout {
-  id: number;
-  workout_name: string;
-  workout_date?: string | null;
-  duration?: number | null;
-  heart_rate?: number | null;
-  calories_burned?: number | null;
-  notes?: string | null;
-  workout_type?: string | null;
-  trainer_id?: number | null;
-  client_id?: number | null;
-  prebuilt_workout?: boolean;
-  session_data: ProgramWorkoutExercise[];
-}
-
-interface ProgramWorkout {
-  id: number;
-  program: number;
-  week_index?: number | null;
-  day_index?: number | null;
-  order?: number | null;
-  date?: string | null;
-  workout: Workout;
-}
-
-interface Program {
-  id: number;
-  name: string;
-  client_id?: number | null;
-  client_name?: string | null;
-  is_template: boolean;
-  description?: string | null;
-  start_date?: string | null;
-  end_date?: string | null;
-  workout_type?: string | null;
-  created_at?: string | null;
-  updated_at?: string | null;
-  program_workouts: ProgramWorkout[];
-}
 
 export async function getTrainerPrograms(): Promise<Program[]> {
   try {
@@ -555,12 +494,24 @@ interface SetsPerExercise {
   total_sets: number;
 }
 
+interface Recent3Weeks {
+  cutoff_date: string;
+  total_workouts: number;
+  workouts_per_week: number;
+  sets_per_muscle_group: { exercise__muscle_group: string; total_sets: number }[];
+  sets_per_exercise: { exercise__name: string; total_sets: number }[];
+  equipment_usage: { exercise__equipment: string; usage_count: number }[];
+  volume_per_muscle_group: { muscle_group: string; total_volume: number }[];
+  weight_progression: { exercise_name: string; workout_date: string | null; avg_weight: number }[];
+}
+
 interface WeightsSessionInsights {
   volume_per_exercise: VolumePerExercise[];
   avg_effort_per_exercise: AvgEffortPerExercise[];
   avg_reps_per_exercise: AvgRepsPerExercise;
   weight_progression: WeightProgression[];
   sets_per_exercise: SetsPerExercise[];
+  recent_3_weeks: Recent3Weeks;  // Add this
 }
 
 export async function getClientWeightsSessionData(client_id: number): Promise<{ data: WeightsSessionInsights }> {
@@ -695,36 +646,20 @@ interface BodyMeasurement {
   waist_to_height_ratio: number;
   body_fat_percentage: number;
 }
-interface Client {
-  id: number;
-  first_name: string;
-  last_name: string;
-  email: string;
-  city?: string | null;
-  home_state?: string | null;
-  country?: string | null;
-  profile_image?: string | null;
-  gender?: string | null;
-  height?: number | null;
-  body_weight?: number | null;
-  age?: number | null;
-  fitness_goal?: string | null;
-  training_status?: string | null;
-  subscription_type?: string | null;
-  body_measurements?: BodyMeasurement;
-  health_metrics?: HealthMetric;
-  body_fat_skinfolds?: Skinfold;
-  fitness_test?: FitnessTest;
-  activity_metrics?: Record<string, unknown>; // instead of any
-  alerts?: Array<Record<string, unknown>>; 
+
+interface ClientMetricsData {
+  body_measurements?: BodyMeasurement[];  // <-- array
+  health_metrics?: HealthMetric[];        // <-- array
+  body_fat_skinfolds?: Skinfold[];       // <-- array
+  fitness_tests?: FitnessTest[];         // <-- array
   cardio_sessions?: CardioSession[];
   weight_workouts?: WeightWorkout[];
 }
 
 // Metrics
-export async function getClientMetricsData(client_id: number): Promise<{ data: Client }> {
+export async function getClientMetricsData(client_id: number): Promise<ClientMetricsData> {
   try {
-    const data = await fetchWithAutoRefresh(`/trainers/get-specific-client-metrics/${client_id}/`) as { data: Client };
+    const data = await fetchWithAutoRefresh(`/trainers/get-specific-client-metrics/${client_id}/`) as ClientMetricsData;
     console.log("Fetched client metrics:", data);
     return data;
   } catch (err: unknown) {
@@ -737,7 +672,6 @@ export async function getClientMetricsData(client_id: number): Promise<{ data: C
     }
   }
 }
-
 interface AlertItem {
   id: number | null;
   time: string;
@@ -950,5 +884,21 @@ export async function searchExerciseLibrary(
       console.error("[searchExerciseLibrary] unknown error:", err);
       throw new Error("Unknown error occurred while fetching exercises");
     }
+  }
+}
+
+// Create Workout
+export async function sendTrainerWorkout(payload: WorkoutPayload) {
+  try {
+    const data = await postWithAutoRefresh("/trainers/send-trainer-workout/", payload);
+    console.log("Workout created successfully:", data);
+    return data;
+  } catch (err: unknown) {
+    if (err instanceof Error) {
+      console.error("[CreateTrainerWorkout] error:", err.message);
+    } else {
+      console.error("[CreateTrainerWorkout] unexpected error:", err);
+    }
+    throw err;
   }
 }

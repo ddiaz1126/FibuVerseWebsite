@@ -57,8 +57,16 @@ interface MergedSession {
 export default function HistoryTab({ cardioSessions = [], weightWorkouts = [] }: HistoryTabProps) {
   // Merge cardio and weight workouts
   const allSessions: MergedSession[] = [
-    ...cardioSessions.map(c => ({ ...c, type: "Cardio", date: c.cardio_date })),
-    ...weightWorkouts.map(w => ({ ...w, type: "Weight", date: w.workout_date })),
+    ...cardioSessions.map(c => ({
+      ...c,
+      type: "Cardio" as SessionType,   // assert the literal type
+      date: c.cardio_date,
+    })),
+    ...weightWorkouts.map(w => ({
+      ...w,
+      type: "Weight" as SessionType,
+      date: w.workout_date,
+    })),
   ];
 
   // Sort descending by date
