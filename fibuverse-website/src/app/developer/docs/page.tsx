@@ -7,16 +7,16 @@ import { fetchSubAgents } from "@/api/developer";
 interface Agent {
   id: number;
   name: string;
-  description?: string | Record<string, unknown>;           // text or JSON object
-  inputs?: Record<string, unknown>;                        // JSON dict
-  input_examples?: Array<Record<string, unknown>>;         // list of JSON dicts
-  outputs?: Record<string, unknown>;                       // JSON dict
-  output_examples?: Array<Record<string, unknown>>;        // list of JSON dicts
+  description?: string | Record<string, unknown>;
+  inputs?: Record<string, unknown>;
+  input_examples?: Array<Record<string, unknown>>;
+  outputs?: Record<string, unknown>;
+  output_examples?: Array<Record<string, unknown>>;
 }
 
 const workflows = ["Workout Generator", "Cardio Tracker"];
 
-export default function DeveloperDocsView({ token }: { token?: string }) {
+export default function DeveloperDocsView() {
   const router = useRouter();
   const [selectedAgent, setSelectedAgent] = useState<Agent | null>(null);
   const [search, setSearch] = useState("");
@@ -33,7 +33,7 @@ export default function DeveloperDocsView({ token }: { token?: string }) {
     }
 
     const loadAgents = async () => {
-      const tokenToUse = token ?? localStorage.getItem("access_token");
+      const tokenToUse = localStorage.getItem("access_token");
       if (!tokenToUse) {
         router.push("/developer/login");
         return;
@@ -44,7 +44,7 @@ export default function DeveloperDocsView({ token }: { token?: string }) {
         const fetched = await fetchSubAgents();
 
         const normalized: Agent[] = (fetched ?? []).map((a: unknown) => {
-          const agent = a as Partial<Agent>; // assert it may have some Agent fields
+          const agent = a as Partial<Agent>;
           return {
             id: agent.id ?? 0,
             name: agent.name ?? "Unknown",
@@ -59,7 +59,6 @@ export default function DeveloperDocsView({ token }: { token?: string }) {
         setAgents(normalized);
         setSelectedAgent(normalized.length ? normalized[0] : null);
       } catch (err: unknown) {
-        // Narrow the unknown type safely
         if (err instanceof Error) {
           console.error("Failed to fetch subagents:", err.message);
           if (err.message.toLowerCase().includes("401")) {
@@ -74,11 +73,10 @@ export default function DeveloperDocsView({ token }: { token?: string }) {
       } finally {
         setLoadingAgents(false);
       }
-
     };
 
     loadAgents();
-  }, [tab, token, router]);
+  }, [tab, router]);
 
   const workflowObjects: Agent[] = workflows.map((name, i) => ({ id: -1 - i, name }));
   const currentList: Agent[] = tab === "Workflows" ? workflowObjects : agents;
@@ -86,19 +84,15 @@ export default function DeveloperDocsView({ token }: { token?: string }) {
     agent.name.toLowerCase().includes(search.toLowerCase())
   );
 
-  // Render any value nicely, including arrays of objects
   const renderValue = (value: unknown, fallback = "—") => {
-    // Handle null, undefined, or empty arrays
     if (!value || (Array.isArray(value) && value.length === 0)) {
       return <span className="text-gray-400">{fallback}</span>;
     }
 
-    // String
     if (typeof value === "string") {
       return <span className="text-gray-300 whitespace-pre-wrap">{value}</span>;
     }
 
-    // Array
     if (Array.isArray(value)) {
       return (
         <ul className="list-disc ml-5 text-gray-300">
@@ -115,21 +109,18 @@ export default function DeveloperDocsView({ token }: { token?: string }) {
       );
     }
 
-    // Object
     if (typeof value === "object" && value !== null) {
       return (
         <pre className="text-sm bg-gray-800 p-2 rounded text-gray-300">{JSON.stringify(value, null, 2)}</pre>
       );
     }
 
-    // Fallback for numbers, booleans, etc.
     return <span className="text-gray-300">{String(value)}</span>;
   };
+
   return (
     <div className="flex h-full">
-      {/* Left sidebar */}
       <div className="w-1/4 border-r border-gray-700 bg-gray-800 p-4 flex flex-col gap-4">
-        {/* Tabs */}
         <div className="flex gap-2 mb-4">
           {(["Workflows", "Agents"] as const).map((t) => (
             <button
@@ -144,7 +135,6 @@ export default function DeveloperDocsView({ token }: { token?: string }) {
           ))}
         </div>
 
-        {/* Search */}
         <input
           type="text"
           value={search}
@@ -153,7 +143,6 @@ export default function DeveloperDocsView({ token }: { token?: string }) {
           className="mb-2 p-2 rounded bg-gray-700 border border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-100"
         />
 
-        {/* List */}
         <div className="flex-1 overflow-y-auto flex flex-col gap-2">
           {loadingAgents && tab === "Agents" ? (
             <div className="text-gray-400 p-2">Loading agents...</div>
@@ -175,17 +164,14 @@ export default function DeveloperDocsView({ token }: { token?: string }) {
         </div>
       </div>
 
-      {/* Right content */}
       <div className="flex-1 p-6 overflow-auto">
         <h1 className="text-2xl font-bold mb-4">{selectedAgent?.name || "Select an agent"}</h1>
 
-        {/* Description */}
         <div className="mb-6">
           <h2 className="text-xl font-semibold mb-2">Description</h2>
           {renderValue(selectedAgent?.description, "No description available.")}
         </div>
 
-        {/* Inputs */}
         <div className="mb-6">
           <h2 className="text-xl font-semibold mb-2">Inputs</h2>
           {renderValue(selectedAgent?.inputs, "No inputs described.")}
@@ -197,7 +183,6 @@ export default function DeveloperDocsView({ token }: { token?: string }) {
           )}
         </div>
 
-        {/* Outputs */}
         <div className="mb-6">
           <h2 className="text-xl font-semibold mb-2">Outputs</h2>
           {renderValue(selectedAgent?.outputs, "No outputs described.")}
@@ -209,7 +194,6 @@ export default function DeveloperDocsView({ token }: { token?: string }) {
           )}
         </div>
 
-        {/* Usage examples */}
         <div className="mb-6">
           <h2 className="text-xl font-semibold mb-2">Usage Examples</h2>
           <p className="text-gray-400">Example calls and expected results.</p>
