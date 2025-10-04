@@ -217,6 +217,7 @@ export interface NutritionMetadata {
 export interface SessionData {
   id: number; // frontend ID
   exerciseId: Exercise; // reference to Exercise model
+  exerciseName: string | null;
   workoutId?: number; // optional if saving new session data
   exerciseOrder: number;
   setStructure?: number | null;
@@ -238,7 +239,7 @@ export interface Workout {
   caloriesBurned?: number;
   notes?: string;
   summary?: string;
-  prebuiltWorkout?: 0 | 1;
+  prebuiltWorkout?: number;
   difficulty?: string;
   muscleGroups?: string[];
   equipment?: string[];
@@ -269,7 +270,7 @@ export interface ExerciseSet {
 }
 export interface WorkoutPayload {
   workout_data: {
-    client_id: number;
+    client_id: number | null;
     workout_name: string;
     workout_date: string;
     workout_start_time: string;
@@ -279,6 +280,7 @@ export interface WorkoutPayload {
     prebuilt_workout?: number; // Add this line, make it optional
     exercises: {
       id: number; // Exercise ID
+      exercise_name: string | null;
       exercise_order: number;
       group_id: number;
       set_structure: number;

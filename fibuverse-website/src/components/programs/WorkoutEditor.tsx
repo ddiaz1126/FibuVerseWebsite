@@ -175,6 +175,7 @@ export default function WorkoutEditor() {
     const newSession: SessionData = {
         id: Date.now(),
         exerciseId: selectedExercise,
+        exerciseName: "",
         exerciseOrder: exercises.length + 1,
         setStructure: groupAddContext?.setStructure ?? 0, // 0 = single
         groupId,
@@ -446,91 +447,94 @@ export default function WorkoutEditor() {
 
     const handleSaveClients = async () => {
     // Create a workout payload for each selected client
-    const workoutPayloads: WorkoutPayload[] = selectedClientsWithDates.map((clientWithDate) => ({
-        workout_data: {
-        client_id: clientWithDate.clientId,
-        workout_name: workoutName || 'Default Workout',
-        workout_date: clientWithDate.date,
-        workout_start_time: new Date(clientWithDate.date).toISOString(),
-        workout_end_time: new Date(new Date(clientWithDate.date).getTime() + 60 * 60 * 1000).toISOString(),
-        workout_type: workoutType || 'General',
-        duration: 60,
-        prebuilt_workout: 1,
-        exercises: exercises.map(ex => ({
-            id: typeof ex.exerciseId === 'object' ? ex.exerciseId.id : ex.exerciseId,
-            exercise_order: ex.exerciseOrder,
-            group_id: ex.groupId ?? 0,
-            set_structure: ex.setStructure ?? 0,
-            sets: ex.sets.map(s => ({
-            sets_order: s.setsOrder,
-            weight: s.weight ?? 0,
-            reps: s.reps ?? '0',
-            rir: s.rir ?? null,
-            weight_unit: s.weightUnit ?? null,
-            duration_or_velocity: s.durationOrVelocity ?? null,
-            rir_or_rpe: s.rirOrRpe ?? null,
-            duration: s.duration ?? null
+        const workoutPayloads: WorkoutPayload[] = selectedClientsWithDates.map((clientWithDate) => ({
+            workout_data: {
+            client_id: clientWithDate.clientId,
+            workout_name: workoutName || 'Default Workout',
+            workout_date: clientWithDate.date,
+            workout_start_time: new Date(clientWithDate.date).toISOString(),
+            workout_end_time: new Date(new Date(clientWithDate.date).getTime() + 60 * 60 * 1000).toISOString(),
+            workout_type: workoutType || 'General',
+            duration: 60,
+            prebuilt_workout: 1,
+            exercises: exercises.map(ex => ({
+                id: typeof ex.exerciseId === 'object' ? ex.exerciseId.id : ex.exerciseId,
+                exercise_name: ex.exerciseName,
+                exercise_order: ex.exerciseOrder,
+                group_id: ex.groupId ?? 0,
+                set_structure: ex.setStructure ?? 0,
+                sets: ex.sets.map(s => ({
+                sets_order: s.setsOrder,
+                weight: s.weight ?? 0,
+                reps: s.reps ?? '0',
+                rir: s.rir ?? null,
+                weight_unit: s.weightUnit ?? null,
+                duration_or_velocity: s.durationOrVelocity ?? null,
+                rir_or_rpe: s.rirOrRpe ?? null,
+                duration: s.duration ?? null
+                }))
             }))
-        }))
         }
-    }));
+        }
+        ));
 
-    // Add the template workout with client_id: 0
-    const templatePayload: WorkoutPayload = {
-        workout_data: {
-        client_id: 0,
-        workout_name: workoutName || 'Default Workout',
-        workout_date: workoutDate 
-            ? new Date(workoutDate).toISOString().split('T')[0] 
-            : new Date().toISOString().split('T')[0],
-        workout_start_time: new Date().toISOString(),
-        workout_end_time: new Date(new Date().getTime() + 60 * 60 * 1000).toISOString(),
-        workout_type: workoutType || 'General',
-        duration: 60,
-        prebuilt_workout: 1, // Mark as template
-        exercises: exercises.map(ex => ({
-            id: typeof ex.exerciseId === 'object' ? ex.exerciseId.id : ex.exerciseId,
-            exercise_order: ex.exerciseOrder,
-            group_id: ex.groupId ?? 0,
-            set_structure: ex.setStructure ?? 0,
-            sets: ex.sets.map(s => ({
-            sets_order: s.setsOrder,
-            weight: s.weight ?? 0,
-            reps: s.reps ?? '0',
-            rir: s.rir ?? null,
-            weight_unit: s.weightUnit ?? null,
-            duration_or_velocity: s.durationOrVelocity ?? null,
-            rir_or_rpe: s.rirOrRpe ?? null,
-            duration: s.duration ?? null
+        // Add the template workout with client_id: 0
+        const templatePayload: WorkoutPayload = {
+            workout_data: {
+            client_id: 0,
+            workout_name: workoutName || 'Default Workout',
+            workout_date: workoutDate 
+                ? new Date(workoutDate).toISOString().split('T')[0] 
+                : new Date().toISOString().split('T')[0],
+            workout_start_time: new Date().toISOString(),
+            workout_end_time: new Date(new Date().getTime() + 60 * 60 * 1000).toISOString(),
+            workout_type: workoutType || 'General',
+            duration: 60,
+            prebuilt_workout: 1, // Mark as template
+            exercises: exercises.map(ex => ({
+                id: typeof ex.exerciseId === 'object' ? ex.exerciseId.id : ex.exerciseId,
+                exercise_name: ex.exerciseName,
+                exercise_order: ex.exerciseOrder,
+                group_id: ex.groupId ?? 0,
+                set_structure: ex.setStructure ?? 0,
+                sets: ex.sets.map(s => ({
+                sets_order: s.setsOrder,
+                weight: s.weight ?? 0,
+                reps: s.reps ?? '0',
+                rir: s.rir ?? null,
+                weight_unit: s.weightUnit ?? null,
+                duration_or_velocity: s.durationOrVelocity ?? null,
+                rir_or_rpe: s.rirOrRpe ?? null,
+                duration: s.duration ?? null
+                }))
             }))
-        }))
+            }
+        };
+
+        // Add template to the payloads array
+        workoutPayloads.push(templatePayload);
+
+        console.log('Workout payloads for all clients + template:', workoutPayloads);
+
+        try {
+            // Send each workout individually, but all in parallel
+            await Promise.all(
+            workoutPayloads.map(payload => sendTrainerWorkout(payload))
+            );
+            
+            alert(`Successfully assigned workout to ${selectedClientsWithDates.length} client(s) and saved as template!`);
+            setShowModal(false);
+            setSelectedClientsWithDates([]);
+        } catch (error) {
+            console.error('Error saving workouts:', error);
+            alert('Failed to save one or more workouts');
         }
-    };
-
-    // Add template to the payloads array
-    workoutPayloads.push(templatePayload);
-
-    console.log('Workout payloads for all clients + template:', workoutPayloads);
-
-    try {
-        // Send each workout individually, but all in parallel
-        await Promise.all(
-        workoutPayloads.map(payload => sendTrainerWorkout(payload))
-        );
-        
-        alert(`Successfully assigned workout to ${selectedClientsWithDates.length} client(s) and saved as template!`);
-        setShowModal(false);
-        setSelectedClientsWithDates([]);
-    } catch (error) {
-        console.error('Error saving workouts:', error);
-        alert('Failed to save one or more workouts');
-    }
     };
 
     // Add state for selected clients with dates
     const [selectedClientsWithDates, setSelectedClientsWithDates] = useState<{
-    clientId: number;
-    date: string;
+        clientId: number;
+        date: string;
     }[]>([]);
 
     // Handle checkbox toggle
@@ -619,6 +623,7 @@ export default function WorkoutEditor() {
             prebuilt_workout: 1,
             exercises: exercises.map(ex => ({
                 id: typeof ex.exerciseId === 'object' ? ex.exerciseId.id : ex.exerciseId,
+                exercise_name: ex.exerciseName,
                 exercise_order: ex.exerciseOrder,
                 group_id: ex.groupId ?? 0,
                 set_structure: ex.setStructure ?? 0,

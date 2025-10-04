@@ -1,5 +1,5 @@
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
-import { WorkoutPayload, Program, WorkoutListItem } from "@/api/trainerTypes";
+import { WorkoutPayload, Program, WorkoutListItem, Workout } from "@/api/trainerTypes";
 
 // ------------------ Refresh Token API Wrapper Functions
 interface RefreshResponse {
@@ -901,4 +901,60 @@ export async function sendTrainerWorkout(payload: WorkoutPayload) {
     }
     throw err;
   }
+}
+
+// Get Trainer Workout
+export async function getSpecificWorkout(workoutId: number): Promise<Workout> {
+  const response = (await fetchWithAutoRefresh(
+    `/trainers/get-specific-workout/${workoutId}`
+  )) as WorkoutPayload;
+
+  console.log("hate",response)
+
+  const data = response.workout_data;
+
+  console.log("data", data)
+
+  // Map payload to frontend Workout
+  const workout: Workout = {
+    workoutId: workoutId,
+    clientId: data.client_id ?? null,
+    trainerId: null, // if needed, map from payload
+    workoutName: data.workout_name,
+    workoutDate: data.workout_date,
+    workoutStartTime: data.workout_start_time,
+    workoutEndTime: data.workout_end_time,
+    workoutType: data.workout_type,
+    duration: data.duration,
+    prebuiltWorkout: data.prebuilt_workout,
+    exercises: data.exercises.map((e) => ({
+      id: e.id,
+      exerciseId: {
+        id: e.id,
+        name: '', // fill from elsewhere if available
+        category: '',
+        equipment: '',
+        description: '',
+        instructions: '',
+      },
+      exerciseName: e.exercise_name,
+      workoutId,
+      exerciseOrder: e.exercise_order,
+      groupId: e.group_id ?? undefined,
+      setStructure: e.set_structure ?? undefined,
+      weight: undefined, // can map first set if needed
+      sets: e.sets.map((s) => ({
+        setsOrder: s.sets_order,
+        weight: s.weight,
+        reps: s.reps,
+        rir: s.rir ?? 0,
+        weightUnit: s.weight_unit ?? 0,
+        duration: s.duration ?? undefined,
+        durationOrVelocity: s.duration_or_velocity ?? 0,
+        rirOrRpe: s.rir_or_rpe ?? 0,
+      })),
+    })),
+  };
+
+  return workout;
 }

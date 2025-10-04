@@ -11,10 +11,11 @@ import {
   isSameDay,
   isSameMonth,
 } from "date-fns";
-import { getTrainerPrograms, getTrainerClients, getClientWeightsSessionData, getTrainerWorkouts } from "@/api/trainer";
+import { getTrainerPrograms, getTrainerClients, getClientWeightsSessionData, getTrainerWorkouts, getSpecificWorkout } from "@/api/trainer";
 import WorkoutEditor from "@/components/programs/WorkoutEditor";
-import { Client, WorkoutListItem, WeightsSessionInsights } from '@/api/trainerTypes';
+import { Client, WorkoutListItem, WeightsSessionInsights, Workout } from '@/api/trainerTypes';
 import { Program } from "@/api/trainerTypes";
+import { WorkoutDetailView } from "@/components/programs/WorkoutDetailView"
 
 export default function ProgramsPage() {
   const today = new Date();
@@ -39,6 +40,7 @@ export default function ProgramsPage() {
 
   const [trainerWorkouts, setTrainerWorkouts] = useState<WorkoutListItem[]>([]);
   const [loadingWorkouts, setLoadingWorkouts] = useState(false);
+  const [selectedWorkout, setSelectedWorkout] = useState<Workout | null>(null);
 
   // For Programs tab - fetch templates
   useEffect(() => {
@@ -138,6 +140,16 @@ export default function ProgramsPage() {
     }
   };
 
+  const handleWorkoutSelect = async (workoutId: number) => {
+    try {
+      const workout = await getSpecificWorkout(workoutId);
+      console.log("Selected workout:", workout);
+      // Here you can set state, e.g.:
+      setSelectedWorkout(workout);
+    } catch (err) {
+      console.error("Failed to fetch workout by ID:", err);
+    }
+  };
 
   return (
     <div className="flex h-screen bg-gray-900 text-white">
@@ -167,6 +179,19 @@ export default function ProgramsPage() {
           </button>
         </div>
 
+          {/* Create Workout Button */}
+          {activeTab === "workouts" && (
+            <div className="p-3">
+              <button
+                onClick={() => setSelectedWorkout(null)}
+                className="w-full bg-green-600 hover:bg-green-700 text-white py-2 px-3 rounded-md font-medium shadow-md transition-all duration-200"
+              >
+                + Create Workout
+              </button>
+            </div>
+          )}
+
+
         {/* Search */}
         <div className="p-3 border-b border-gray-800">
           <input
@@ -188,10 +213,7 @@ export default function ProgramsPage() {
                 <div
                   key={workout.id}
                   className="p-3 hover:bg-gray-800 cursor-pointer border-b border-gray-800"
-                  onClick={() => {
-                    // Handle clicking on a workout to view/edit
-                    console.log("Selected workout:", workout);
-                  }}
+                  onClick={() => handleWorkoutSelect(workout.id!)}
                 >
                   <div className="font-medium">{workout.workout_name}</div>
                   {/* <div className="text-sm text-gray-400 mt-1">
@@ -227,8 +249,12 @@ export default function ProgramsPage() {
         </div>
       </div>
 
-      {/* Middle column: Workout Editor */}
-      <WorkoutEditor/>
+      {/* Middle column */}
+      {selectedWorkout ? (
+        <WorkoutDetailView workout={selectedWorkout} />
+      ) : (
+        <WorkoutEditor />
+      )}
 
       {/* Right column: Calendar + Client Analysis */}
       <div className="w-96 flex flex-col border-l border-gray-800">

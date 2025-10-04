@@ -4,6 +4,7 @@ import { useState, useEffect, Suspense } from "react";
 import Header from "@/components/Header";
 import { fetchPublicCompositeAgents, runPublicCompositeAgent } from "@/api/public";
 import { useSearchParams } from "next/navigation";
+import { AgentOutput } from "@/components/agents/AgentOutput"
 
 interface SubAgent {
   id: number;
@@ -42,7 +43,7 @@ function FibuPageContent() {
   const [agents, setAgents] = useState<CompositeAgent[]>([]);
   const [loadingAgents, setLoadingAgents] = useState(true);
   const [selectedAgent, setSelectedAgent] = useState<CompositeAgent | null>(null);
-  const [inputValues, setInputValues] = useState<Record<string, string>>({});
+  const [inputValues, setInputValues] = useState<Record<string, string | File | null>>({});
   const [output, setOutput] = useState<unknown>(null);
   const [running, setRunning] = useState(false);
 
@@ -78,9 +79,10 @@ function FibuPageContent() {
   };
 
   // Handle input change
-  const handleInputChange = (key: string, value: string) => {
+  const handleInputChange = (key: string, value: string | File | null) => {
     setInputValues(prev => ({ ...prev, [key]: value }));
   };
+
 
   // Run agent
   const handleRunAgent = async () => {
@@ -191,7 +193,6 @@ export default function FibuPage() {
 }
 
 
-// Network Visualization Component
 // Network Visualization Component - Horizontal Layout
 function AgentNetworkGraph({ agent }: { agent: CompositeAgent }) {
   const [activeNode, setActiveNode] = useState<string | null>(null);
@@ -384,7 +385,11 @@ return (
   );
 }
 
-// Input Form Component
+type AgentInputMeta = {
+  type?: string;
+  required?: boolean;
+  description?: string;
+};
 
 function AgentInputForm({ 
   agent, 
@@ -394,8 +399,8 @@ function AgentInputForm({
   loading 
 }: { 
   agent: CompositeAgent;
-  inputValues: Record<string, string>;
-  onInputChange: (key: string, value: string) => void;
+  inputValues: Record<string, string | File | null>;
+  onInputChange: (key: string, value: string | File | null) => void;
   onSubmit: () => void;
   loading: boolean;
 }) {
@@ -403,22 +408,76 @@ function AgentInputForm({
 
   if (!agent.inputs) return null;
 
-  // Separate required vs optional
-  const requiredInputs = Object.entries(agent.inputs).filter(
-    ([, meta]) => meta.required
-  );
-  const optionalInputs = Object.entries(agent.inputs).filter(
-    ([, meta]) => !meta.required
-  );
+  // Get inputs from the first layer's subagents only
+  const firstLayerSubagents = agent.layers?.[0]?.subagents ?? [];
+
+  // Collect all inputs from first-layer subagents
+  const allInputs: Array<{ key: string; meta: AgentInputMeta }> = [];
+  firstLayerSubagents.forEach((sub) => {
+    if (!sub.inputs) return;
+    Object.entries(sub.inputs).forEach(([key, meta]) => {
+      allInputs.push({ key, meta: meta as AgentInputMeta });
+    });
+  });
+
+  // Deduplicate required inputs by key (keep first occurrence)
+  const seenRequired = new Set<string>();
+  const requiredInputs = allInputs.filter(({ key, meta }) => {
+    if (!meta.required) return false;
+    if (seenRequired.has(key)) return false;
+    seenRequired.add(key);
+    return true;
+  });
+
+  // Deduplicate optional inputs by key (keep first occurrence) and remove keys already in required
+  const seenOptional = new Set<string>();
+  const optionalInputs = allInputs.filter(({ key, meta }) => {
+    if (meta.required) return false; // already in required
+    if (seenRequired.has(key)) return false; // in required inputs
+    if (seenOptional.has(key)) return false; // already seen optional
+    seenOptional.add(key);
+    return true;
+  });
+
+  const renderInput = (key: string, meta: AgentInputMeta) => {
+    if (meta.type === "file" || key === "ai_image") {
+      return (
+        <input
+          type="file"
+          accept="image/*"
+          onChange={(e) => onInputChange(key, e.target.files?.[0] ?? null)}
+          className="w-full p-3 rounded-lg bg-gray-900 border border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500 text-white"
+        />
+      );
+    }
+
+    if (meta.type?.toLowerCase() === "dict") {
+      return (
+        <div className="p-3 rounded-lg bg-gray-900 border border-gray-600 text-gray-400">
+          Dict UI (to implement)
+        </div>
+      );
+    }
+
+    return (
+      <input
+        type={meta.type === "password" ? "password" : "text"}
+        placeholder={`Enter ${key}`}
+        value={(inputValues[key] as string) || ""}
+        onChange={(e) => onInputChange(key, e.target.value)}
+        className="w-full p-3 rounded-lg bg-gray-900 border border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500 text-white"
+        required={meta.required}
+      />
+    );
+  };
 
   return (
     <div className="bg-gray-800 rounded-xl p-6 border border-gray-700">
       <h3 className="text-lg font-semibold mb-4">Inputs</h3>
-      
-      <div className="space-y-4">
-        {/* Required Inputs */}
-        {requiredInputs.map(([key, meta]) => (
-          <div key={key}>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {requiredInputs.map(({ key, meta }, idx) => (
+          <div key={`required-${key}-${idx}`}>
             <label className="block text-sm font-medium text-gray-300 mb-2">
               {key}
               {meta.required && <span className="text-red-500 ml-1">*</span>}
@@ -426,103 +485,44 @@ function AgentInputForm({
             {meta.description && (
               <p className="text-xs text-gray-400 mb-2">{meta.description}</p>
             )}
-            <input
-              type={meta.type === "password" ? "password" : "text"}
-              placeholder={`Enter ${key}`}
-              value={inputValues[key] || ""}
-              onChange={(e) => onInputChange(key, e.target.value)}
-              className="w-full p-3 rounded-lg bg-gray-900 border border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500 text-white"
-              required={meta.required}
-            />
+            {renderInput(key, meta)}
           </div>
         ))}
 
-        {/* Toggle Optional Section */}
-        {optionalInputs.length > 0 && (
-          <div>
-            <button
-              type="button"
-              className="text-sm text-blue-400 hover:text-blue-300 font-medium"
-              onClick={() => setShowOptional(!showOptional)}
-            >
-              {showOptional ? "Hide Advanced Inputs" : "Show Advanced Inputs"}
-            </button>
-
-            {showOptional && (
-              <div className="mt-4 space-y-4">
-                {optionalInputs.map(([key, meta]) => (
-                  <div key={key}>
-                    <label className="block text-sm font-medium text-gray-300 mb-2">
-                      {key}
-                    </label>
-                    {meta.description && (
-                      <p className="text-xs text-gray-400 mb-2">{meta.description}</p>
-                    )}
-                    <input
-                      type={meta.type === "password" ? "password" : "text"}
-                      placeholder={`Enter ${key}`}
-                      value={inputValues[key] || ""}
-                      onChange={(e) => onInputChange(key, e.target.value)}
-                      className="w-full p-3 rounded-lg bg-gray-900 border border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500 text-white"
-                    />
-                  </div>
-                ))}
-              </div>
+        {optionalInputs.length > 0 && showOptional && optionalInputs.map(({ key, meta }, idx) => (
+          <div key={`optional-${key}-${idx}`}>
+            <label className="block text-sm font-medium text-gray-300 mb-2">{key}</label>
+            {meta.description && (
+              <p className="text-xs text-gray-400 mb-2">{meta.description}</p>
             )}
+            {renderInput(key, meta)}
           </div>
-        )}
-
-        {/* Submit */}
-        <button
-          onClick={onSubmit}
-          disabled={loading}
-          className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 disabled:cursor-not-allowed px-6 py-3 rounded-lg font-medium transition-colors"
-        >
-          {loading ? "Running..." : "Run Agent"}
-        </button>
+        ))}
       </div>
-    </div>
-  );
-}
 
-interface AgentOutputProps {
-  output: unknown;
-  loading: boolean;
-}
-// Output Display Component
-function AgentOutput({ output, loading }: AgentOutputProps) {
-  if (loading) {
-    return (
-      <div className="bg-gray-800 rounded-xl p-6 border border-gray-700">
-        <h3 className="text-lg font-semibold mb-4">Output</h3>
-        <div className="flex items-center justify-center py-12">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
-          <span className="ml-3 text-gray-400">Processing...</span>
+      {optionalInputs.length > 0 && (
+        <div className="mt-4">
+          <button
+            type="button"
+            className="text-sm text-blue-400 hover:text-blue-300 font-medium"
+            onClick={() => setShowOptional(!showOptional)}
+          >
+            {showOptional ? "Hide Advanced Inputs" : "Show Advanced Inputs"}
+          </button>
         </div>
-      </div>
-    );
-  }
+      )}
 
-  if (!output) {
-    return (
-      <div className="bg-gray-800 rounded-xl p-6 border border-gray-700">
-        <h3 className="text-lg font-semibold mb-4">Output</h3>
-        <p className="text-gray-500 text-center py-12">
-          Run the agent to see output here
-        </p>
-      </div>
-    );
-  }
-
-  return (
-    <div className="bg-gray-800 rounded-xl p-6 border border-gray-700">
-      <h3 className="text-lg font-semibold mb-4">Output</h3>
-      <div className="bg-gray-900 rounded-lg p-4 border border-gray-600">
-        <pre className="text-sm text-gray-300 whitespace-pre-wrap overflow-auto max-h-96">
-          {JSON.stringify(output, null, 2)}
-        </pre>
-      </div>
+      <button
+        onClick={onSubmit}
+        disabled={loading}
+        className="w-full mt-6 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 disabled:cursor-not-allowed px-6 py-3 rounded-lg font-medium transition-colors"
+      >
+        {loading ? "Running..." : "Run Agent"}
+      </button>
     </div>
   );
 }
+
+
+
 

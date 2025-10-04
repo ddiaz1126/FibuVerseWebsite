@@ -7,8 +7,6 @@ import { useState, useEffect } from "react";
 
 export default function DeveloperLayout({ children }: { children: React.ReactNode }) {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
-
-  // Chat state lifted to layout so available globally
   const [chatOpen, setChatOpen] = useState(false);
   const [chatWidth, setChatWidth] = useState(360);
 
@@ -20,7 +18,8 @@ export default function DeveloperLayout({ children }: { children: React.ReactNod
   }, []);
 
   return (
-    <div className="min-h-screen flex bg-gray-900 text-white">
+    // Full viewport height, flex container
+    <div className="h-screen flex bg-gray-900 text-white">
       {/* Left sidebar */}
       <DeveloperSidebar
         collapsed={sidebarCollapsed}
@@ -28,11 +27,13 @@ export default function DeveloperLayout({ children }: { children: React.ReactNod
       />
 
       {/* Main content flex container */}
-      <div className="flex flex-1 overflow-auto transition-all duration-300">
-        {/* Content */}
-        <main className="flex-1 p-8">{children}</main>
+      <div className="flex-1 flex min-h-0">
+        {/* Scrollable content */}
+        <main className="flex-1 overflow-auto p-8 min-h-0">
+          {children}
+        </main>
 
-        {/* Right-side chat panel (pushes content) */}
+        {/* Right-side chat panel */}
         {chatOpen && (
           <div className="flex-shrink-0 h-full" style={{ width: chatWidth }}>
             <FibuChat
@@ -45,14 +46,16 @@ export default function DeveloperLayout({ children }: { children: React.ReactNod
         )}
       </div>
 
-      {/* Floating toggle button (optional) */}
-      <button
-        className="fixed bottom-8 right-8 w-16 h-16 rounded-full shadow-lg z-50 border-2 border-blue-500 flex items-center justify-center bg-gray-700 hover:bg-gray-600 transition"
-        onClick={() => setChatOpen(s => !s)}
-        aria-label="Open chat"
-      >
-        <ChatBubbleLeftEllipsisIcon className="w-8 h-8 text-white" />
-      </button>
+      {/* Floating toggle button (only when chat is closed) */}
+      {!chatOpen && (
+        <button
+          className="fixed bottom-8 right-8 w-16 h-16 rounded-full shadow-lg z-50 border-2 border-blue-500 flex items-center justify-center bg-gray-700 hover:bg-gray-600 transition"
+          onClick={() => setChatOpen(true)}
+          aria-label="Open chat"
+        >
+          <ChatBubbleLeftEllipsisIcon className="w-8 h-8 text-white" />
+        </button>
+      )}
     </div>
   );
 }

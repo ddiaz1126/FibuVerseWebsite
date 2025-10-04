@@ -14,11 +14,11 @@ const Header: React.FC<HeaderProps> = ({ logoSrc }) => {
   const pathname = usePathname(); // detect current page
 
   const links = [
+    { href: "/", label: "Home" }, // or use logo for this
     { href: "/about", label: "About" },
-    { href: "/documents", label: "Documents" },
     { href: "/developerlogin", label: "Developer Portal" },
     { href: "/trainerlogin", label: "Trainer Portal" },
-    { href: "/support", label: "Support" }
+    // { href: "/support", label: "Support" },
   ];
 
   return (

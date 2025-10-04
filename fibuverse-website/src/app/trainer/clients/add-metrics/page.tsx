@@ -117,29 +117,91 @@ function MetricsContent() {
     }
   };
 
-  const handleSubmit = async () => {
-    const payloads = [
-      { func: sendHealthMetricsData, data: healthMetrics },
-      { func: sendBodyMeasurementData, data: bodyMeasurements },
-      { func: sendBodyFatData, data: skinfolds },
-      { func: sendFitnessTestsData, data: fitnessTest },
-    ];
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
 
-    const clientPayload = { client_id: clientId };
+    const timestamp = new Date().toISOString();
 
     try {
-      for (const { func, data } of payloads) {
-        const hasData = Object.values(data).some(
-          (val) => val !== null && val !== undefined && val !== ""
-        );
-        if (!hasData) continue;
+      // Health Metrics - parse strings to numbers
+      const hasHealthMetrics = Object.values(healthMetrics).some(
+        (val) => val !== null && val !== undefined && val !== ""
+      );
+      if (hasHealthMetrics) {
+        await sendHealthMetricsData({ 
+          client_id: clientId,
+          created_at: timestamp,
+          resting_hr: healthMetrics.resting_hr ? Number(healthMetrics.resting_hr) : undefined,
+          max_hr: healthMetrics.max_hr ? Number(healthMetrics.max_hr) : undefined,
+          vo2max: healthMetrics.vo2max ? Number(healthMetrics.vo2max) : undefined,
+          hrv_ms: healthMetrics.hrv_ms ? Number(healthMetrics.hrv_ms) : undefined,
+          systolic_bp: healthMetrics.systolic_bp ? Number(healthMetrics.systolic_bp) : undefined,
+          diastolic_bp: healthMetrics.diastolic_bp ? Number(healthMetrics.diastolic_bp) : undefined,
+        });
+      }
 
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        await (func as any)({ ...clientPayload, ...data });
+      // Body Measurements - parse strings to numbers
+      const hasBodyMeasurements = Object.values(bodyMeasurements).some(
+        (val) => val !== null && val !== undefined && val !== ""
+      );
+      if (hasBodyMeasurements) {
+        await sendBodyMeasurementData({ 
+          client_id: clientId,
+          created_at: timestamp,
+          weight_kg: bodyMeasurements.weight_kg ? Number(bodyMeasurements.weight_kg) : undefined,
+          height_cm: bodyMeasurements.height_cm ? Number(bodyMeasurements.height_cm) : undefined,
+          bmi: bodyMeasurements.bmi ? Number(bodyMeasurements.bmi) : undefined,
+          waist_cm: bodyMeasurements.waist_cm ? Number(bodyMeasurements.waist_cm) : undefined,
+          hip_cm: bodyMeasurements.hip_cm ? Number(bodyMeasurements.hip_cm) : undefined,
+          waist_to_height_ratio: bodyMeasurements.waist_to_height_ratio ? Number(bodyMeasurements.waist_to_height_ratio) : undefined,
+          body_fat_percentage: bodyMeasurements.body_fat_percentage ? Number(bodyMeasurements.body_fat_percentage) : undefined,
+        });
+      }
+
+      // Body Fat/Skinfolds - parse strings to numbers
+      const hasSkinfolds = Object.values(skinfolds).some(
+        (val) => val !== null && val !== undefined && val !== ""
+      );
+      if (hasSkinfolds) {
+        await sendBodyFatData({ 
+          client_id: clientId,
+          created_at: timestamp,
+          chest: skinfolds.chest ? Number(skinfolds.chest) : 0,
+          abdomen: skinfolds.abdomen ? Number(skinfolds.abdomen) : 0,
+          thigh: skinfolds.thigh ? Number(skinfolds.thigh) : 0,
+          triceps: skinfolds.triceps ? Number(skinfolds.triceps) : 0,
+          subscapular: skinfolds.subscapular ? Number(skinfolds.subscapular) : 0,
+          midaxillary: skinfolds.midaxillary ? Number(skinfolds.midaxillary) : 0,
+          biceps: skinfolds.biceps ? Number(skinfolds.biceps) : 0,
+          calf: skinfolds.calf ? Number(skinfolds.calf) : 0,
+          suprailiac: skinfolds.suprailiac ? Number(skinfolds.suprailiac) : 0,
+        });
+      }
+
+      // Fitness Tests - parse strings to numbers
+      const hasFitnessTest = Object.values(fitnessTest).some(
+        (val) => val !== null && val !== undefined && val !== ""
+      );
+      if (hasFitnessTest) {
+        await sendFitnessTestsData({ 
+          client_id: clientId,
+          created_at: timestamp,
+          sit_and_reach_cm: fitnessTest.sit_and_reach_cm ? Number(fitnessTest.sit_and_reach_cm) : 0,
+          hand_dynamometer_kg: fitnessTest.hand_dynamometer_kg ? Number(fitnessTest.hand_dynamometer_kg) : 0,
+          plank_hold_seconds: fitnessTest.plank_hold_seconds ? Number(fitnessTest.plank_hold_seconds) : 0,
+          wall_sit_seconds: fitnessTest.wall_sit_seconds ? Number(fitnessTest.wall_sit_seconds) : 0,
+          balance_test_seconds: fitnessTest.balance_test_seconds ? Number(fitnessTest.balance_test_seconds) : 0,
+          push_ups_test: fitnessTest.push_ups_test ? Number(fitnessTest.push_ups_test) : 0,
+          sit_ups_test: fitnessTest.sit_ups_test ? Number(fitnessTest.sit_ups_test) : 0,
+          pull_ups_test: fitnessTest.pull_ups_test ? Number(fitnessTest.pull_ups_test) : 0,
+          bench_press_1rm_kg: fitnessTest.bench_press_1rm_kg ? Number(fitnessTest.bench_press_1rm_kg) : 0,
+          leg_press_1rm_kg: fitnessTest.leg_press_1rm_kg ? Number(fitnessTest.leg_press_1rm_kg) : 0,
+        });
       }
 
       alert("Metrics sent successfully!");
       router.push("/trainer/clients");
+      
     } catch (err) {
       console.error(err);
       alert("Failed to send some metrics.");
@@ -581,15 +643,6 @@ function MetricsContent() {
           >
             Submit Metrics
           </button>
-
-          {/* Send button */}
-          {/* <button
-            type="button"
-            className="px-6 py-3 bg-blue-600 text-white rounded hover:bg-blue-700"
-            onClick={handleSendMetrics}
-          >
-            Send Metrics
-          </button> */}
         </div>
 
       </form>
@@ -600,8 +653,8 @@ function MetricsContent() {
 interface MetricGaugeProps {
   label: string;
   value: number;
-  onChange?: (val: number) => void;
-  ranges?: { min: number; max: number; color: string }[];
+  onChange?: (val: number | null) => void; // Changed from (val: number)
+  ranges?: { label?: string; min: number; max: number; color: string }[];
   minValue: number;
   maxValue: number;
   ticks?: number[];
@@ -638,15 +691,16 @@ const MetricGauge: React.FC<MetricGaugeProps> = ({
 
   const toPct = (abs: number) => ((abs - minValue) / (maxValue - minValue)) * 100;
 
+  // Build label -> color mapping
   const labelColors: Record<string, string> = {};
   ranges?.forEach((r) => {
-    // e.g., use min-max as key
-    const key = `${r.min}-${r.max}`;
-    labelColors[key] = r.color;
+    if (r.label) {
+      labelColors[r.label] = r.color;
+    }
   });
 
   const formattedLabel = label.replace(/_/g, " ").toUpperCase();
-
+  
   return (
     <div className="flex flex-col gap-6 w-full p-6 bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 rounded-xl shadow-2xl border border-gray-700">
       <div className="flex items-center gap-6 w-full">
@@ -658,24 +712,57 @@ const MetricGauge: React.FC<MetricGaugeProps> = ({
             <input
               type="number"
               step="any"
-              value={value ?? ""}
-              onChange={(e) => onChange?.(Number(e.target.value))} // safe call with optional chaining
-              className="px-4 py-3 rounded-lg bg-gray-800/50 text-white border border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 backdrop-blur-sm"
+              value={value === 0 ? "" : (value ?? "")}
+              onChange={(e) => {
+                const inputValue = e.target.value;
+                // Convert empty string to null, otherwise parse as number
+                const parsedValue = inputValue === "" ? null : Number(inputValue);
+                onChange?.(parsedValue);
+              }}
+              onFocus={(e) => e.target.select()}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === "ArrowDown") {
+                  e.preventDefault();
+                  const form = e.currentTarget.form;
+                  if (form) {
+                    const inputs = Array.from(form.querySelectorAll('input[type="number"]'));
+                    const currentIndex = inputs.indexOf(e.currentTarget);
+                    const nextInput = inputs[currentIndex + 1] as HTMLInputElement;
+                    if (nextInput) {
+                      nextInput.focus();
+                      nextInput.select();
+                    }
+                  }
+                } else if (e.key === "ArrowUp") {
+                  e.preventDefault();
+                  const form = e.currentTarget.form;
+                  if (form) {
+                    const inputs = Array.from(form.querySelectorAll('input[type="number"]'));
+                    const currentIndex = inputs.indexOf(e.currentTarget);
+                    const prevInput = inputs[currentIndex - 1] as HTMLInputElement;
+                    if (prevInput) {
+                      prevInput.focus();
+                      prevInput.select();
+                    }
+                  }
+                }
+              }}
+              className="px-4 py-3 rounded-lg bg-gray-800/50 text-white border border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 backdrop-blur-sm [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
               placeholder="Enter value..."
             />
         </div>
 
         {/* Gauge Section */}
-        <div className="flex flex-col w-1/2 self-end"> {/* <-- self-end lowers the gauge */}
+        <div className="flex flex-col w-1/2 self-end">
           {/* Gauge Bar */}
           <div className="relative h-8 w-full rounded-lg bg-gray-800/80 overflow-hidden shadow-inner border border-gray-700/50">
             {/* Colored ranges */}
-            {ranges?.map((r) => {
+            {ranges?.map((r, idx) => {
               const left = toPct(r.min);
               const width = toPct(r.max) - toPct(r.min);
               return (
                 <div
-                  key={`${r.min}-${r.max}`} // safer key if label is not present
+                  key={`${r.min}-${r.max}-${idx}`}
                   className={`${r.color} absolute top-0 h-full transition-all duration-300`}
                   style={{ left: `${left}%`, width: `${width}%` }}
                 />
@@ -750,14 +837,17 @@ const MetricGauge: React.FC<MetricGaugeProps> = ({
                     <tr className="bg-gray-800/80">
                       <th className="border-b border-r border-gray-700 px-4 py-3 text-left font-semibold text-gray-300">Gender</th>
                       <th className="border-b border-r border-gray-700 px-4 py-3 text-left font-semibold text-gray-300">Age Range</th>
-                      {Object.keys(tableData?.["male"]?.[Object.keys(tableData["male"])[0]] || {}).map((metricKey) => (
-                        <th
-                          key={metricKey}
-                          className={`border-b border-r border-gray-700 px-4 py-3 text-left font-semibold ${labelColors[metricKey]}`}
-                        >
-                          {metricKey}
-                        </th>
-                      ))}
+                      {Object.keys(tableData?.["male"]?.[Object.keys(tableData["male"])[0]] || {}).map((metricKey) => {
+                        const colorClass = labelColors[metricKey] || '';
+                        return (
+                          <th
+                            key={metricKey}
+                            className={`border-b border-r border-gray-700 px-4 py-3 text-left font-semibold text-gray-300 ${colorClass}`}
+                          >
+                            {metricKey}
+                          </th>
+                        );
+                      })}
                     </tr>
                   </thead>
                   <tbody>
@@ -766,14 +856,17 @@ const MetricGauge: React.FC<MetricGaugeProps> = ({
                         <tr key={`${gender}-${ageRange}`} className="hover:bg-gray-800/40 transition-colors duration-150">
                           <td className="border-b border-r border-gray-700/50 px-4 py-3 text-gray-200 capitalize">{gender}</td>
                           <td className="border-b border-r border-gray-700/50 px-4 py-3 text-gray-200">{ageRange}</td>
-                          {Object.keys(values).map((metricKey) => (
-                            <td
-                              key={metricKey}
-                              className={`border-b border-r border-gray-700/50 px-4 py-3 ${labelColors[metricKey]}`}
-                            >
-                              {values[metricKey] ?? "-"}
-                            </td>
-                          ))}
+                          {Object.keys(values).map((metricKey) => {
+                            const colorClass = labelColors[metricKey] || '';
+                            return (
+                              <td
+                                key={metricKey}
+                                className={`border-b border-r border-gray-700/50 px-4 py-3 text-gray-100 ${colorClass}`}
+                              >
+                                {values[metricKey] ?? "-"}
+                              </td>
+                            );
+                          })}
                         </tr>
                       ))
                     )}
@@ -787,7 +880,6 @@ const MetricGauge: React.FC<MetricGaugeProps> = ({
     </div>
   );
 };
-
 export default function Page() {
   return (
   <Suspense fallback={

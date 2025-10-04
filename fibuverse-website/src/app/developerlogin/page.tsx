@@ -45,7 +45,7 @@ export default function DeveloperLogin() {
       <div className="flex items-center justify-start py-4">
         <button
           type="button"
-          onClick={() => router.push("/fibu/")} // main site
+          onClick={() => router.push("/")} // main site
           className="bg-gray-600 hover:bg-gray-500 transition rounded-lg px-4 py-2 font-semibold"
         >
           ← Back

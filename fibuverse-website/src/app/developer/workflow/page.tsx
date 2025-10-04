@@ -457,21 +457,27 @@ export default function DeveloperWorkflowView() {
             </div>
 
             {/* Output */}
-            <div className="p-4 bg-gray-700 text-white rounded border border-gray-600 mb-6">
-              {output && Object.keys(output).length > 0 ? (
-                (() => {
-                  const keys = Object.keys(output);
-                  const lastKey = keys[keys.length - 1];
-                  return (
-                    <pre className="overflow-x-auto max-w-full break-words">
-                      {JSON.stringify({ [lastKey]: output[lastKey] }, null, 2)}
-                    </pre>
-                  );
-                })()
-              ) : (
-                <p>No output yet. Run the workflow to see results.</p>
-              )}
-            </div>
+              <div className="p-4 bg-gray-700 text-white rounded border border-gray-600 mb-6">
+                {output && Object.keys(output).length > 0 ? (
+                  (() => {
+                    const keys = Object.keys(output);
+                    const lastKey = keys[keys.length - 1];
+                    const value = output[lastKey];
+
+                    // Format objects nicely, otherwise show as string
+                    const displayValue =
+                      typeof value === "object" ? JSON.stringify(value, null, 2) : String(value);
+
+                    return (
+                      <pre className="overflow-x-auto max-w-full break-words whitespace-pre-wrap">
+                        {displayValue}
+                      </pre>
+                    );
+                  })()
+                ) : (
+                  <p>No output yet. Run the workflow to see results.</p>
+                )}
+              </div>
 
             {/* History */}
             <div>
@@ -512,8 +518,8 @@ export default function DeveloperWorkflowView() {
 
             {/* Run Modal */}
             {showRunModal && selectedRun && (
-              <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-                <div className="bg-gray-900 text-white rounded p-6 w-[90%] max-w-3xl">
+              <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+                <div className="bg-gray-900 text-white rounded p-6 w-full max-w-3xl max-h-[90vh] overflow-auto">
                   <div className="flex justify-between items-center mb-4">
                     <h3 className="text-lg font-semibold">
                       Run #{selectedRun.id} — {new Date(selectedRun.created_at).toLocaleString()}
@@ -539,16 +545,24 @@ export default function DeveloperWorkflowView() {
                   <div className="space-y-4">
                     <div>
                       <h4 className="font-medium mb-1">Inputs</h4>
-                      <pre className="bg-black/30 p-3 rounded">{JSON.stringify(selectedRun.inputs, null, 2)}</pre>
+                      <div className="max-h-64 overflow-auto bg-black/30 p-3 rounded">
+                        <pre className="whitespace-pre-wrap break-words">{JSON.stringify(selectedRun.inputs, null, 2)}</pre>
+                      </div>
                     </div>
+
                     <div>
                       <h4 className="font-medium mb-1">Outputs</h4>
-                      <pre className="bg-black/30 p-3 rounded">{JSON.stringify(selectedRun.outputs, null, 2)}</pre>
+                      <div className="max-h-64 overflow-auto bg-black/30 p-3 rounded">
+                        <pre className="whitespace-pre-wrap break-words">{JSON.stringify(selectedRun.outputs, null, 2)}</pre>
+                      </div>
                     </div>
+
                     {selectedRun.error_message && (
                       <div>
                         <h4 className="font-medium mb-1">Error</h4>
-                        <pre className="bg-black/30 p-3 rounded">{selectedRun.error_message}</pre>
+                        <div className="max-h-64 overflow-auto bg-black/30 p-3 rounded">
+                          <pre className="whitespace-pre-wrap break-words">{selectedRun.error_message}</pre>
+                        </div>
                       </div>
                     )}
                   </div>
