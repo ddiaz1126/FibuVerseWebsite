@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Image, { StaticImageData } from "next/image";
 import Link from "next/link";
-import { usePathname } from "next/navigation"; // for active link
+import { usePathname } from "next/navigation";
 
 interface HeaderProps {
   logoSrc: string | StaticImageData;
@@ -11,26 +11,25 @@ interface HeaderProps {
 
 const Header: React.FC<HeaderProps> = ({ logoSrc }) => {
   const [menuOpen, setMenuOpen] = useState(false);
-  const pathname = usePathname(); // detect current page
+  const pathname = usePathname();
 
   const links = [
-    { href: "/", label: "Home" }, // or use logo for this
+    { href: "/", label: "Home" },
     { href: "/about", label: "About" },
     { href: "/developerlogin", label: "Developer Portal" },
     { href: "/trainerlogin", label: "Trainer Portal" },
-    // { href: "/support", label: "Support" },
   ];
 
   return (
-    <header className="bg-black text-white flex items-center px-6 py-4 md:py-6 shadow-md relative z-50">
+    <header className="bg-black text-white flex items-center px-6 py-3 shadow-md relative z-50">
       {/* Logo + Brand */}
-      <Link href="/" className="flex items-center space-x-3"> 
-        <Image src={logoSrc} alt="FibuVerse Logo" width={40} height={40} /> 
-        <span className="text-xl font-bold">FibuVerse</span> 
+      <Link href="/" className="flex items-center space-x-2"> 
+        <Image src={logoSrc} alt="FibuVerse Logo" width={32} height={32} /> 
+        <span className="text-base font-semibold">FibuVerse</span> 
       </Link>
 
       {/* Desktop nav */}
-      <nav className="ml-auto hidden md:flex space-x-8 text-lg font-semibold">
+      <nav className="ml-auto hidden md:flex space-x-6 text-sm font-medium">
         {links.map((link) => (
           <Link
             key={link.href}
@@ -72,7 +71,7 @@ const Header: React.FC<HeaderProps> = ({ logoSrc }) => {
             <Link
               key={link.href}
               href={link.href}
-              className={`px-6 py-4 text-white hover:text-yellow-400 transition-colors ${
+              className={`px-6 py-3 text-sm hover:text-yellow-400 transition-colors ${
                 pathname === link.href ? "text-yellow-400" : ""
               }`}
               onClick={() => setMenuOpen(false)}

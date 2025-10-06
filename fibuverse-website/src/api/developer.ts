@@ -322,6 +322,21 @@ export async function runCompositeAgentFormData(
   return data;
 }
 
+export interface RunSubAgentResponse {
+  outputs: JsonDataObject;
+}
+
+export async function runSubAgentFormData(
+  formData: FormData
+): Promise<RunSubAgentResponse> {
+  const data = await postFormDataWithAutoRefresh<RunSubAgentResponse>(
+    "/developer/run-sub-agent/",
+    formData
+  );
+
+  console.log("SubAgent run results:", data);
+  return data;
+}
 export type RunStatus = "pending" | "running" | "succeeded" | "failed" | (string & {});
 
 /** Input/output are opaque JSON objects for now — safer than `any` */

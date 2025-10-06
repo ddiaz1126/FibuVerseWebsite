@@ -39,7 +39,7 @@ export default function FibuAppSection() {
     }
   ];
 
-  return (
+return (
     <section className="relative w-full py-12 px-8 bg-black overflow-hidden">
 
       <div className="relative z-10 max-w-6xl mx-auto">
@@ -50,11 +50,11 @@ export default function FibuAppSection() {
           <div className="flex-1 space-y-4">
             {/* Header */}
             <div className="text-center mb-12">
-            <h2 className="text-4xl font-bold mb-4 text-white">
+            <h2 className="text-2xl font-bold mb-4 text-white">
             The <span className="text-yellow-400 font-extrabold">Fibu</span> App
             </h2>
 
-            <p className="text-lg text-gray-300 max-w-2xl mx-auto">
+            <p className="text-base text-gray-300 max-w-2xl mx-auto">
             Fibu is your complete fitness companion — track nutrition, weights, runs, and interact with AI agents to optimize wellness. Currently in beta on iOS via TestFlight, it also connects clients with trainers, allowing trainers to create workouts and plans, track progress, and message clients directly, all in one seamless app.
             </p>
 
@@ -71,10 +71,10 @@ export default function FibuAppSection() {
                     </div>
                   </div>
                   <div className="flex-1">
-                    <h3 className="text-base font-semibold text-white group-hover:text-yellow-400 transition-colors duration-300 mb-1">
+                    <h3 className="text-sm font-semibold text-white group-hover:text-yellow-400 transition-colors duration-300 mb-1">
                       {feature.title}
                     </h3>
-                    <p className="text-gray-300 text-sm leading-relaxed">
+                    <p className="text-gray-300 text-xs leading-relaxed">
                       {feature.description}
                     </p>
                   </div>
@@ -82,13 +82,13 @@ export default function FibuAppSection() {
               </div>
             ))}
             {/* CTA Section */}
-            <div className="text-center mt-12">
+            {/* <div className="text-center mt-12">
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                <button className="bg-blue-600 text-white px-8 py-3 rounded-lg hover:bg-blue-700 transition shadow-lg hover:shadow-blue-600/50">
+                <button className="bg-blue-600 text-white px-6 py-2.5 text-sm rounded-lg hover:bg-blue-700 transition shadow-lg hover:shadow-blue-600/50">
                 Contact for Beta Access
                 </button>
             </div>
-            </div>
+            </div> */}
           </div>
 
           {/* App Screenshot - Right Side */}

@@ -1,6 +1,6 @@
 // DeveloperPortalSection.tsx
 import React, { useState, useEffect } from 'react';
-import { Mail, Code, GitBranch, Cpu, Network, Zap, Layers } from 'lucide-react';
+import { Code, GitBranch, Cpu, Network, Layers } from 'lucide-react';
 
 type AgentType = "fitness" | "nutrition" | "wellness" | "coach" | "analytics" | "core";
 
@@ -107,7 +107,7 @@ export default function DeveloperPortalSection() {
     }
   ];
 
-  return (
+return (
     <section className="relative w-full py-20 px-8 bg-black overflow-hidden">
       {/* Background Effects */}
       <div className="absolute inset-0">
@@ -143,11 +143,11 @@ export default function DeveloperPortalSection() {
         <div className="text-center mb-16">
           <div className="inline-flex items-center gap-3 mb-4">
             <div className="p-2 bg-yellow-500/10 rounded-lg border border-yellow-500/20">
-              <Layers className="w-6 h-6 text-yellow-400" />
+              <Layers className="w-5 h-5 text-yellow-400" />
             </div>
-            <h2 className="text-4xl font-bold text-white">Developer Portal</h2>
+            <h2 className="text-2xl font-bold text-white">Developer Portal</h2>
           </div>
-          <p className="text-xl text-gray-300 max-w-4xl mx-auto leading-relaxed mb-8">
+          <p className="text-base text-gray-300 max-w-4xl mx-auto leading-relaxed mb-8">
             Build, test, and extend the Fibu ecosystem — integrate AI agents into your apps, 
             explore APIs, and experiment in a secure sandbox environment.
           </p>
@@ -158,7 +158,7 @@ export default function DeveloperPortalSection() {
           {/* Left Side - AI Agent Network Visualization */}
           <div className="relative">
             <div className="relative w-full h-96 bg-gradient-to-br from-gray-900/50 to-gray-800/50 rounded-2xl border border-gray-700/50 p-8 backdrop-blur-sm overflow-hidden">
-              <h3 className="text-lg font-semibold text-white mb-4 text-center">AI Agent Ecosystem</h3>
+              <h3 className="text-base font-semibold text-white mb-4 text-center">AI Agent Ecosystem</h3>
               
               {/* SVG for connections */}
               <svg className="absolute inset-0 w-full h-full" style={{ zIndex: 1 }}>
@@ -252,7 +252,7 @@ export default function DeveloperPortalSection() {
                     </div>
                   </div>
                   <div className="flex-1">
-                    <h3 className="text-lg font-semibold text-white group-hover:text-yellow-400 transition-colors duration-300 mb-2">
+                    <h3 className="text-base font-semibold text-white group-hover:text-yellow-400 transition-colors duration-300 mb-2">
                       {feature.title}
                     </h3>
                     <p className="text-gray-300 text-sm leading-relaxed">
@@ -266,18 +266,18 @@ export default function DeveloperPortalSection() {
         </div>
 
         {/* CTA Section */}
-        <div className="text-center">
+        {/* <div className="text-center">
         <div className="inline-flex flex-col sm:flex-row items-center gap-4 p-6 bg-gray-900/50 rounded-2xl border border-gray-700/50 backdrop-blur-sm">
             <div className="flex items-center gap-2">
-            <Zap className="w-5 h-5 text-yellow-400" />
-            <span className="text-gray-300">Ready to shape the future of fitness AI?</span>
+            <Zap className="w-4 h-4 text-yellow-400" />
+            <span className="text-gray-300 text-sm">Ready to shape the future of fitness AI?</span>
             </div>
-            <button className="bg-gradient-to-r from-blue-600 to-blue-700 text-white px-6 py-3 rounded-lg hover:from-blue-700 hover:to-blue-800 transition-all duration-300 shadow-lg hover:shadow-blue-600/30 transform hover:scale-105 flex items-center justify-center gap-2">
+            <button className="bg-gradient-to-r from-blue-600 to-blue-700 text-white px-5 py-2.5 text-sm rounded-lg hover:from-blue-700 hover:to-blue-800 transition-all duration-300 shadow-lg hover:shadow-blue-600/30 transform hover:scale-105 flex items-center justify-center gap-2">
             <Mail className="w-4 h-4" />
             Request Access
             </button>
         </div>
-        </div>
+        </div> */}
 
       </div>
 
