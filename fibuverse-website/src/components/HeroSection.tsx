@@ -103,10 +103,10 @@ const HeroSection: React.FC<HeroSectionProps> = ({
       <div className="relative z-10 flex flex-col md:flex-row justify-center items-center px-8 py-16 min-h-[500px]">
         {/* Left content */}
         <div className="flex-1 relative">
-          <h1 className="text-5xl font-bold mb-4 max-w-3xl text-white">
+          <h1 className="text-3xl font-bold mb-4 max-w-3xl text-white">
             Welcome to FibuVerse!
           </h1>
-          <p className="text-lg text-gray-300 max-w-3xl mb-6 text-left">
+          <p className="text-base text-gray-300 max-w-3xl mb-6 text-left">
           An AI ecosystem built to empower trainers — turning data into actionable insights, without ever replacing the human touch.
           </p>
         </div>
@@ -137,10 +137,10 @@ const HeroSection: React.FC<HeroSectionProps> = ({
         <div className="relative z-10 w-full px-8 pb-16">
           {/* Header */}
           <div className="mb-6 max-w-full">
-            <h2 className="text-4xl font-bold text-white mb-2">
+            <h2 className="text-2xl font-bold text-white mb-2">
               AI Agents
             </h2>
-            {/* <p className="text-gray-300 text-lg max-w-3xl">
+            {/* <p className="text-gray-300 text-base max-w-3xl">
               Try our collection of specialized AI agents, each designed to solve specific challenges in fitness and wellness.
             </p> */}
           </div>
@@ -150,7 +150,7 @@ const HeroSection: React.FC<HeroSectionProps> = ({
             <div className="w-full flex items-center justify-center py-12">
               <div className="flex flex-col items-center space-y-4">
                 <div className="w-8 h-8 border-2 border-yellow-400 border-t-transparent rounded-full animate-spin"></div>
-                <p className="text-gray-300">Loading agents...</p>
+                <p className="text-gray-300 text-sm">Loading agents...</p>
               </div>
             </div>
           ) : (
@@ -167,15 +167,15 @@ const HeroSection: React.FC<HeroSectionProps> = ({
                   <div className="relative z-10 flex flex-col h-full">
                     {/* Avatar */}
                     <div className="relative mb-4">
-                      <div className="w-14 h-14 bg-gradient-to-br from-yellow-400 to-yellow-500 rounded-xl flex items-center justify-center text-black font-bold text-xl shadow-lg">
+                      <div className="w-12 h-12 bg-gradient-to-br from-yellow-400 to-yellow-500 rounded-xl flex items-center justify-center text-black font-bold text-lg shadow-lg">
                         {agent.name[0].toUpperCase()}
                       </div>
-                      <div className="absolute -top-1 -right-1 w-4 h-4 bg-green-400 rounded-full border-2 border-gray-900 animate-pulse"></div>
+                      <div className="absolute -top-1 -right-1 w-3 h-3 bg-green-400 rounded-full border-2 border-gray-900 animate-pulse"></div>
                     </div>
 
                     {/* Info */}
                     <div className="flex-1 mb-6">
-                      <h3 className="text-xl font-semibold text-white mb-3 group-hover:text-yellow-300 transition-colors">
+                      <h3 className="text-base font-semibold text-white mb-3 group-hover:text-yellow-300 transition-colors">
                         {agent.name}
                       </h3>
                       <p className="text-gray-300 text-sm leading-relaxed">
@@ -187,7 +187,7 @@ const HeroSection: React.FC<HeroSectionProps> = ({
                     {onTryAgent && (
                       <button
                         onClick={() => onTryAgent(agent.id)}
-                        className="w-full bg-gradient-to-r from-yellow-400 to-yellow-500 hover:from-yellow-300 hover:to-yellow-400 text-black font-semibold px-4 py-3 rounded-xl transition-all duration-200 transform hover:scale-105 hover:shadow-lg shadow-yellow-400/25"
+                        className="w-full bg-gradient-to-r from-yellow-400 to-yellow-500 hover:from-yellow-300 hover:to-yellow-400 text-black font-semibold px-4 py-2.5 text-sm rounded-xl transition-all duration-200 transform hover:scale-105 hover:shadow-lg shadow-yellow-400/25"
                       >
                         Try Agent →
                       </button>

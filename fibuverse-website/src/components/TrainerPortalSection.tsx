@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Monitor, BarChart3, Brain, Users, Zap } from 'lucide-react';
+import { Monitor, BarChart3, Brain, Users } from 'lucide-react';
 
 interface Particle {
   id: number;
@@ -52,7 +52,7 @@ export default function TrainerPortalSection() {
     }
   ];
 
-  return (
+return (
 <section className="relative w-full py-20 px-8 bg-black overflow-hidden">
       {/* Background Effects */}
       <div className="absolute inset-0">
@@ -80,11 +80,11 @@ export default function TrainerPortalSection() {
         <div className="text-center mb-16">
           <div className="inline-flex items-center gap-3 mb-4">
             <div className="p-2 bg-yellow-500/10 rounded-lg border border-yellow-500/20">
-              <Users className="w-6 h-6 text-yellow-400" />
+              <Users className="w-5 h-5 text-yellow-400" />
             </div>
-            <h2 className="text-4xl font-bold text-white">Desktop Trainer Portal</h2>
+            <h2 className="text-2xl font-bold text-white">Desktop Trainer Portal</h2>
           </div>
-          <p className="text-xl text-gray-300 max-w-4xl mx-auto leading-relaxed">
+          <p className="text-base text-gray-300 max-w-4xl mx-auto leading-relaxed">
             Giving trainers a streamlined workspace to coach smarter 
             and track progress effortlessly with AI-powered insights.
           </p>
@@ -115,7 +115,7 @@ export default function TrainerPortalSection() {
                 {/* Content */}
                 <div className="relative">
                   {/* Icon */}
-                  <div className={`inline-flex p-4 rounded-xl mb-6 transition-all duration-300 ${
+                  <div className={`inline-flex p-3 rounded-xl mb-6 transition-all duration-300 ${
                     activeCard === idx 
                       ? 'bg-yellow-500/20 text-yellow-400' 
                       : 'bg-gray-700/50 text-gray-400 group-hover:bg-gray-700/70 group-hover:text-gray-300'
@@ -124,14 +124,14 @@ export default function TrainerPortalSection() {
                   </div>
 
                   {/* Title */}
-                  <h3 className={`text-xl font-bold mb-4 transition-colors duration-300 ${
+                  <h3 className={`text-base font-bold mb-4 transition-colors duration-300 ${
                     activeCard === idx ? 'text-yellow-400' : 'text-white group-hover:text-gray-200'
                   }`}>
                     {item.title}
                   </h3>
 
                   {/* Description */}
-                  <p className="text-gray-300 leading-relaxed mb-6">
+                  <p className="text-gray-300 text-sm leading-relaxed mb-6">
                     {item.description}
                   </p>
 
@@ -145,7 +145,7 @@ export default function TrainerPortalSection() {
                         <div className={`w-1.5 h-1.5 rounded-full transition-colors duration-300 ${
                           activeCard === idx ? 'bg-yellow-400' : 'bg-gray-500'
                         }`} />
-                        <span className="text-sm text-gray-400">{feature}</span>
+                        <span className="text-xs text-gray-400">{feature}</span>
                       </div>
                     ))}
                   </div>
@@ -172,17 +172,17 @@ export default function TrainerPortalSection() {
         </div>
 
         {/* Bottom CTA */}
-        <div className="text-center mt-16">
+        {/* <div className="text-center mt-16">
           <div className="inline-flex items-center gap-4 p-6 bg-gray-800/50 rounded-2xl border border-gray-700/50 backdrop-blur-sm">
             <div className="flex items-center gap-2">
-              <Zap className="w-5 h-5 text-yellow-400" />
-              <span className="text-gray-300">Ready to transform your training business?</span>
+              <Zap className="w-4 h-4 text-yellow-400" />
+              <span className="text-gray-300 text-sm">Ready to transform your training business?</span>
             </div>
-            <button className="bg-gradient-to-r from-yellow-500 to-yellow-600 text-black px-6 py-3 rounded-lg font-semibold hover:from-yellow-400 hover:to-yellow-500 transition-all duration-300 shadow-lg hover:shadow-yellow-500/30 transform hover:scale-105">
+            <button className="bg-gradient-to-r from-yellow-500 to-yellow-600 text-black px-5 py-2.5 text-sm rounded-lg font-semibold hover:from-yellow-400 hover:to-yellow-500 transition-all duration-300 shadow-lg hover:shadow-yellow-500/30 transform hover:scale-105">
               Request Access
             </button>
           </div>
-        </div>
+        </div> */}
       </div>
 
       <style jsx>{`
