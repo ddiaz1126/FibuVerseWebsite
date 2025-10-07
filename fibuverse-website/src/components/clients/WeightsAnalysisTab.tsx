@@ -525,28 +525,25 @@ export default function WeightsAnalysisTab({ weightsMeta, weightsSessionInsights
     <div className="p-4 space-y-10">
       {/* ----------------- Overview Section ----------------- */}
       <section>
-        <h2 className="text-2xl font-bold mb-4">📊 Workouts Overview</h2>
-        <div className="flex gap-4 flex-wrap">
+        <h2 className="text-lg font-medium mb-2">📊 Workouts Overview</h2>
+        <div className="flex gap-1.5 flex-wrap mb-2">
           {/* Total Workouts */}
-          <button className="bg-gray-800 text-white px-4 py-2 rounded shadow hover:bg-gray-700">
-            Total Workouts:{" "}
-            {weightsMeta.workouts_per_week.reduce((sum, w) => sum + w.total, 0)}
+          <button className="bg-gray-800 text-white px-2 py-1 text-xs rounded shadow hover:bg-gray-700">
+            Total Workouts: {weightsMeta.workouts_per_week.reduce((sum, w) => sum + w.total, 0)}
           </button>
 
           {/* Avg Duration */}
-          <button className="bg-gray-800 text-white px-4 py-2 rounded shadow hover:bg-gray-700">
+          <button className="bg-gray-800 text-white px-2 py-1 text-xs rounded shadow hover:bg-gray-700">
             Avg Duration:{" "}
             {Math.round(
-              weightsMeta.avg_duration.reduce(
-                (sum, m) => sum + m.avg_duration,
-                0
-              ) / weightsMeta.avg_duration.length
+              weightsMeta.avg_duration.reduce((sum, m) => sum + m.avg_duration, 0) /
+              weightsMeta.avg_duration.length
             )}{" "}
             min
           </button>
 
           {/* Placeholder buttons for future metrics */}
-          <button className="bg-gray-800 text-white px-4 py-2 rounded shadow hover:bg-gray-700">
+          <button className="bg-gray-800 text-white px-2 py-1 text-xs rounded shadow hover:bg-gray-700">
             Total Exercises: --
           </button>
         </div>
@@ -554,16 +551,17 @@ export default function WeightsAnalysisTab({ weightsMeta, weightsSessionInsights
 
       {/* ----------------- Recent Training Summary (Last 3 Weeks) ----------------- */}
       <section>
-        <h2 className="text-2xl font-bold mb-4">Recent Training Summary (Last 3 Weeks)</h2>
+        <h2 className="text-lg font-medium mb-2">Recent Training Summary (Last 3 Weeks)</h2>
+        
         {weightsSessionInsights?.recent_3_weeks && (
-          <div className="mb-4 text-sm text-gray-400">
+          <div className="mb-2 text-xs text-gray-400">
             <span>Total Workouts: {weightsSessionInsights.recent_3_weeks.total_workouts}</span>
-            <span className="ml-4">Average: {weightsSessionInsights.recent_3_weeks.workouts_per_week} workouts/week</span>
-            <span className="ml-4">Period: {new Date(weightsSessionInsights.recent_3_weeks.cutoff_date).toLocaleDateString()} - Today</span>
+            <span className="ml-3">Average: {weightsSessionInsights.recent_3_weeks.workouts_per_week} workouts/week</span>
+            <span className="ml-3">Period: {new Date(weightsSessionInsights.recent_3_weeks.cutoff_date).toLocaleDateString()} - Today</span>
           </div>
         )}
         
-        <div className="flex gap-2 mb-4 flex-wrap">
+        <div className="flex gap-1.5 mb-2 flex-wrap">
           {[
             "sets_per_muscle_group",
             "sets_per_exercise",
@@ -583,7 +581,7 @@ export default function WeightsAnalysisTab({ weightsMeta, weightsSessionInsights
                     | "weight_progression"
                 )
               }
-              className={`px-3 py-1 rounded ${
+              className={`px-2 py-1 text-xs rounded ${
                 activeRecentMetric === metric
                   ? "bg-blue-600 text-white"
                   : "bg-gray-800 text-gray-300 hover:bg-gray-700"
@@ -594,13 +592,15 @@ export default function WeightsAnalysisTab({ weightsMeta, weightsSessionInsights
           ))}
         </div>
 
-        <div className="bg-gray-900 p-4 rounded shadow">{renderRecentMetricsChart()}</div>
+        <div className="bg-gray-900 p-3 rounded shadow">{renderRecentMetricsChart()}</div>
       </section>
+
 
       {/* ----------------- Workout Metrics Section ----------------- */}
       <section>
-        <h2 className="text-2xl font-bold mb-4">💪 Workout Metrics</h2>
-        <div className="flex gap-2 mb-4 flex-wrap">
+        <h2 className="text-lg font-medium mb-2">💪 Workout Metrics</h2>
+        
+        <div className="flex gap-1.5 mb-2 flex-wrap">
           {[
             "workouts_per_week",
             "avg_duration",
@@ -622,7 +622,7 @@ export default function WeightsAnalysisTab({ weightsMeta, weightsSessionInsights
                     | "difficulty_stats"
                 )
               }
-              className={`px-3 py-1 rounded ${
+              className={`px-2 py-1 text-xs rounded ${
                 activeMetric === metric
                   ? "bg-blue-600 text-white"
                   : "bg-gray-800 text-gray-300 hover:bg-gray-700"
@@ -633,13 +633,14 @@ export default function WeightsAnalysisTab({ weightsMeta, weightsSessionInsights
           ))}
         </div>
 
-        <div className="bg-gray-900 p-4 rounded shadow">{renderChart()}</div>
+        <div className="bg-gray-900 p-3 rounded shadow">{renderChart()}</div>
       </section>
 
       {/* ----------------- Session Metrics Section ----------------- */}
       <section>
-        <h2 className="text-2xl font-bold mb-4">🏋️ Session Metrics</h2>
-        <div className="flex gap-2 mb-4 flex-wrap">
+        <h2 className="text-lg font-medium mb-2">🏋️ Session Metrics</h2>
+
+        <div className="flex gap-1.5 mb-2 flex-wrap">
           {[
             "volume_per_exercise",
             "avg_effort_per_exercise",
@@ -659,7 +660,7 @@ export default function WeightsAnalysisTab({ weightsMeta, weightsSessionInsights
                     | "sets_per_exercise"
                 )
               }
-              className={`px-3 py-1 rounded ${
+              className={`px-2 py-1 text-xs rounded ${
                 activeSessionMetric === metric
                   ? "bg-blue-600 text-white"
                   : "bg-gray-800 text-gray-300 hover:bg-gray-700"
@@ -670,9 +671,7 @@ export default function WeightsAnalysisTab({ weightsMeta, weightsSessionInsights
           ))}
         </div>
 
-        <div className="bg-gray-900 p-4 rounded shadow">
-          {renderSessionChart()}
-        </div>
+        <div className="bg-gray-900 p-3 rounded shadow">{renderSessionChart()}</div>
       </section>
     </div>
   );

@@ -47,14 +47,14 @@ export default function TrainerLayout({ children }: { children: React.ReactNode 
         )}
       </div>
 
--      {/* Floating toggle button — hide when chat is open */}
+     {/* Floating toggle button — hide when chat is open */}
       {!chatOpen && (
         <button
-          className="fixed bottom-8 right-8 w-16 h-16 rounded-full shadow-lg z-50 border-2 border-blue-500 flex items-center justify-center bg-gray-700 hover:bg-gray-600 transition"
+          className="fixed bottom-6 right-6 w-12 h-12 rounded-full shadow-lg z-50 border border-blue-500 flex items-center justify-center bg-gray-700 hover:bg-gray-600 transition"
           onClick={() => setChatOpen(true)}
           aria-label="Open chat"
         >
-          <ChatBubbleLeftEllipsisIcon className="w-8 h-8 text-white" />
+          <ChatBubbleLeftEllipsisIcon className="w-6 h-6 text-white" />
         </button>
       )}
     </div>

@@ -271,101 +271,101 @@ export default function CardioAnalysisTab({
     <div className="p-4 space-y-10">
       {/* ----------------- Overview Section ----------------- */}
       <section>
-        <h2 className="text-2xl font-bold mb-4">🏃 Cardio Overview</h2>
-        <div className="flex gap-4 flex-wrap">
-          <button className="bg-gray-800 text-white px-4 py-2 rounded shadow hover:bg-gray-700">
+        <h2 className="text-base font-medium mb-2">🏃 Cardio Overview</h2>
+        <div className="flex gap-1 flex-wrap">
+          <button className="bg-gray-800 text-white px-1.5 py-0.5 rounded text-xs shadow-sm hover:bg-gray-700">
             Total Runs: {cardioMeta.sessions_per_week.reduce((s, r) => s + (r.total ?? 0), 0)}
           </button>
-          <button className="bg-gray-800 text-white px-4 py-2 rounded shadow hover:bg-gray-700">
+          <button className="bg-gray-800 text-white px-1.5 py-0.5 rounded text-xs shadow-sm hover:bg-gray-700">
             Avg Distance:{" "}
             {Math.round(
                 cardioMeta.distance_per_week.reduce((s, d) => s + (d.total_distance ?? 0), 0) /
                 cardioMeta.distance_per_week.length
-            )}{" "}
-            km
+            )} km
           </button>
-          <button className="bg-gray-800 text-white px-4 py-2 rounded shadow hover:bg-gray-700">
+          <button className="bg-gray-800 text-white px-1.5 py-0.5 rounded text-xs shadow-sm hover:bg-gray-700">
             Avg Pace:{" "}
             {(
               cardioMeta.avg_pace_per_week.reduce((s, d) => s + (d.avg_pace ?? 0), 0) /
               cardioMeta.avg_pace_per_week.length
-            ).toFixed(2)}{" "}
-            min/km
+            ).toFixed(2)} min/km
           </button>
         </div>
       </section>
 
-      {/* ----------------- Run Metrics ----------------- */}
-      <section>
-        <h2 className="text-2xl font-bold mb-4">📈 Run Metrics</h2>
-        <div className="flex gap-2 mb-4 flex-wrap">
-          {[
-            "sessions_per_week",
-            "distance_per_week",
-            "avg_pace_per_week",
-            "cardio_types",
-          ].map((metric) => (
-            <button
-              key={metric}
-              onClick={() =>
-                setActiveMetric(
-                  metric as
-                    | "sessions_per_week"
-                    | "distance_per_week"
-                    | "avg_pace_per_week"
-                    | "cardio_types"
-                )
-              }
-              className={`px-3 py-1 rounded ${
-                activeMetric === metric
-                  ? "bg-blue-600 text-white"
-                  : "bg-gray-800 text-gray-300 hover:bg-gray-700"
-              }`}
-            >
-              {metric.replace(/_/g, " ").toUpperCase()}
-            </button>
-          ))}
-        </div>
 
-        <div className="bg-gray-900 p-4 rounded shadow">{renderChart()}</div>
-      </section>
+
+      {/* ----------------- Run Metrics ----------------- */}
+    <section>
+      <h2 className="text-base font-medium mb-2">📈 Run Metrics</h2>
+      <div className="flex gap-1 mb-2 flex-wrap">
+        {[
+          "sessions_per_week",
+          "distance_per_week",
+          "avg_pace_per_week",
+          "cardio_types",
+        ].map((metric) => (
+          <button
+            key={metric}
+            onClick={() =>
+              setActiveMetric(
+                metric as
+                  | "sessions_per_week"
+                  | "distance_per_week"
+                  | "avg_pace_per_week"
+                  | "cardio_types"
+              )
+            }
+            className={`px-2 py-0.5 rounded text-xs ${
+              activeMetric === metric
+                ? "bg-blue-600 text-white"
+                : "bg-gray-800 text-gray-300 hover:bg-gray-700"
+            }`}
+          >
+            {metric.replace(/_/g, " ").toUpperCase()}
+          </button>
+        ))}
+      </div>
+
+      <div className="bg-gray-900 p-2 rounded shadow-sm">{renderChart()}</div>
+    </section>
 
       {/* ----------------- Session Metrics ----------------- */}
-      <section>
-        <h2 className="text-2xl font-bold mb-4">🔥 Session Insights</h2>
-        <div className="flex gap-2 mb-4 flex-wrap">
-          {[
-            "avg_speed_over_time",
-            "avg_pace_over_time",
-            "avg_heart_rate_over_time",
-            "avg_altitude_over_time",
-          ].map((metric) => (
-            <button
-              key={metric}
-              onClick={() =>
-                setActiveSessionMetric(
-                  metric as
-                    | "avg_speed_over_time"
-                    | "avg_pace_over_time"
-                    | "avg_heart_rate_over_time"
-                    | "avg_altitude_over_time"
-                )
-              }
-              className={`px-3 py-1 rounded ${
-                activeSessionMetric === metric
-                  ? "bg-blue-600 text-white"
-                  : "bg-gray-800 text-gray-300 hover:bg-gray-700"
-              }`}
-            >
-              {metric.replace(/_/g, " ").toUpperCase()}
-            </button>
-          ))}
-        </div>
+    <section>
+      <h2 className="text-base font-medium mb-2">🔥 Session Insights</h2>
+      <div className="flex gap-1 mb-2 flex-wrap">
+        {[
+          "avg_speed_over_time",
+          "avg_pace_over_time",
+          "avg_heart_rate_over_time",
+          "avg_altitude_over_time",
+        ].map((metric) => (
+          <button
+            key={metric}
+            onClick={() =>
+              setActiveSessionMetric(
+                metric as
+                  | "avg_speed_over_time"
+                  | "avg_pace_over_time"
+                  | "avg_heart_rate_over_time"
+                  | "avg_altitude_over_time"
+              )
+            }
+            className={`px-2 py-0.5 rounded text-xs ${
+              activeSessionMetric === metric
+                ? "bg-blue-600 text-white"
+                : "bg-gray-800 text-gray-300 hover:bg-gray-700"
+            }`}
+          >
+            {metric.replace(/_/g, " ").toUpperCase()}
+          </button>
+        ))}
+      </div>
 
-        <div className="bg-gray-900 p-4 rounded shadow">
-          {renderSessionChart()}
-        </div>
-      </section>
+      <div className="bg-gray-900 p-2 rounded shadow-sm">
+        {renderSessionChart()}
+      </div>
+    </section>
     </div>
   );
 }

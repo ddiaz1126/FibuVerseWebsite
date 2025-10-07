@@ -268,235 +268,154 @@ export default function TrainerDashboard() {
   );
 
   return (
-    <div className="flex-1 p-8 overflow-auto">
-      <div className="max-w-11xl mx-auto flex gap-6">
-        {/* Main dashboard area */}
-        <div className="flex-1">
-          <div className="flex items-center justify-between mb-6">
-            <h1 className="text-3xl font-bold">Dashboard</h1>
-            <div className="text-sm text-gray-300">
-              Welcome, <strong className="text-white">{trainer.username}</strong>
-            </div>
+<div className="flex-1 p-8 overflow-auto">
+  <div className="flex gap-6 max-w-full mx-auto">
+    {/* Main dashboard area */}
+    <div className="flex-1 flex flex-col gap-6">
+      {/* Header */}
+      <div className="flex items-center justify-between mb-6">
+        <h1 className="text-3xl font-bold">Dashboard</h1>
+        <div className="text-sm text-gray-300">
+          Welcome, <strong className="text-white">{trainer.username}</strong>
+        </div>
+      </div>
+
+      {/* Metrics */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4"> {/* reduced gap */}
+        <div className="bg-gray-800 p-4 rounded-lg shadow flex flex-col items-center flex-1"> {/* smaller padding */}
+          <h2 className="font-semibold text-base mb-2">Total Clients</h2> {/* smaller font, less margin */}
+          <p className="text-3xl font-bold text-blue-500"> {/* smaller number */}
+            {metrics ? metrics.total_clients : "Loading..."}
+          </p>
+        </div>
+
+        <div className="bg-gray-800 p-4 rounded-lg shadow flex flex-col items-center flex-1">
+          <h2 className="font-semibold text-base mb-2">Today&apos;s Client Sessions</h2>
+          <p className="text-3xl font-bold text-blue-500">
+            {metrics ? metrics.total_workouts_today : "Loading..."}
+          </p>
+        </div>
+
+        <div className="bg-gray-800 p-4 rounded-lg shadow flex flex-col items-center flex-1">
+          <h2 className="font-semibold text-base mb-2">Nutrition</h2>
+          <p className="text-sm">Track and suggest nutrition plans.</p> {/* smaller text */}
+        </div>
+      </div>
+
+
+      {/* Graph + Articles side by side */}
+      <div className="flex flex-col md:flex-row gap-6">
+        {/* Client Activity Graph */}
+        <div className="flex-1 bg-gray-800 p-6 rounded-lg shadow">
+          <h2 className="text-xl font-semibold mb-4">Client Activity</h2>
+          <div className="flex space-x-4 mb-4">
+            <button
+              onClick={() => setActiveTab("workouts")}
+              className={`px-4 py-2 rounded ${
+                activeTab === "workouts" ? "bg-blue-600 text-white" : "bg-gray-700 text-gray-300"
+              }`}
+            >
+              Workouts
+            </button>
+            <button
+              onClick={() => setActiveTab("calories")}
+              className={`px-4 py-2 rounded ${
+                activeTab === "calories" ? "bg-orange-600 text-white" : "bg-gray-700 text-gray-300"
+              }`}
+            >
+              Calories
+            </button>
           </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div className="bg-gray-800 p-6 rounded-lg shadow flex flex-col items-center flex-1">
-              <h2 className="font-semibold text-lg mb-4">Total Clients</h2>
-              <p className="text-5xl font-extrabold text-blue-500">
-                {metrics ? metrics.total_clients : "Loading..."}
-              </p>
-            </div>
-
-            <div className="bg-gray-800 p-6 rounded-lg shadow flex flex-col items-center flex-1">
-              <h2 className="font-semibold text-lg mb-4">Today&apos;s Client Sessions</h2>
-              <p className="text-5xl font-extrabold text-blue-500">
-                {metrics ? metrics.total_workouts_today : "Loading..."}
-              </p>
-            </div>
-
-            <div className="bg-gray-800 p-6 rounded-lg shadow">
-              <h2 className="font-semibold text-lg mb-2">Nutrition</h2>
-              <p>Track and suggest nutrition plans.</p>
-            </div>
-
-          <div className="col-span-full bg-gray-800 p-6 rounded-lg shadow">
-            {/* Section Title */}
-            <h2 className="text-xl font-semibold mb-4">Client Activity</h2>
-            {/* Tabs */}
-            <div className="flex space-x-4 mb-4">
-              <button
-                onClick={() => setActiveTab("workouts")}
-                className={`px-4 py-2 rounded ${
-                  activeTab === "workouts" ? "bg-blue-600 text-white" : "bg-gray-700 text-gray-300"
-                }`}
-              >
-                Workouts
-              </button>
-              <button
-                onClick={() => setActiveTab("calories")}
-                className={`px-4 py-2 rounded ${
-                  activeTab === "calories" ? "bg-orange-600 text-white" : "bg-gray-700 text-gray-300"
-                }`}
-              >
-                Calories
-              </button>
-            </div>
-
-            {/* One shared chart */}
-            <div className="w-full h-[500px] bg-gray-900 p-4 rounded shadow">
-              <Bar
-                data={{
-                  labels: labels.length ? labels : [""], // fallback so chart renders
-                  datasets: datasets.length
-                    ? datasets
-                    : [
-                        {
-                          label: "No Data",
-                          data: [0],
-                          backgroundColor: "rgba(200,200,200,0.3)",
-                        },
-                      ],
-                }}
-                options={{
-                  maintainAspectRatio: false,
-                  responsive: true,
-                  plugins: { legend: { position: "top" } },
-                  scales: {
-                    x: { title: { display: true, text: "Date" } },
-                    y: {
-                      title: {
-                        display: true,
-                        text: activeTab === "workouts" ? "Workouts" : "Calories",
+          <div className="w-full h-[500px] bg-gray-900 p-4 rounded shadow">
+            <Bar
+              data={{
+                labels: labels.length ? labels : [""],
+                datasets: datasets.length
+                  ? datasets
+                  : [
+                      {
+                        label: "No Data",
+                        data: [0],
+                        backgroundColor: "rgba(200,200,200,0.3)",
                       },
-                      beginAtZero: true,
+                    ],
+              }}
+              options={{
+                maintainAspectRatio: false,
+                responsive: true,
+                plugins: { legend: { position: "top" } },
+                scales: {
+                  x: { title: { display: true, text: "Date" } },
+                  y: {
+                    title: {
+                      display: true,
+                      text: activeTab === "workouts" ? "Workouts" : "Calories",
                     },
+                    beginAtZero: true,
                   },
-                }}
-              />
-            </div>
-
-          </div>
-
-            {/* Research Papers Section */}
-            <div className="bg-gray-800 p-6 rounded-lg shadow md:col-span-3">
-              <div className="bg-gray-800 p-6 rounded-lg shadow md:col-span-3 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-                {/* Title */}
-                <h2 className="text-xl font-semibold">
-                  Latest Research Articles
-                </h2>
-
-                {/* Inline label + dropdown */}
-                <div className="flex items-center gap-2">
-                  <label className="text-sm font-semibold">Topic:</label>
-                  <select
-                    value={selectedCategory}
-                    onChange={(e) => {
-                      const value = e.target.value;
-                      setSelectedCategory(value);
-                      runResearchWorkflow(value);
-                    }}
-                    className="bg-gray-700 text-white px-4 py-2 rounded border border-gray-600 text-base"
-                  >
-                    <option value="Fitness">Fitness</option>
-                    <option value="Nutrition">Nutrition</option>
-                    <option value="Cardio">Cardio</option>
-                  </select>
-                </div>
-              </div>
-
-              {/* Reserve space for 3 papers */}
-              <div className="space-y-4 min-h-[36rem]">
-                {running ? (
-                  <p className="text-gray-400">Serching web for papers…</p>
-                ) : papers.length === 0 ? (
-                  <p className="text-gray-400">No papers found.</p>
-                ) : (
-                  papers.slice(0, 3).map((paper, idx) => (
-                    <div key={idx} className="bg-gray-900 p-4 rounded-lg">
-                      <h3 className="text-white font-bold text-md">{paper.title}</h3>
-                      <p className="text-gray-400 text-sm">
-                        {Array.isArray(paper.authors)
-                          ? paper.authors.slice(0, 3).join(", ")
-                          : String(paper.authors)}
-                        {Array.isArray(paper.authors) && paper.authors.length > 3 ? " et al." : ""} • {paper.date}
-                      </p>
-                      <p className="text-gray-300 text-sm mt-2 line-clamp-3">
-                        {paper.abstract || "No abstract available."}
-                      </p>
-                      <div className="flex gap-3 mt-2 text-blue-400 text-xs">
-                        {paper.doi && (
-                          <a href={`https://doi.org/${paper.doi}`} target="_blank" rel="noreferrer">
-                            DOI
-                          </a>
-                        )}
-                        {paper.pdf_link && (
-                          <a href={paper.pdf_link} target="_blank" rel="noreferrer">
-                            PDF
-                          </a>
-                        )}
-                        {paper.pmid && (
-                          <a href={`https://pubmed.ncbi.nlm.nih.gov/${paper.pmid}/`} target="_blank" rel="noreferrer">
-                            PubMed
-                          </a>
-                        )}
-                      </div>
-                    </div>
-                  ))
-                )}
-              </div>
-            </div>
-
+                },
+              }}
+            />
           </div>
         </div>
 
-        {/* Alerts sidebar */}
-        <div className="w-1/3 bg-gray-900 p-4 rounded-lg flex flex-col">
-          <h2 className="text-xl font-bold mb-4">Alerts</h2>
-
-          {/* Tabs for last 7 days */}
-          <div className="relative mb-3 flex items-center">
-            {/* Left scroll button */}
-            <button
-              onClick={() => scrollTabs(-100)}
-              className="z-10 bg-gray-700 text-white px-2 py-1 rounded hover:bg-gray-600 mr-2"
-            >
-              ◀
-            </button>
-
-            {/* Scrollable tabs container */}
-            <div
-              ref={tabsRef}
-              className="flex gap-2 overflow-x-auto scrollbar-hide whitespace-nowrap h-16 items-center flex-1"
-              style={{ scrollbarWidth: "none" }}
-            >
-              {dayAlerts.slice().reverse().map((day, idx) => (
-                <button
-                  key={day.date}
-                  onClick={() => setSelectedDayIndex(idx)}
-                  className={`flex-shrink-0 px-4 py-2 rounded text-base whitespace-nowrap ${
-                    idx === selectedDayIndex
-                      ? "bg-blue-600 text-white"
-                      : "bg-gray-800 text-gray-300 hover:bg-gray-700"
-                  }`}
-                >
-                  {day.date.split(",")[1]?.trim() || day.date}
-                </button>
-              ))}
+        {/* Research Papers */}
+        <div className="flex-1 bg-gray-800 p-6 rounded-lg shadow flex flex-col">
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-4">
+            <h2 className="text-lg font-semibold">FibuScholar&apos;s Latest Finds</h2>
+            <div className="flex items-center gap-2">
+              <label className="text-sm font-semibold">Topic:</label>
+              <select
+                value={selectedCategory}
+                onChange={(e) => {
+                  const value = e.target.value;
+                  setSelectedCategory(value);
+                  runResearchWorkflow(value);
+                }}
+                className="bg-gray-700 text-white px-4 py-2 rounded border border-gray-600 text-base"
+              >
+                <option value="Fitness">Fitness</option>
+                <option value="Nutrition">Nutrition</option>
+                <option value="Cardio">Cardio</option>
+              </select>
             </div>
-
-            {/* Right scroll button */}
-            <button
-              onClick={() => scrollTabs(100)}
-              className="z-10 bg-gray-700 text-white px-2 py-1 rounded hover:bg-gray-600 ml-2"
-            >
-              ▶
-            </button>
           </div>
 
-          {/* Selected Date */}
-          <div className="text-gray-300 text-lg font-semibold mb-2 px-2">
-            {currentDay ? currentDay.date : "Select a day"}
-          </div>
-
-          {/* Scrollable alerts */}
-          <div className="flex-1 overflow-y-auto space-y-3">
-            {currentDay?.alerts?.length === 0 ? (
-              <div className="p-3 rounded border-l-4 border-gray-500 bg-gray-800 text-gray-300 text-sm">
-                No alerts for {currentDay?.date}
-              </div>
+          <div className="space-y-4 overflow-auto min-h-[500px]">
+            {running ? (
+              <p className="text-gray-400">Searching web for papers…</p>
+            ) : papers.length === 0 ? (
+              <p className="text-gray-400">No papers found.</p>
             ) : (
-              currentDay?.alerts?.map((alert) => (
-                <div
-                  key={alert.id ?? Math.random()}
-                  className={`p-3 rounded border-l-4 bg-gray-800 ${
-                    alert.id ? "border-blue-500" : "border-gray-500"
-                  }`}
-                >
-                  <div className="flex items-center justify-between mb-1">
-                    <span className="font-semibold text-white">{alert.time}</span>
-                    <span className="text-gray-400 text-sm">{renderIcon(alert.icon)}</span>
+              papers.slice(0, 3).map((paper, idx) => (
+                <div key={idx} className="bg-gray-900 p-4 rounded-lg">
+                  <h3 className="text-white font-bold text-sm">{paper.title}</h3>
+                  <p className="text-gray-400 text-xs">
+                    {Array.isArray(paper.authors)
+                      ? paper.authors.slice(0, 3).join(", ")
+                      : String(paper.authors)}
+                    {Array.isArray(paper.authors) && paper.authors.length > 3 ? " et al." : ""} • {paper.date}
+                  </p>
+                  <p className="text-gray-300 text-xs mt-2 line-clamp-3">
+                    {paper.abstract || "No abstract available."}
+                  </p>
+                  <div className="flex gap-3 mt-2 text-blue-400 text-xs">
+                    {paper.doi && (
+                      <a href={`https://doi.org/${paper.doi}`} target="_blank" rel="noreferrer">
+                        DOI
+                      </a>
+                    )}
+                    {paper.pdf_link && (
+                      <a href={paper.pdf_link} target="_blank" rel="noreferrer">
+                        PDF
+                      </a>
+                    )}
+                    {paper.pmid && (
+                      <a href={`https://pubmed.ncbi.nlm.nih.gov/${paper.pmid}/`} target="_blank" rel="noreferrer">
+                        PubMed
+                      </a>
+                    )}
                   </div>
-                  <p className="text-gray-300 text-sm">{alert.alert_message}</p>
                 </div>
               ))
             )}
@@ -504,5 +423,76 @@ export default function TrainerDashboard() {
         </div>
       </div>
     </div>
+
+    {/* Alerts sidebar */}
+    <div className="w-full md:w-1/4 bg-gray-900 p-4 rounded-lg flex flex-col">
+      <h2 className="text-xl font-bold mb-4">Alerts</h2>
+      {/* Tabs */}
+      <div className="relative mb-2 flex items-center">
+        <button
+          onClick={() => scrollTabs(-100)}
+          className="z-10 bg-gray-700 text-white px-1 py-1 rounded hover:bg-gray-600 mr-1 text-sm"
+        >
+          ◀
+        </button>
+
+        <div
+          ref={tabsRef}
+          className="flex gap-1 overflow-x-auto scrollbar-hide whitespace-nowrap h-12 items-center flex-1"
+          style={{ scrollbarWidth: "none" }}
+        >
+          {dayAlerts.slice().reverse().map((day, idx) => (
+            <button
+              key={day.date}
+              onClick={() => setSelectedDayIndex(idx)}
+              className={`flex-shrink-0 px-2 py-1 rounded text-sm whitespace-nowrap ${
+                idx === selectedDayIndex
+                  ? "bg-blue-600 text-white"
+                  : "bg-gray-800 text-gray-300 hover:bg-gray-700"
+              }`}
+            >
+              {day.date.split(",")[1]?.trim() || day.date}
+            </button>
+          ))}
+        </div>
+
+        <button
+          onClick={() => scrollTabs(100)}
+          className="z-10 bg-gray-700 text-white px-1 py-1 rounded hover:bg-gray-600 ml-1 text-sm"
+        >
+          ▶
+        </button>
+      </div>
+
+      <div className="text-gray-300 text-lg font-semibold mb-2 px-2">
+        {currentDay ? currentDay.date : "Select a day"}
+      </div>
+
+      <div className="flex-1 overflow-y-auto space-y-3">
+        {currentDay?.alerts?.length === 0 ? (
+          <div className="p-3 rounded border-l-4 border-gray-500 bg-gray-800 text-gray-300 text-sm">
+            No alerts for {currentDay?.date}
+          </div>
+        ) : (
+          currentDay?.alerts?.map((alert) => (
+            <div
+              key={alert.id ?? Math.random()}
+              className={`p-3 rounded border-l-4 bg-gray-800 ${
+                alert.id ? "border-blue-500" : "border-gray-500"
+              }`}
+            >
+              <div className="flex items-center justify-between mb-1">
+                <span className="font-semibold text-white">{alert.time}</span>
+                <span className="text-gray-400 text-sm">{renderIcon(alert.icon)}</span>
+              </div>
+              <p className="text-gray-300 text-sm">{alert.alert_message}</p>
+            </div>
+          ))
+        )}
+      </div>
+    </div>
+  </div>
+</div>
+
   );
 }

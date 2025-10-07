@@ -87,6 +87,35 @@ export default function CreateWorkflowPage() {
   // Markdown Section
   const [agentGoal, setAgentGoal] = useState('');
 
+  const [draggedNode, setDraggedNode] = useState<{ layerId: string; agentId: string } | null>(null);
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  const [pendingDeleteName, setPendingDeleteName] = useState('');
+
+  function handleDragStart(e: React.DragEvent, layerId: string, agentId: string) {
+    setDraggedNode({ layerId, agentId });
+    e.dataTransfer.effectAllowed = 'move';
+  }
+
+  function handleDragEnd() {
+    setDraggedNode(null);
+  }
+
+  function handleDropToTrash(e: React.DragEvent) {
+    e.preventDefault();
+    if (draggedNode) {
+      const agent = findAgent(Number(draggedNode.agentId));
+      setPendingDeleteName(agent?.name || 'this node');
+      setConfirmDelete(true);
+    }
+  }
+
+  function confirmRemove() {
+    if (draggedNode) {
+    removeNodeFromLayer(draggedNode.layerId, Number(draggedNode.agentId));
+      setDraggedNode(null);
+      setConfirmDelete(false);
+    }
+  }
   // load agents on mount
   useEffect(() => {
     async function loadAgents() {
@@ -305,7 +334,6 @@ export default function CreateWorkflowPage() {
         )}
       </div>
 
-
       {/* Network Visualization + Details */}
       <div className="flex-1 flex flex-col overflow-auto">
         {selectedAgent ? (
@@ -343,174 +371,220 @@ export default function CreateWorkflowPage() {
         )}
       </div>
 
-      {/* Workflow Columns */}
-      <div
-        ref={containerRef}
-        className="relative w-full min-h-[350px] mb-4 border-2 border-gray-600 rounded-lg bg-gray-800 flex gap-4 overflow-x-auto p-4"
-      >
-        {/* Arrows SVG */}
-        <svg className="absolute top-0 left-0 w-full h-full pointer-events-none z-20">
-          <defs>
-            <marker
-              id="arrow"
-              markerWidth="12"
-              markerHeight="12"
-              refX="8"
-              refY="4"
-              orient="auto"
-              markerUnits="strokeWidth"
-            >
-              <path d="M0,0 L0,8 L10,4 z" fill="#10b981" />
-            </marker>
-            <filter id="glow">
-              <feGaussianBlur stdDeviation="2" result="coloredBlur"/>
-              <feMerge>
-                <feMergeNode in="coloredBlur"/>
-                <feMergeNode in="SourceGraphic"/>
-              </feMerge>
-            </filter>
-          </defs>
+{/* Workflow Columns */}
+<div
+  ref={containerRef}
+  className="relative w-full min-h-[400px] mb-4 border-2 border-gray-700 rounded-xl bg-gradient-to-br from-gray-900/50 to-gray-800/50 backdrop-blur-sm flex flex-col"
+>
+  {/* Background Effects */}
+  <div className="absolute inset-0 opacity-10 pointer-events-none">
+    <div
+      className="absolute inset-0"
+      style={{
+        backgroundImage: `
+          radial-gradient(circle at 20% 20%, #10b981 1px, transparent 1px),
+          radial-gradient(circle at 80% 80%, #3b82f6 1px, transparent 1px)
+        `,
+        backgroundSize: '50px 50px',
+      }}
+    />
+  </div>
 
-          {layers.map((layer, i) => {
-            if (i === layers.length - 1) return null;
-            const nextLayer = layers[i + 1];
+  {/* Main Scrollable Layers */}
+  <div className="flex gap-6 overflow-x-auto p-6 flex-1 relative">
+    {/* Arrows SVG */}
+    <svg className="absolute top-0 left-0 w-full h-full pointer-events-none z-20">
+      <defs>
+        <marker
+          id="arrow"
+          markerWidth="12"
+          markerHeight="12"
+          refX="8"
+          refY="4"
+          orient="auto"
+          markerUnits="strokeWidth"
+        >
+          <path d="M0,0 L0,8 L10,4 z" fill="#10b981" />
+        </marker>
+        <filter id="glow">
+          <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
+          <feMerge>
+            <feMergeNode in="coloredBlur"/>
+            <feMergeNode in="SourceGraphic"/>
+          </feMerge>
+        </filter>
+      </defs>
 
-            return (
-              <g key={`g-${i}`}>
-                {layer.nodes.map((agentId, rowIndex) =>
-                  nextLayer.nodes.map((nextAgentId, nextRowIndex) => {
-                    const aKey = `${i}-${rowIndex}-${agentId}`;
-                    const bKey = `${i + 1}-${nextRowIndex}-${nextAgentId}`;
-                    const a = positions[aKey];
-                    const b = positions[bKey];
-                    
-                    // Only render if both positions exist
-                    if (!a || !b) return null;
+      {layers.map((layer, i) => {
+        if (i === layers.length - 1) return null;
+        const nextLayer = layers[i + 1];
 
-                    const x1 = a.right;
-                    const y1 = a.cy;
-                    const x2 = b.left;
-                    const y2 = b.cy;
+        return (
+          <g key={`g-${i}`}>
+            {layer.nodes.map((agentId, rowIndex) =>
+              nextLayer.nodes.map((nextAgentId, nextRowIndex) => {
+                const aKey = `${i}-${rowIndex}-${agentId}`;
+                const bKey = `${i + 1}-${nextRowIndex}-${nextAgentId}`;
+                const a = positions[aKey];
+                const b = positions[bKey];
+                
+                if (!a || !b) return null;
 
-                    const offset = 8;
-                    const sx = x1 + offset;
-                    const ex = x2 - offset;
+                const x1 = a.right;
+                const y1 = a.cy;
+                const x2 = b.left;
+                const y2 = b.cy;
 
-                    return (
-                      <line
-                        key={`${i}-${rowIndex}-${nextRowIndex}-${agentId}-${nextAgentId}`}
-                        x1={sx}
-                        y1={y1}
-                        x2={ex}
-                        y2={y2}
-                        stroke="#10b981"
-                        strokeWidth={3}
-                        markerEnd="url(#arrow)"
-                        filter="url(#glow)"
-                        opacity={0.8}
-                      />
-                    );
-                  })
-                )}
-              </g>
-            );
-          })}
-        </svg>
+                const offset = 8;
+                const sx = x1 + offset;
+                const ex = x2 - offset;
 
-        {/* Columns */}
-        {layers.map((layer, colIndex) => (
-          <div
-            key={layer.id}
-            className="flex flex-col gap-3 min-w-[200px] flex-1 p-3 border-l-2 border-gray-600 z-10 relative bg-gray-800/50 rounded"
-          >
-            <h3 className="text-gray-300 font-bold text-center mb-2 pb-2 border-b border-gray-700">
-              Layer {colIndex + 1}
-            </h3>
-
-            {layer.nodes.length === 0 && (
-              <div className="flex-1 flex items-center justify-center border-2 border-dashed border-gray-700 rounded-lg p-4 text-gray-500 text-sm">
-                Empty layer
-              </div>
-            )}
-
-            {layer.nodes.map((agentId, nodeIndex) => {
-              const agent = findAgent(agentId);
-              const key = `${colIndex}-${nodeIndex}-${agentId}`;
-              const isHovered = hoveredAgent === key;
-              
-              return (
-                <div key={key} className="relative">
-                  <div
-                    ref={(el) => {
-                      nodeRefs.current[key] = el;
+                return (
+                  <line
+                    key={`${i}-${rowIndex}-${nextRowIndex}-${agentId}-${nextAgentId}`}
+                    x1={sx}
+                    y1={y1}
+                    x2={ex}
+                    y2={y2}
+                    stroke="#10b981"
+                    strokeWidth={2}
+                    markerEnd="url(#arrow)"
+                    filter="url(#glow)"
+                    opacity={0.7}
+                    className="animate-pulse"
+                    style={{
+                      animationDuration: '3s',
+                      animationDelay: `${i * 0.2}s`,
                     }}
-                    onMouseEnter={() => setHoveredAgent(key)}
-                    onMouseLeave={() => setHoveredAgent(null)}
-                    className={`node bg-gradient-to-r from-green-600 to-emerald-600 text-white p-3 rounded-lg flex justify-between items-center text-sm shadow-lg transition-all duration-200 cursor-pointer ${
-                      isHovered ? 'scale-105 shadow-2xl ring-2 ring-green-400' : ''
-                    }`}
-                  >
-                    <span className="truncate mr-2 font-medium">
-                      {agent ? agent.name : `Agent ${agentId}`}
-                    </span>
-                    <button
-                      type="button"
-                      title="Remove node"
-                      className="ml-1 bg-red-600 px-2 py-1 rounded hover:bg-red-700 text-xs font-bold transition-colors"
-                      onClick={() => removeNodeFromLayer(layer.id, agentId)}
-                    >
-                      ×
-                    </button>
+                  />
+                );
+              })
+            )}
+          </g>
+        );
+      })}
+    </svg>
+
+    {/* Columns */}
+    {layers.map((layer, colIndex) => (
+      <div
+        key={layer.id}
+        className="flex flex-col gap-3 min-w-[180px] flex-1 p-3 border-l border-gray-700/40 z-10 relative bg-gray-800/20 rounded-lg"
+      >
+        <h3 className="text-gray-300 font-semibold text-center mb-1 pb-1 border-b border-gray-700/40 text-xs uppercase tracking-wider">
+          Layer {colIndex + 1}
+        </h3>
+
+        {layer.nodes.length === 0 && (
+          <div className="flex-1 flex items-center justify-center border border-dashed border-gray-700/40 rounded-lg p-4 text-gray-500 text-xs italic">
+            Empty
+          </div>
+        )}
+
+        {layer.nodes.map((agentId, nodeIndex) => {
+          const agent = findAgent(agentId);
+          const key = `${colIndex}-${nodeIndex}-${agentId}`;
+          const isHovered = hoveredAgent === key;
+
+          return (
+            <div
+              key={key}
+              className="relative group"
+              draggable
+              onDragStart={(e) => handleDragStart(e, layer.id, agentId)}
+              onDragEnd={handleDragEnd}
+            >
+              {/* Node */}
+              <div
+                ref={(el) => {
+                  nodeRefs.current[key] = el;
+                }}
+                onMouseEnter={() => setHoveredAgent(key)}
+                onMouseLeave={() => setHoveredAgent(null)}
+                className={`node bg-gradient-to-r from-emerald-600 to-green-600 text-white p-2 rounded-lg border border-white/10 text-xs flex justify-between items-center shadow-md cursor-pointer transition-all duration-300 ${
+                  isHovered ? 'scale-105 border-white/40 shadow-lg' : ''
+                }`}
+              >
+                <span className="truncate mr-1 font-medium">
+                  {agent ? agent.name : `Agent ${agentId}`}
+                </span>
+              </div>
+
+              {/* Hover Pulse */}
+              {isHovered && (
+                <>
+                  <div className="absolute inset-0 rounded-lg border border-green-400/40 animate-ping pointer-events-none" />
+                  <div className="absolute -inset-1 rounded-lg border border-green-400/20 animate-ping pointer-events-none" style={{ animationDelay: '0.4s' }} />
+                </>
+              )}
+
+              {/* Hover Tooltip */}
+              {isHovered && agent && (
+                <div 
+                  className="absolute left-full ml-3 top-0 z-30 w-64 bg-black/90 border border-green-500 rounded-lg shadow-2xl p-3 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+                >
+                  <div className="absolute -left-2 top-4 w-3 h-3 bg-black/90 border-l border-t border-green-500 rotate-[-45deg]" />
+                  <div className="font-semibold text-white mb-1">{agent.name}</div>
+                  <div className="text-gray-400 text-xs mb-2 line-clamp-2">{agent.description}</div>
+
+                  <div className="text-xs text-blue-400 mb-1 font-semibold">Inputs</div>
+                  <div className="space-y-0.5 mb-2">
+                    {Object.entries(agent.inputs).map(([key, meta]) => (
+                      <div key={key} className="text-gray-300 bg-gray-800/40 px-2 py-0.5 rounded">
+                        {key} {meta.required && <span className="text-orange-400">(req)</span>}
+                      </div>
+                    ))}
                   </div>
 
-                  {/* Hover Tooltip with Inputs/Outputs */}
-                  {isHovered && agent && (
-                    <div 
-                      className="absolute left-full ml-4 top-0 z-30 w-72 bg-gray-900 border-2 border-green-500 rounded-lg shadow-2xl p-4"
-                      style={{
-                        animation: 'fadeIn 0.2s ease-out'
-                      }}
-                    >
-                      <div className="absolute -left-2 top-4 w-4 h-4 bg-gray-900 border-l-2 border-t-2 border-green-500 transform rotate-[-45deg]" />
-                      
-                      <div className="font-bold text-white mb-2 text-base">{agent.name}</div>
-                      <div className="text-gray-400 text-xs mb-3">{agent.description}</div>
-                      
-                      <div className="space-y-3">
-                        <div>
-                          <div className="text-xs font-semibold text-blue-400 mb-1.5 flex items-center gap-1">
-                            <span>📥</span> INPUTS
-                          </div>
-                          <div className="space-y-1">
-                            {Object.entries(agent.inputs).map(([key, meta]) => (
-                              <div key={key} className="text-xs text-gray-300 bg-gray-800 px-2 py-1 rounded">
-                                • {key} {meta.required ? "(required)" : "(optional)"}
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-                        
-                        <div>
-                          <div className="text-xs font-semibold text-green-400 mb-1.5 flex items-center gap-1">
-                            <span>📤</span> OUTPUTS
-                          </div>
-                            <div className="space-y-1">
-                              {Object.entries(agent.outputs).map(([key, meta]) => (
-                                <div key={key} className="text-xs text-gray-300 bg-gray-800 px-2 py-1 rounded">
-                                  • {key} - {meta.type}{meta.description ? `: ${meta.description}` : ""}
-                                </div>
-                              ))}
-                            </div>
-                        </div>
+                  <div className="text-xs text-green-400 mb-1 font-semibold">Outputs</div>
+                  <div className="space-y-0.5">
+                    {Object.entries(agent.outputs).map(([key, meta]) => (
+                      <div key={key} className="text-gray-300 bg-gray-800/40 px-2 py-0.5 rounded">
+                        {key} - <span className="text-gray-500">{meta.type}</span>
                       </div>
-                    </div>
-                  )}
+                    ))}
+                  </div>
                 </div>
-              );
-            })}
-          </div>
-        ))}
+              )}
+            </div>
+          );
+        })}
       </div>
+    ))}
+  </div>
+
+  {/* Trash Zone */}
+  <div
+    className={`h-20 border-t border-gray-700 flex items-center justify-center text-gray-400 text-sm transition-all duration-300 rounded-b-xl ${
+      draggedNode ? 'bg-red-900/50 text-red-400 border-red-700' : 'bg-gray-900/60'
+    }`}
+    onDragOver={(e) => e.preventDefault()}
+    onDrop={handleDropToTrash}
+  >
+    🗑️ <span className="ml-2">Drag a node here to delete</span>
+
+    {confirmDelete && (
+      <div className="absolute bottom-24 bg-gray-800 border border-red-500 text-white rounded-lg p-4 flex flex-col items-center shadow-xl z-50">
+        <div className="text-sm mb-2">Remove <b>{pendingDeleteName}</b>?</div>
+        <div className="flex gap-2">
+          <button
+            className="bg-red-600 px-3 py-1 rounded text-xs hover:bg-red-700"
+            onClick={confirmRemove}
+          >
+            Yes
+          </button>
+          <button
+            className="bg-gray-700 px-3 py-1 rounded text-xs hover:bg-gray-600"
+            onClick={() => setConfirmDelete(false)}
+          >
+            Cancel
+          </button>
+        </div>
+      </div>
+    )}
+  </div>
+</div>
+
 
       {/* Form */}
       <form onSubmit={handleSubmit} className="space-y-4">
