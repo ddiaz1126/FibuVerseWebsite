@@ -357,8 +357,8 @@ export default function ClientsPage() {
       <div className="w-1/5 border-r border-gray-700 p-4 flex flex-col">
         {/* Add Client Button */}
         <button
-          onClick={() => router.push("/trainer/clients/add-client")} // adjust route if needed
-          className="mb-4 px-3 py-2 bg-green-600 text-white rounded hover:bg-green-700 transition"
+          onClick={() => router.push("/trainer/clients/add-client")}
+          className="mb-4 px-2 py-1 bg-green-600 text-white rounded text-sm hover:bg-green-700 transition"
         >
           + Add Client
         </button>
@@ -375,13 +375,13 @@ export default function ClientsPage() {
             <div className="text-center text-gray-400 mt-4">Loading clients...</div>
           ) : (
             clients.map(client => (
-              <button
-                key={client.id}
-                onClick={() => setSelectedClient(client)}
-                className={`w-full text-left px-3 py-2 rounded mb-1 hover:bg-gray-700 transition ${
-                  selectedClient?.id === client.id ? "bg-gray-700" : ""
-                }`}
-              >
+                <button
+                  key={client.id}
+                  onClick={() => setSelectedClient(client)}
+                  className={`w-full text-left px-3 py-2 rounded mb-1 hover:bg-gray-700 transition ${
+                    selectedClient?.id === client.id ? "bg-gray-700" : ""
+                  } text-sm`} // <-- add this
+                >
                 {client.first_name} {client.last_name}
               </button>
             ))
@@ -394,52 +394,52 @@ export default function ClientsPage() {
         {/* Top section split: Client details + Calendar */}
         <div className="flex gap-4">
         {/* Client details */}
-        <div className="w-full md:w-1/3 bg-gray-800 p-4 rounded-2xl shadow-md flex flex-col gap-4">
-          <h2 className="font-semibold text-xl border-b border-gray-700 pb-2">Client Details</h2>
+        <div className="w-full md:w-1/3 bg-gray-800 p-3 rounded-xl shadow-md flex flex-col gap-3">
+          <h2 className="font-semibold text-lg border-b border-gray-700 pb-1">Client Details</h2>
 
           {selectedClient ? (
-            <div className="flex flex-col gap-4">
+            <div className="flex flex-col gap-3">
               {/* Top section: avatar + name */}
-              <div className="flex items-center gap-4">
-                  <Image
-                    src={selectedClient.profile_image || "/placeholder-profile.png"}
-                    alt={`${selectedClient.first_name} ${selectedClient.last_name}`}
-                    width={64}       // match your Tailwind w-16
-                    height={64}      // match your Tailwind h-16
-                    className="rounded-full object-cover border border-gray-600"
-                  />
+              <div className="flex items-center gap-3">
+                <Image
+                  src={selectedClient.profile_image || "/placeholder-profile.png"}
+                  alt={`${selectedClient.first_name} ${selectedClient.last_name}`}
+                  width={48}       
+                  height={48}      
+                  className="rounded-full object-cover border border-gray-600"
+                />
                 <div>
-                  <p className="text-lg font-semibold">
+                  <p className="text-base font-semibold">
                     {selectedClient.first_name || "-"} {selectedClient.last_name || "-"}
                   </p>
-                  <p className="text-gray-300 text-sm">{selectedClient.email || "-"}</p>
-                  <p className="text-gray-400 text-sm">
+                  <p className="text-gray-300 text-xs">{selectedClient.email || "-"}</p>
+                  <p className="text-gray-400 text-xs">
                     {selectedClient.city || "-"}, {selectedClient.home_state || "-"}
                   </p>
                 </div>
               </div>
 
               {/* Info boxes */}
-              <div className="grid grid-cols-2 gap-3">
-                <div className="bg-gray-700 p-3 rounded-lg">
-                  <span className="block text-xs text-gray-400">Gender</span>
-                  <span className="font-medium">{selectedClient.gender || "-"}</span>
+              <div className="grid grid-cols-2 gap-2">
+                <div className="bg-gray-700 p-2 rounded-lg">
+                  <span className="block text-[10px] text-gray-400">Gender</span>
+                  <span className="font-medium text-sm">{selectedClient.gender || "-"}</span>
                 </div>
-                <div className="bg-gray-700 p-3 rounded-lg">
-                  <span className="block text-xs text-gray-400">Age</span>
-                  <span className="font-medium">{selectedClient.age || "-"}</span>
+                <div className="bg-gray-700 p-2 rounded-lg">
+                  <span className="block text-[10px] text-gray-400">Age</span>
+                  <span className="font-medium text-sm">{selectedClient.age || "-"}</span>
                 </div>
-                <div className="bg-gray-700 p-3 rounded-lg">
-                  <span className="block text-xs text-gray-400">Height</span>
-              <span className="font-medium">
-                {metricsData?.body_measurements?.[0]?.height_cm
-                  ? `${metricsData.body_measurements[0].height_cm} cm`
-                  : "-"}
-              </span>
+                <div className="bg-gray-700 p-2 rounded-lg">
+                  <span className="block text-[10px] text-gray-400">Height</span>
+                  <span className="font-medium text-sm">
+                    {metricsData?.body_measurements?.[0]?.height_cm
+                      ? `${metricsData.body_measurements[0].height_cm} cm`
+                      : "-"}
+                  </span>
                 </div>
-                <div className="bg-gray-700 p-3 rounded-lg">
-                  <span className="block text-xs text-gray-400">Weight</span>
-                  <span className="font-medium">
+                <div className="bg-gray-700 p-2 rounded-lg">
+                  <span className="block text-[10px] text-gray-400">Weight</span>
+                  <span className="font-medium text-sm">
                     {metricsData?.body_measurements?.[0]?.weight_kg
                       ? `${metricsData.body_measurements[0].weight_kg} kg`
                       : "-"}
@@ -448,15 +448,15 @@ export default function ClientsPage() {
               </div>
 
               {/* Fitness goal */}
-              <div className="bg-gray-700 p-3 rounded-lg">
-                <span className="block text-xs text-gray-400">Fitness Goal</span>
-                <span className="font-medium">{selectedClient.fitness_goal || "-"}</span>
+              <div className="bg-gray-700 p-2 rounded-lg">
+                <span className="block text-[10px] text-gray-400">Fitness Goal</span>
+                <span className="font-medium text-sm">{selectedClient.fitness_goal || "-"}</span>
               </div>
 
               {/* Activity Metrics */}
-              <div className="bg-gray-700 p-3 rounded-lg">
-                <span className="block text-xs text-gray-400 mb-1">Activity Metrics</span>
-                <div className="grid grid-cols-2 gap-2 text-sm">
+              <div className="bg-gray-700 p-2 rounded-lg">
+                <span className="block text-[10px] text-gray-400 mb-1">Activity Metrics</span>
+                <div className="grid grid-cols-2 gap-1 text-xs">
                   <span><strong>Workouts/wk:</strong> {String(selectedClient.activity_metrics?.workouts_per_week ?? "-")}</span>
                   <span><strong>Runs/wk:</strong> {String(selectedClient.activity_metrics?.runs_per_week ?? "-")}</span>
                   <span><strong>Steps/day:</strong> {String(selectedClient.activity_metrics?.average_daily_steps ?? "-")}</span>
@@ -464,50 +464,50 @@ export default function ClientsPage() {
               </div>
             </div>
           ) : (
-            <p className="text-gray-400">Select a client to view details</p>
+            <p className="text-gray-400 text-sm">Select a client to view details</p>
           )}
         </div>
 
           {/* Calendar */}
-          <div className="flex-1 bg-gray-800 p-4 rounded-2xl shadow-md">
+          <div className="flex-1 bg-gray-800 p-3 rounded-xl shadow-md">
             {/* Header with navigation */}
-            <div className="flex justify-between items-center mb-8">
+            <div className="flex justify-between items-center mb-4">
               <button 
                 onClick={prevMonth} 
-                className="px-3 py-1.5 bg-gray-700 rounded-lg hover:bg-gray-600 transition-colors text-sm font-medium"
+                className="px-2 py-1 bg-gray-700 rounded-lg hover:bg-gray-600 transition-colors text-xs font-medium"
               >
                 ← Prev
               </button>
-              <div className="font-bold text-lg">{format(currentMonth, "MMMM yyyy")}</div>
+              <div className="font-bold text-base">{format(currentMonth, "MMMM yyyy")}</div>
               <button 
                 onClick={nextMonth} 
-                className="px-3 py-1.5 bg-gray-700 rounded-lg hover:bg-gray-600 transition-colors text-sm font-medium"
+                className="px-2 py-1 bg-gray-700 rounded-lg hover:bg-gray-600 transition-colors text-xs font-medium"
               >
                 Next →
               </button>
             </div>
 
             {/* Legend */}
-            <div className="flex gap-4 mb-3 items-center text-xs justify-center">
-              <div className="flex items-center gap-1.5">
-                <span className="w-2.5 h-2.5 bg-green-500 rounded-full"></span>
+            <div className="flex gap-3 mb-2 items-center text-[10px] justify-center">
+              <div className="flex items-center gap-1">
+                <span className="w-2 h-2 bg-green-500 rounded-full"></span>
                 <span className="text-gray-300">Cardio</span>
               </div>
-              <div className="flex items-center gap-1.5">
-                <span className="w-2.5 h-2.5 bg-yellow-500 rounded-full"></span>
+              <div className="flex items-center gap-1">
+                <span className="w-2 h-2 bg-yellow-500 rounded-full"></span>
                 <span className="text-gray-300">Weights</span>
               </div>
             </div>
 
             {/* Day headers */}
-            <div className="grid grid-cols-7 gap-1.5 text-center mb-2">
+            <div className="grid grid-cols-7 gap-1 text-center mb-1">
               {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map(d => (
-                <div key={d} className="font-semibold text-gray-400 text-xs">{d}</div>
+                <div key={d} className="font-semibold text-gray-400 text-[10px]">{d}</div>
               ))}
             </div>
 
             {/* Calendar grid */}
-            <div className="grid grid-cols-7 grid-rows-6 gap-1.5">
+            <div className="grid grid-cols-7 grid-rows-6 gap-1">
               {days.map(day => {
                 const dayStr = format(day, "yyyy-MM-dd");
                 const hasCardio = cardioDates.includes(dayStr);
@@ -519,7 +519,7 @@ export default function ClientsPage() {
                   <div
                     key={day.toISOString()}
                     className={`
-                      h-12 flex flex-col items-center justify-center rounded-lg cursor-pointer transition-all
+                      h-10 flex flex-col items-center justify-center rounded-lg cursor-pointer transition-all
                       ${isToday 
                         ? "bg-blue-600 text-white shadow-lg" 
                         : "bg-gray-700 hover:bg-gray-600"
@@ -527,13 +527,13 @@ export default function ClientsPage() {
                       ${!isCurrentMonth ? "opacity-40" : ""}
                     `}
                   >
-                    <span className={`text-sm ${isToday ? "font-bold" : "font-medium"}`}>
+                    <span className={`text-xs ${isToday ? "font-bold" : "font-medium"}`}>
                       {format(day, "d")}
                     </span>
                     {(hasCardio || hasWeight) && (
-                      <div className="flex gap-1 mt-0.5">
-                        {hasCardio && <span className="w-1.5 h-1.5 bg-green-400 rounded-full"></span>}
-                        {hasWeight && <span className="w-1.5 h-1.5 bg-yellow-400 rounded-full"></span>}
+                      <div className="flex gap-0.5 mt-0.5">
+                        {hasCardio && <span className="w-1 h-1 bg-green-400 rounded-full"></span>}
+                        {hasWeight && <span className="w-1 h-1 bg-yellow-400 rounded-full"></span>}
                       </div>
                     )}
                   </div>
@@ -546,22 +546,23 @@ export default function ClientsPage() {
         {/* Tabs below top section */}
         <div className="flex-1 flex flex-col">
           {/* Tabs */}
-          <div className="flex gap-2 mb-4">
+          <div className="flex gap-1.5 mb-3">
             {tabs.map(({ label }) => (
               <button
                 key={label}
                 onClick={() => setActiveTab(label as typeof activeTab)}
-                className={`px-4 py-2 rounded transition-colors duration-200 ${
-                  activeTab === label
+                className={`
+                  px-2 py-1 rounded text-sm transition-colors duration-200
+                  ${activeTab === label
                     ? "bg-blue-600 text-white shadow-lg"
                     : "bg-gray-800 text-gray-300 hover:bg-gray-700"
-                }`}
+                  }
+                `}
               >
                 {label}
               </button>
             ))}
           </div>
-
           {/* Tab content */}
           <div className="flex-1 overflow-auto bg-gray-800 p-4 rounded-2xl shadow-md">
             {activeTab === "Client Metrics" && selectedClient && (

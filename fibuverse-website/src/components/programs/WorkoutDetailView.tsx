@@ -152,25 +152,24 @@ export const WorkoutDetailView: React.FC<WorkoutDetailViewProps> = ({ workout, o
         <div className="bg-gray-800 rounded-lg shadow border border-gray-700 p-6 mb-6">
         <div className="flex justify-between items-start mb-4">
             <div>
-            <h1 className="text-3xl font-bold text-white mb-2">
+              <h1 className="text-lg font-semibold text-white mb-1">
                 {workout.workoutName}
-            </h1>
-            <div className="flex items-center gap-2 text-sm">
-                <span className="px-3 py-1 bg-green-400 text-gray-900 rounded-full font-bold">
-                {workout.workoutType}
+              </h1>
+              <div className="flex items-center gap-1 text-[10px]">
+                <span className="px-1.5 py-0.5 bg-green-400 text-gray-900 rounded-full font-medium">
+                  {workout.workoutType}
                 </span>
-            </div>
+              </div>
             </div>
 
             <div className="flex items-center gap-3">
             {/* Assign button */}
             <button
-                onClick={() => assignAndSaveWorkout()}
-                className="px-4 py-2 bg-green-500 hover:bg-green-600 text-white font-bold rounded-lg shadow transition"
+              onClick={() => assignAndSaveWorkout()}
+              className="px-3 py-1.5 bg-green-500 hover:bg-green-600 text-white font-semibold rounded-md shadow transition text-sm"
             >
-                Assign
+              Assign
             </button>
-
             {showModal && (
             <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
                 <div className="bg-gray-900 rounded-xl border border-gray-700 w-full max-w-2xl max-h-[80vh] flex flex-col">
@@ -267,147 +266,130 @@ export const WorkoutDetailView: React.FC<WorkoutDetailViewProps> = ({ workout, o
         </div>
 
         {/* Workout Info + Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mt-6">
-            {/* Date */}
-            <div className="flex items-center gap-3">
-                <div className="p-2 bg-gray-700 rounded-lg">
-                    <Calendar className="w-5 h-5 text-green-400" />
-                </div>
-                <div>
-                    <p className="text-xs text-gray-400 uppercase tracking-wide font-bold">Date</p>
-                    <p className="text-sm font-bold text-gray-100">
-                    {formatDate(workout.workoutDate ?? "")}
-                    </p>
-                </div>
-            </div>
-
-            {/* Duration */}
-            <div className="flex items-center gap-3">
-            <div className="p-2 bg-gray-700 rounded-lg">
-                <Dumbbell className="w-5 h-5 text-blue-400" />
+        <div className="grid grid-cols-1 md:grid-cols-5 gap-3 mt-4 text-sm">
+          {/* Date */}
+          <div className="flex items-center gap-2">
+            <div className="p-1.5 bg-gray-700 rounded">
+              <Calendar className="w-4 h-4 text-green-400" />
             </div>
             <div>
-                <p className="text-xs text-gray-400 uppercase tracking-wide font-bold">Duration</p>
-                <p className="text-sm font-bold text-gray-100">{workout.duration} minutes</p>
+              <p className="text-xs text-gray-400 font-semibold uppercase">Date</p>
+              <p className="text-xs font-bold text-gray-100">{formatDate(workout.workoutDate ?? "")}</p>
             </div>
-            </div>
+          </div>
 
-            {/* Total Exercises */}
-            <div className="flex items-center gap-3">
-            <div className="p-2 bg-gray-700 rounded-lg">
-                <Activity className="w-5 h-5 text-yellow-400" />
+          {/* Duration */}
+          <div className="flex items-center gap-2">
+            <div className="p-1.5 bg-gray-700 rounded">
+              <Dumbbell className="w-4 h-4 text-blue-400" />
             </div>
             <div>
-                <p className="text-xs text-gray-400 uppercase tracking-wide font-bold">Exercises</p>
-                <p className="text-sm font-bold text-gray-100">{workout.exercises.length}</p>
+              <p className="text-xs text-gray-400 font-semibold uppercase">Duration</p>
+              <p className="text-xs font-bold text-gray-100">{workout.duration} min</p>
             </div>
-            </div>
+          </div>
 
-            {/* Total Sets */}
-            <div className="flex items-center gap-3">
-            <div className="p-2 bg-gray-700 rounded-lg">
-                <Layers className="w-5 h-5 text-purple-400" />
+          {/* Total Exercises */}
+          <div className="flex items-center gap-2">
+            <div className="p-1.5 bg-gray-700 rounded">
+              <Activity className="w-4 h-4 text-yellow-400" />
             </div>
             <div>
-                <p className="text-xs text-gray-400 uppercase tracking-wide font-bold">Sets</p>
-                <p className="text-sm font-bold text-gray-100">
+              <p className="text-xs text-gray-400 font-semibold uppercase">Exercises</p>
+              <p className="text-xs font-bold text-gray-100">{workout.exercises.length}</p>
+            </div>
+          </div>
+
+          {/* Total Sets */}
+          <div className="flex items-center gap-2">
+            <div className="p-1.5 bg-gray-700 rounded">
+              <Layers className="w-4 h-4 text-purple-400" />
+            </div>
+            <div>
+              <p className="text-xs text-gray-400 font-semibold uppercase">Sets</p>
+              <p className="text-xs font-bold text-gray-100">
                 {workout.exercises.reduce((sum, ex) => sum + ex.sets.length, 0)}
-                </p>
+              </p>
             </div>
-            </div>
-            {/* Volume */}
-            <div className="flex items-center gap-3">
-            <div className="p-2 bg-gray-700 rounded-lg">
-                <BarChart3 className="w-5 h-5 text-red-400" /> {/* new icon + color */}
+          </div>
+
+          {/* Volume */}
+          <div className="flex items-center gap-2">
+            <div className="p-1.5 bg-gray-700 rounded">
+              <BarChart3 className="w-4 h-4 text-red-400" />
             </div>
             <div>
-                <p className="text-xs text-gray-400 uppercase tracking-wide font-bold">Volume</p>
-                <p className="text-sm font-bold text-gray-100">
-                {workout.exercises.reduce((total, ex) => {
-                    return total + ex.sets.reduce((setSum, s) => {
-                    const weight = Number(s.weight) || 0;
-                    const reps = Number(s.reps) || 0;
-                    return setSum + weight * reps;
-                    }, 0);
-                }, 0)}
-                </p>
+              <p className="text-xs text-gray-400 font-semibold uppercase">Volume</p>
+              <p className="text-xs font-bold text-gray-100">
+                {workout.exercises.reduce(
+                  (total, ex) =>
+                    total +
+                    ex.sets.reduce((setSum, s) => {
+                      const weight = Number(s.weight) || 0;
+                      const reps = Number(s.reps) || 0;
+                      return setSum + weight * reps;
+                    }, 0),
+                  0
+                )}
+              </p>
             </div>
-            </div>
+          </div>
         </div>
+
         </div>
 
         {/* Exercises */}
-        <div className="space-y-4">
+        <div className="space-y-3">
           {Object.entries(groupedExercises).map(([key, exercises], groupIndex) => (
-            <div key={key} className="bg-gray-800 rounded-lg shadow border border-gray-700 p-6">
+            <div key={key} className="bg-gray-800 rounded-lg shadow border border-gray-700 p-4">
+              
               {exercises.length > 1 && (
-                <div className="mb-4 pb-3 border-b border-gray-700">
-                  <h3 className="text-sm font-bold text-gray-400 uppercase tracking-wide">
+                <div className="mb-2 pb-2 border-b border-gray-700">
+                  <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wide">
                     Superset {groupIndex + 1}
                   </h3>
                 </div>
               )}
 
               {exercises.map((exercise, idx) => (
-                <div key={exercise.exerciseName} className={idx > 0 ? 'mt-6 pt-6 border-t border-gray-700' : ''}>
+                <div key={exercise.exerciseName} className={idx > 0 ? 'mt-4 pt-4 border-t border-gray-700' : ''}>
+                  
                   {/* Exercise Header */}
-                  <div className="flex items-start justify-between mb-4">
-                    <div>
-                      <div className="flex items-center gap-2 mb-1">
-                        <span className="text-xs font-bold text-gray-500">
-                          {exercise.groupId}.{exercise.exerciseOrder}
-                        </span>
-                        <h3 className="text-lg font-bold text-white">
-                          {exercise.exerciseName}
-                        </h3>
-                      </div>
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center gap-2">
+                      <span className="text-[10px] font-bold text-gray-500">
+                        {exercise.groupId}.{exercise.exerciseOrder}
+                      </span>
+                      <h3 className="text-sm font-bold text-white">{exercise.exerciseName}</h3>
                     </div>
                   </div>
 
                   {/* Sets Table */}
                   {exercise.sets.length > 0 && (
                     <div className="overflow-x-auto">
-                      <table className="w-full">
+                      <table className="w-full text-xs">
                         <thead>
                           <tr className="border-b border-gray-700">
-                            <th className="text-left py-2 px-3 text-xs font-bold text-gray-400 uppercase tracking-wide">
-                              Set
-                            </th>
-                            <th className="text-left py-2 px-3 text-xs font-bold text-gray-400 uppercase tracking-wide">
-                              Weight
-                            </th>
-                            <th className="text-left py-2 px-3 text-xs font-bold text-gray-400 uppercase tracking-wide">
-                              Reps
-                            </th>
-                            <th className="text-left py-2 px-3 text-xs font-bold text-gray-400 uppercase tracking-wide">
+                            <th className="py-1 px-2 font-bold text-gray-400 uppercase tracking-wide text-left">Set</th>
+                            <th className="py-1 px-2 font-bold text-gray-400 uppercase tracking-wide text-left">Weight</th>
+                            <th className="py-1 px-2 font-bold text-gray-400 uppercase tracking-wide text-left">Reps</th>
+                            <th className="py-1 px-2 font-bold text-gray-400 uppercase tracking-wide text-left">
                               {getRirRpeLabel(exercise.sets[0].rirOrRpe)}
                             </th>
                             {exercise.sets.some(s => s.duration) && (
-                              <th className="text-left py-2 px-3 text-xs font-bold text-gray-400 uppercase tracking-wide">
-                                Duration
-                              </th>
+                              <th className="py-1 px-2 font-bold text-gray-400 uppercase tracking-wide text-left">Duration</th>
                             )}
                           </tr>
                         </thead>
                         <tbody>
                           {exercise.sets.map((set) => (
                             <tr key={set.setsOrder} className="border-b border-gray-700 hover:bg-gray-750 transition-colors">
-                              <td className="py-3 px-3 text-sm font-bold text-white">
-                                {set.setsOrder}
-                              </td>
-                              <td className="py-3 px-3 text-sm text-gray-300">
-                                {set.weight} {getWeightUnit(set.weightUnit)}
-                              </td>
-                              <td className="py-3 px-3 text-sm text-gray-300">
-                                {set.reps}
-                              </td>
-                              <td className="py-3 px-3 text-sm text-gray-300">
-                                {set.rir}
-                              </td>
+                              <td className="py-1 px-2 font-bold text-white">{set.setsOrder}</td>
+                              <td className="py-1 px-2 text-gray-300">{set.weight} {getWeightUnit(set.weightUnit)}</td>
+                              <td className="py-1 px-2 text-gray-300">{set.reps}</td>
+                              <td className="py-1 px-2 text-gray-300">{set.rir}</td>
                               {exercise.sets.some(s => s.duration) && (
-                                <td className="py-3 px-3 text-sm text-gray-300">
-                                  {set.duration ? `${set.duration}s` : '-'}
-                                </td>
+                                <td className="py-1 px-2 text-gray-300">{set.duration ? `${set.duration}s` : '-'}</td>
                               )}
                             </tr>
                           ))}
@@ -420,6 +402,7 @@ export const WorkoutDetailView: React.FC<WorkoutDetailViewProps> = ({ workout, o
             </div>
           ))}
         </div>
+
       </div>
     </div>
   );

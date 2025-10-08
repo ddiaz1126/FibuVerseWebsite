@@ -2,6 +2,9 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Plus, X, GripVertical, Link2, Search } from 'lucide-react';
 import { searchExerciseLibrary, getTrainerClients, sendTrainerWorkout } from "@/api/trainer";
 import { SessionData, Exercise, ExerciseSet, Client, WorkoutPayload} from "@/api/trainerTypes";
+import { AIWorkoutResponse } from '@/api/globalTypes';
+import { RunCompositeResponse, runCompositeAgentFormData } from "@/api/developer";
+import { useRouter } from 'next/navigation'; 
 
 /*
 Structure
@@ -12,12 +15,15 @@ Structure
 - Group Ids are given but not updated during, still unique so groups stay intact, will be updated at the end. 
 */
 
+interface WorkoutEditorProps {
+  onSave?: () => void; // Optional callback
+  // ... other props
+}
 
-export default function WorkoutEditor() {
+export default function WorkoutEditor({ onSave }: WorkoutEditorProps) {
   const [exercises, setExercises] = useState<SessionData[]>([]);
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
   const [draggedGroupId, setDraggedGroupId] = useState<number | null>(null);
-  const [uploadedFile, ] = useState(null);
   const [isRecording, setIsRecording] = useState(false);
   const [isAIGeneratorOpen, setIsAIGeneratorOpen] = useState(false);
   const [showExerciseSearch, setShowExerciseSearch] = useState(false);
@@ -41,6 +47,11 @@ export default function WorkoutEditor() {
   // refs for debounce/abort
   const debounceRef = useRef<number | null>(null);
   const abortCtrlRef = useRef<AbortController | null>(null);
+  const router = useRouter();
+
+  // Agents
+  const [, setRunning] = useState<boolean>(false);
+  const [uploadedFile, setUploadedFile] = useState<File | null>(null);
 
 
 //   const handleFileUpload = (e) => {
@@ -64,11 +75,86 @@ export default function WorkoutEditor() {
     }
   };
 
-  const generateWorkoutFromAI = () => {
-    console.log('Generating workout from AI...');
-    // TODO: Send uploadedFile or audio to backend API
-    // The backend will process and return workout data
+  const generateWorkoutFromAI = async () => {
+    const AGENT_ID = 20;
+    setRunning(true);
+    
+    const formData = new FormData();
+    formData.append("id", AGENT_ID.toString());
+    
+    if (uploadedFile) {
+      formData.append("ai_image", uploadedFile);
+    }
+    
+    try {
+      const res: RunCompositeResponse = await runCompositeAgentFormData(formData);
+      console.log('Generating workout from AI...', res);
+      
+      if (res.status === 'success' && res.outputs) {
+        const data = res.outputs as unknown as { workout: AIWorkoutResponse };
+        const workout = data.workout;
+        
+        if (workout && workout.session_data) {
+          const transformedExercises: SessionData[] = workout.session_data.map((ex, index) => {
+            const exercise: Exercise = {
+              id: ex.id || ex.exercise_id || index,
+              name: ex.name,
+              category: ex.category || '',
+              equipment: ex.equipment || '',
+              description: '',
+              instructions: ''
+            };
+
+            // Handle sets - check if it exists and is an array
+            let sets: ExerciseSet[] = [];
+            if (ex.sets && Array.isArray(ex.sets)) {
+              sets = ex.sets.map(s => ({
+                setsOrder: s.setsOrder,
+                reps: s.reps,
+                rir: s.rir,
+                rirOrRpe: s.rirOrRpe,
+                weight: s.weight,
+                weightUnit: s.weightUnit,
+                duration: s.duration || null,
+                durationOrVelocity: s.durationOrVelocity
+              }));
+            }
+
+            return {
+              id: index,
+              exerciseId: exercise,
+              exerciseName: ex.name,
+              exerciseOrder: ex.exercise_order,
+              groupId: ex.group_id || 0,
+              setStructure: ex.set_structure,
+              sets: sets
+            };
+          });
+          
+          setExercises(transformedExercises);
+          setWorkoutName(workout.workout_name || '');
+          setWorkoutType(workout.workout_type || '');
+          setWorkoutDate(workout.workout_date || null);
+          setNotes(workout.notes || '');
+          
+          setIsAIGeneratorOpen(false);
+          setUploadedFile(null);
+          
+          console.log(`Loaded ${transformedExercises.length} exercises from AI`);
+        }
+      }
+    } catch (error) {
+      console.error('Failed to generate workout from AI:', error);
+    } finally {
+      setRunning(false);
+    }
   };
+    const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+        setUploadedFile(file);
+      }
+    };
 
     const searchExercises = useCallback(
     async (query: string) => {
@@ -598,6 +684,10 @@ export default function WorkoutEditor() {
             const response = await sendTrainerWorkout(payload);
             console.log("Workout saved successfully:", response);
             alert("Workout saved successfully!");
+            // Call the optional callback after successful save
+            onSave?.();
+            router.refresh(); // Refresh current route data
+
             
             // Optional: Clear the form or redirect
             // resetWorkoutForm();
@@ -647,81 +737,82 @@ export default function WorkoutEditor() {
 
 
   return (
-    <div className="flex-1 border-r border-gray-800 overflow-y-auto bg-gray-900">
+    <div className="flex-1 h-full border-r border-gray-800 overflow-y-auto bg-gray-900">
       <div className="max-w-3xl mx-auto p-6">
         {/* Header */}
         <div className="mb-2">
-          <h2 className="text-3xl font-bold mb-2">Create Workout</h2>
+          <h2 className="text-xl font-bold mb-1">Create Workout</h2>
         </div>
-          {/* Workout Name */}
-        <div className="mb-4">
-            <label className="block text-sm font-medium text-gray-400 mb-1">Workout Name</label>
-            <input
+
+        {/* Workout Name */}
+        <div className="mb-3">
+          <label className="block text-xs font-medium text-gray-400 mb-1">Workout Name</label>
+          <input
             type="text"
             value={workoutName}
             onChange={(e) => setWorkoutName(e.target.value)}
             placeholder="Enter workout name"
-            className="w-full bg-gray-900 border border-gray-700 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            />
+            className="w-full bg-gray-900 border border-gray-700 rounded px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+          />
         </div>
 
         {/* Workout Type + Date */}
-        <div className="flex gap-4 mb-4">
-            {/* Type Dropdown */}
-            <div className="flex-1">
-            <label className="block text-sm font-medium text-gray-400 mb-1">Workout Type</label>
+        <div className="flex gap-3 mb-3">
+          {/* Type Dropdown */}
+          <div className="flex-1">
+            <label className="block text-xs font-medium text-gray-400 mb-1">Workout Type</label>
             <select
-                value={workoutType}
-                onChange={(e) => setWorkoutType(e.target.value)}
-                className="w-full bg-gray-900 border border-gray-700 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              value={workoutType}
+              onChange={(e) => setWorkoutType(e.target.value)}
+              className="w-full bg-gray-900 border border-gray-700 rounded px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             >
-                <option value="">Select type</option>
-                <option value="General">General</option>
-                <option value="Strength">Strength</option>
-                <option value="Hypertrophy">Hypertrophy</option>
-                <option value="Powerlifting">Powerlifting</option>
-                <option value="HIIT">HIIT</option>
+              <option value="">Select type</option>
+              <option value="General">General</option>
+              <option value="Strength">Strength</option>
+              <option value="Hypertrophy">Hypertrophy</option>
+              <option value="Powerlifting">Powerlifting</option>
+              <option value="HIIT">HIIT</option>
             </select>
-            </div>
+          </div>
 
-            {/* Date Picker */}
-            <div className="flex-1">
-            <label className="block text-sm font-medium text-gray-400 mb-1">Workout Date (Optional)</label>
+          {/* Date Picker */}
+          <div className="flex-1">
+            <label className="block text-xs font-medium text-gray-400 mb-1">Workout Date (Optional)</label>
             <input
-                type="date"
-                value={workoutDate ?? ''}
-                onChange={(e) => setWorkoutDate(e.target.value)}
-                className="w-full bg-gray-900 border border-gray-700 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              type="date"
+              value={workoutDate ?? ''}
+              onChange={(e) => setWorkoutDate(e.target.value)}
+              className="w-full bg-gray-900 border border-gray-700 rounded px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             />
-            </div>
+          </div>
         </div>
 
         {/* Notes */}
-        <div className="mb-4">
-            <label className="block text-sm font-medium text-gray-400 mb-1">Notes</label>
-            <textarea
+        <div className="mb-3">
+          <label className="block text-xs font-medium text-gray-400 mb-1">Notes</label>
+          <textarea
             value={notes}
             onChange={(e) => setNotes(e.target.value)}
             placeholder="Add any notes..."
             rows={3}
-            className="w-full bg-gray-900 border border-gray-700 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            />
+            className="w-full bg-gray-900 border border-gray-700 rounded px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+          />
         </div>
 
         {/* AI Generation Section */}
-        <div className="mb-8 bg-gradient-to-br from-purple-900/20 to-blue-900/20 rounded-xl border border-purple-500/30 overflow-hidden">
+        <div className="mb-6 bg-gradient-to-br from-purple-900/20 to-blue-900/20 rounded-lg border border-purple-500/30 overflow-hidden">
           <button
             onClick={() => setIsAIGeneratorOpen(!isAIGeneratorOpen)}
-            className="w-full p-4 flex items-center justify-between hover:bg-purple-900/10 transition-colors"
+            className="w-full px-3 py-2 flex items-center justify-between hover:bg-purple-900/10 transition-colors"
           >
-            <h3 className="text-lg font-semibold flex items-center gap-2">
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <h3 className="text-sm font-semibold flex items-center gap-2">
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
               </svg>
               AI Workout Generator
             </h3>
             <svg 
-              className={`w-5 h-5 transition-transform ${isAIGeneratorOpen ? 'rotate-180' : ''}`}
+              className={`w-4 h-4 transition-transform ${isAIGeneratorOpen ? 'rotate-180' : ''}`}
               fill="none" 
               stroke="currentColor" 
               viewBox="0 0 24 24"
@@ -731,63 +822,62 @@ export default function WorkoutEditor() {
           </button>
           
           {isAIGeneratorOpen && (
-            <div className="p-4 pt-0">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <div className="p-3 pt-0">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
                 {/* File/Image Upload */}
-                <div className="bg-gray-800/50 rounded-lg p-3 border-2 border-dashed border-gray-600 hover:border-purple-500 transition-all cursor-pointer">
+                <div className="bg-gray-800/50 rounded-lg p-2 border-2 border-dashed border-gray-600 hover:border-purple-500 transition-all cursor-pointer">
                   <input
                     type="file"
                     id="file-upload"
                     className="hidden"
                     accept="image/*,.pdf,.txt,.doc,.docx"
-                    // onChange={handleFileUpload}
+                    onChange={handleFileUpload}
                   />
-                  <label htmlFor="file-upload" className="cursor-pointer flex flex-col items-center justify-center py-3">
+                  <label htmlFor="file-upload" className="cursor-pointer flex flex-col items-center justify-center py-2">
                     {uploadedFile ? (
                       <>
-                        <svg className="w-10 h-10 text-green-400 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg className="w-8 h-8 text-green-400 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                         </svg>
-                        {/* <p className="text-sm font-medium text-green-400 mb-1">{uploadedFile.name}</p> */}
                         <p className="text-xs text-gray-500">Click to change file</p>
                       </>
                     ) : (
                       <>
-                        <svg className="w-10 h-10 text-purple-400 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg className="w-8 h-8 text-purple-400 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
                         </svg>
-                        <p className="text-sm font-medium text-gray-300 mb-1">Upload Image or File</p>
-                        <p className="text-xs text-gray-500">PNG, JPG, PDF, TXT up to 10MB</p>
+                        <p className="text-sm font-medium text-gray-300 mb-0.5">Upload Image</p>
+                        <p className="text-xs text-gray-500">PNG, JPG to 10MB</p>
                       </>
                     )}
                   </label>
                 </div>
 
                 {/* Audio Recording */}
-                <div className="bg-gray-800/50 rounded-lg p-3 border-2 border-dashed border-gray-600 hover:border-blue-500 transition-all">
-                  <div className="flex flex-col items-center justify-center py-3">
+                <div className="bg-gray-800/50 rounded-lg p-2 border-2 border-dashed border-gray-600 hover:border-blue-500 transition-all">
+                  <div className="flex flex-col items-center justify-center py-2">
                     <button
                       onClick={handleAudioRecord}
-                      className={`w-10 h-10 rounded-full flex items-center justify-center mb-2 transition-all shadow-lg ${
+                      className={`w-8 h-8 rounded-full flex items-center justify-center mb-1 transition-all shadow-lg ${
                         isRecording 
                           ? 'bg-red-600 hover:bg-red-700 animate-pulse' 
                           : 'bg-blue-600 hover:bg-blue-700'
                       }`}
                     >
                       {isRecording ? (
-                        <svg className="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 24 24">
+                        <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 24 24">
                           <rect x="6" y="6" width="12" height="12" rx="2" />
                         </svg>
                       ) : (
-                        <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
                         </svg>
                       )}
                     </button>
-                    <p className="text-sm font-medium text-gray-300 mb-1">
-                      {isRecording ? 'Recording...' : 'Record Audio'}
+                    <p className="text-xs font-medium text-gray-300 mb-0.5">
+                      {isRecording ? 'Recording...' : 'Record Audio (Not Working Yet)'}
                     </p>
-                    <p className="text-xs text-gray-500">
+                    <p className="text-[10px] text-gray-500">
                       {isRecording ? 'Click to stop' : 'Describe your workout verbally'}
                     </p>
                   </div>
@@ -797,7 +887,7 @@ export default function WorkoutEditor() {
               <button 
                 onClick={generateWorkoutFromAI}
                 disabled={!uploadedFile && !isRecording}
-                className={`w-full mt-3 py-3 rounded-lg font-medium transition-all shadow-lg ${
+                className={`w-full mt-2 py-2 rounded text-sm font-medium transition-all shadow-lg ${
                   uploadedFile || isRecording
                     ? 'bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700'
                     : 'bg-gray-700 cursor-not-allowed opacity-50'
@@ -811,243 +901,233 @@ export default function WorkoutEditor() {
 
         {/* Exercise Search Modal */}
         {showExerciseSearch && (
-          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-            <div className="bg-gray-900 rounded-xl border border-gray-700 w-full max-w-2xl max-h-[80vh] flex flex-col">
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-2">
+            <div className="bg-gray-900 rounded-xl border border-gray-700 w-full max-w-xl max-h-[80vh] flex flex-col">
               {/* Header */}
-              <div className="p-6 border-b border-gray-800">
-                <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-2xl font-bold">Select Exercise</h3>
+              <div className="px-4 py-3 border-b border-gray-800">
+                <div className="flex items-center justify-between mb-2">
+                  <h3 className="text-xl font-semibold">Select Exercise</h3>
                   <button
                     onClick={() => {
                       setShowExerciseSearch(false);
                       setSearchQuery('');
                       setSearchResults([]);
                     }}
-                    className="p-2 hover:bg-gray-800 rounded-lg transition-colors"
+                    className="p-1 hover:bg-gray-800 rounded transition-colors"
                   >
-                    <X size={24} />
+                    <X size={20} />
                   </button>
                 </div>
-                
+
                 {/* Search Input */}
                 <div className="relative">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
+                  <Search className="absolute left-2 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
                   <input
                     type="text"
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     placeholder="Search exercises... (e.g., bench press, squat)"
-                    className="w-full pl-10 pr-4 py-3 bg-gray-800 border border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full pl-8 pr-3 py-2 text-sm bg-gray-800 border border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     autoFocus
                   />
                 </div>
+
                 {/* Filters */}
-                <div className="mt-4 flex flex-wrap gap-2">
-                {/* Muscle Groups */}
-                {muscleGroups.map((group) => (
+                <div className="mt-2 flex flex-wrap gap-1.5">
+                  {/* Muscle Groups */}
+                  {muscleGroups.map((group) => (
                     <button
-                    key={group}
-                    onClick={() => setSelectedMuscleGroup(selectedMuscleGroup === group ? null : group)}
-                    className={`px-3 py-1 rounded-full text-sm border transition-colors
+                      key={group}
+                      onClick={() => setSelectedMuscleGroup(selectedMuscleGroup === group ? null : group)}
+                      className={`px-2 py-0.5 rounded-full text-xs border transition-colors
                         ${selectedMuscleGroup === group 
-                        ? "bg-blue-600 text-white border-blue-600" 
-                        : "bg-gray-800 text-gray-300 border-gray-700 hover:border-blue-500"}
-                    `}
+                          ? "bg-blue-600 text-white border-blue-600" 
+                          : "bg-gray-800 text-gray-300 border-gray-700 hover:border-blue-500"}
+                      `}
                     >
-                    {group}
+                      {group}
                     </button>
-                ))}
+                  ))}
 
-                {/* Equipment */}
-                {equipmentOptions.map((eq) => (
+                  {/* Equipment */}
+                  {equipmentOptions.map((eq) => (
                     <button
-                    key={eq}
-                    onClick={() => setSelectedEquipment(selectedEquipment === eq ? null : eq)}
-                    className={`px-3 py-1 rounded-full text-sm border transition-colors
+                      key={eq}
+                      onClick={() => setSelectedEquipment(selectedEquipment === eq ? null : eq)}
+                      className={`px-2 py-0.5 rounded-full text-xs border transition-colors
                         ${selectedEquipment === eq 
-                        ? "bg-green-600 text-white border-green-600" 
-                        : "bg-gray-800 text-gray-300 border-gray-700 hover:border-green-500"}
-                    `}
+                          ? "bg-green-600 text-white border-green-600" 
+                          : "bg-gray-800 text-gray-300 border-gray-700 hover:border-green-500"}
+                      `}
                     >
-                    {eq}
+                      {eq}
                     </button>
-                ))}
+                  ))}
                 </div>
-
               </div>
 
               {/* Results */}
-            `<div className="flex-1 overflow-y-auto p-6">
-            {(searchQuery || selectedMuscleGroup || selectedEquipment) && searchResults.length > 0 ? (
-                <div className="space-y-2">
-                {searchResults.map((exercise) => (
-                    <button
-                    key={exercise.id}
-                    onClick={() => selectExercise(exercise)}
-                    className="w-full p-4 bg-gray-800 hover:bg-gray-750 rounded-lg border border-gray-700 hover:border-blue-500 transition-all text-left group"
-                    >
-                    <div className="flex items-center justify-between">
-                        <div>
-                        <h4 className="font-semibold text-white group-hover:text-blue-400 transition-colors">
-                            {exercise.name}
-                        </h4>
-                        <div className="flex gap-3 mt-1">
-                            <span className="text-xs text-gray-400">{exercise.category}</span>
-                            <span className="text-xs text-gray-500">• {exercise.equipment}</span>
+              <div className="flex-1 overflow-y-auto p-4 text-sm">
+                {(searchQuery || selectedMuscleGroup || selectedEquipment) && searchResults.length > 0 ? (
+                  <div className="space-y-1.5">
+                    {searchResults.map((exercise) => (
+                      <button
+                        key={exercise.id}
+                        onClick={() => selectExercise(exercise)}
+                        className="w-full p-2 bg-gray-800 hover:bg-gray-750 rounded-lg border border-gray-700 hover:border-blue-500 transition-all text-left group"
+                      >
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <h4 className="font-medium text-white group-hover:text-blue-400 transition-colors">{exercise.name}</h4>
+                            <div className="flex gap-2 mt-0.5">
+                              <span className="text-xs text-gray-400">{exercise.category}</span>
+                              <span className="text-xs text-gray-500">• {exercise.equipment}</span>
+                            </div>
+                          </div>
+                          <Plus className="text-gray-600 group-hover:text-blue-400 transition-colors" size={16} />
                         </div>
-                        </div>
-                        <Plus className="text-gray-600 group-hover:text-blue-400 transition-colors" size={20} />
-                    </div>
-                    </button>
-                ))}
-                </div>
-            ) : (searchQuery || selectedMuscleGroup || selectedEquipment) && searchResults.length === 0 ? (
-                <div className="text-center py-12">
-                <p className="text-gray-400">No exercises found</p>
-                <p className="text-gray-600 text-sm mt-2">Try a different search term or filter</p>
-                </div>
-            ) : (
-                <div className="text-center py-12">
-                <Search className="w-16 h-16 text-gray-600 mx-auto mb-4" />
-                <p className="text-gray-400">Start typing to search exercises</p>
-                <p className="text-gray-600 text-sm mt-2">Search from 1,100+ exercises</p>
-                </div>
-            )}
-            </div>
+                      </button>
+                    ))}
+                  </div>
+                ) : (searchQuery || selectedMuscleGroup || selectedEquipment) && searchResults.length === 0 ? (
+                  <div className="text-center py-8">
+                    <p className="text-gray-400 text-sm">No exercises found</p>
+                    <p className="text-gray-600 text-xs mt-1">Try a different search term or filter</p>
+                  </div>
+                ) : (
+                  <div className="text-center py-8">
+                    <Search className="w-12 h-12 text-gray-600 mx-auto mb-2" />
+                    <p className="text-gray-400 text-sm">Start typing to search exercises</p>
+                    <p className="text-gray-600 text-xs mt-1">Search from 1,100+ exercises</p>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         )}
 
         {/* Exercises Section */}
         <div className="mb-6">
-            <div className="flex items-center justify-between mb-4">
-                <label className="text-sm font-medium text-gray-300">
-                Exercises ({exercises.length})
-                </label>
+          <div className="flex items-center justify-between mb-3">
+            <label className="text-xs font-medium text-gray-300">
+              Exercises ({exercises.length})
+            </label>
 
-                <div className="flex items-center gap-3">
-                {/* Only show these if there’s at least one exercise */}
-                {exercises.length > 0 && (
-                    <>
-                    <button
-                        onClick={saveWorkout}
-                        className="px-4 py-2 bg-green-600 rounded-lg text-sm font-medium hover:bg-green-700 transition-colors shadow-lg"
-                    >
-                        Save Workout
-                    </button>
+            <div className="flex items-center gap-2">
+              {/* Only show if at least one exercise */}
+              {exercises.length > 0 && (
+                <>
+                  <button
+                    onClick={saveWorkout}
+                    className="px-2.5 py-1.5 bg-green-600 rounded text-xs font-medium hover:bg-green-700 transition-colors shadow"
+                  >
+                    Save Workout
+                  </button>
 
-                    <button
-                    onClick={() => assignAndSaveWorkout()}
-                    className="px-4 py-2 bg-blue-600 rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors shadow-lg"
-                    >
+                  <button
+                    onClick={assignAndSaveWorkout}
+                    className="px-2.5 py-1.5 bg-blue-600 rounded text-xs font-medium hover:bg-blue-700 transition-colors shadow"
+                  >
                     Assign & Save
-                    </button>
+                  </button>
 
-                        {showModal && (
-                        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-                            <div className="bg-gray-900 rounded-xl border border-gray-700 w-full max-w-2xl max-h-[80vh] flex flex-col">
-                            {/* Header */}
-                            <div className="p-6 border-b border-gray-800">
-                                <div className="flex items-center justify-between">
-                                <h3 className="text-2xl font-bold">Select Clients</h3>
-                                <button
-                                    onClick={() => setShowModal(false)}
-                                    className="p-2 hover:bg-gray-800 rounded-lg transition-colors"
-                                >
-                                    <X size={24} />
-                                </button>
-                                </div>
-                            </div>
-
-                            {/* Client List */}
-                            <div className="flex-1 overflow-y-auto p-6">
-                            {loading ? (
-                                <div className="text-center py-12">
-                                <p className="text-gray-400">Loading clients...</p>
-                                </div>
-                            ) : clients.length > 0 ? (
-                                <div className="space-y-3">
-                                {clients.map((client) => (
-                                    <div key={client.id} className="space-y-2">
-                                    <label className="flex items-center gap-3 p-4 bg-gray-800 hover:bg-gray-750 rounded-lg border border-gray-700 hover:border-blue-500 transition-all cursor-pointer group">
-                                        <input
-                                        type="checkbox"
-                                        checked={isClientSelected(client.id)}
-                                        onChange={() => handleClientToggle(client.id)}
-                                        className="w-4 h-4 rounded border-gray-600 text-blue-600 focus:ring-blue-500 focus:ring-offset-gray-900"
-                                        />
-                                        <span className="text-white group-hover:text-blue-400 transition-colors">
-                                        {client.first_name} {client.last_name}
-                                        </span>
-                                    </label>
-                                    
-                                    {/* Date picker - only show if client is selected */}
-                                    {isClientSelected(client.id) && (
-                                        <div className="ml-7 pl-4 border-l-2 border-gray-700">
-                                        <label className="block text-sm text-gray-400 mb-1">
-                                            Assign Date:
-                                        </label>
-                                        <input
-                                            type="date"
-                                            value={getClientDate(client.id)}
-                                            onChange={(e) => handleDateChange(client.id, e.target.value)}
-                                            className="px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                        />
-                                        </div>
-                                    )}
-                                    </div>
-                                ))}
-                                </div>
-                            ) : (
-                                <div className="text-center py-12">
-                                <p className="text-gray-400">No clients found</p>
-                                </div>
-                            )}
-                            </div>
-
-                            {/* Footer Actions */}
-                            <div className="p-6 border-t border-gray-800 flex justify-end gap-3">
-                                <button
-                                onClick={() => setShowModal(false)}
-                                className="px-4 py-2 bg-gray-800 text-gray-300 rounded-lg hover:bg-gray-700 transition-colors border border-gray-700"
-                                >
-                                Cancel
-                                </button>
-                                <button
-                                onClick={handleSaveClients}
-                                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-                                >
-                                Save
-                                </button>
-                            </div>
-                            </div>
+                  {showModal && (
+                    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-2">
+                      <div className="bg-gray-900 rounded-xl border border-gray-700 w-full max-w-xl max-h-[80vh] flex flex-col">
+                        {/* Header */}
+                        <div className="px-4 py-3 border-b border-gray-800 flex items-center justify-between">
+                          <h3 className="text-lg font-semibold">Select Clients</h3>
+                          <button
+                            onClick={() => setShowModal(false)}
+                            className="p-1 hover:bg-gray-800 rounded transition-colors"
+                          >
+                            <X size={20} />
+                          </button>
                         </div>
-                        )}
-                    </>
-                    )}
-                    {/* Always show Add Exercise */}
-                    <button
-                        onClick={addExercise}
-                        className="flex items-center gap-2 px-4 py-2 bg-blue-600 rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors shadow-lg hover:shadow-xl"
-                    >
-                        <Plus size={16} />
-                        Add Exercise
-                    </button>
-                </div>
+
+                        {/* Client List */}
+                        <div className="flex-1 overflow-y-auto p-4 text-sm">
+                          {loading ? (
+                            <div className="text-center py-8 text-gray-400">Loading clients...</div>
+                          ) : clients.length > 0 ? (
+                            <div className="space-y-2">
+                              {clients.map((client) => (
+                                <div key={client.id} className="space-y-1">
+                                  <label className="flex items-center gap-2 p-2 bg-gray-800 hover:bg-gray-750 rounded border border-gray-700 hover:border-blue-500 transition-all cursor-pointer group">
+                                    <input
+                                      type="checkbox"
+                                      checked={isClientSelected(client.id)}
+                                      onChange={() => handleClientToggle(client.id)}
+                                      className="w-3 h-3 rounded border-gray-600 text-blue-600 focus:ring-blue-500"
+                                    />
+                                    <span className="text-white group-hover:text-blue-400 transition-colors">
+                                      {client.first_name} {client.last_name}
+                                    </span>
+                                  </label>
+
+                                  {isClientSelected(client.id) && (
+                                    <div className="ml-5 pl-3 border-l-2 border-gray-700">
+                                      <label className="block text-xs text-gray-400 mb-1">Assign Date:</label>
+                                      <input
+                                        type="date"
+                                        value={getClientDate(client.id)}
+                                        onChange={(e) => handleDateChange(client.id, e.target.value)}
+                                        className="px-2 py-1 bg-gray-800 border border-gray-700 rounded text-xs text-white focus:outline-none focus:ring-1 focus:ring-blue-500"
+                                      />
+                                    </div>
+                                  )}
+                                </div>
+                              ))}
+                            </div>
+                          ) : (
+                            <div className="text-center py-8 text-gray-400">No clients found</div>
+                          )}
+                        </div>
+
+                        {/* Footer */}
+                        <div className="px-4 py-3 border-t border-gray-800 flex justify-end gap-2">
+                          <button
+                            onClick={() => setShowModal(false)}
+                            className="px-3 py-1.5 bg-gray-800 text-gray-300 rounded hover:bg-gray-700 border border-gray-700 text-xs"
+                          >
+                            Cancel
+                          </button>
+                          <button
+                            onClick={handleSaveClients}
+                            className="px-3 py-1.5 bg-blue-600 text-white rounded hover:bg-blue-700 text-xs"
+                          >
+                            Save
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </>
+              )}
+
+              {/* Always show Add Exercise */}
+              <button
+                onClick={addExercise}
+                className="flex items-center gap-1 px-2 py-1 bg-blue-600 rounded text-xs font-medium hover:bg-blue-700 transition-colors shadow"
+              >
+                <Plus size={14} />
+                Add Exercise
+              </button>
             </div>
+          </div>
 
           {/* Exercise List */}
           <div className="space-y-3">
             {exercises.length === 0 ? (
-              <div className="text-center py-12 bg-gray-800/50 rounded-lg border-2 border-dashed border-gray-700">
-                <p className="text-gray-500 mb-3">No exercises added yet</p>
-                <button
-                  onClick={addExercise}
-                  className="text-blue-500 hover:text-blue-400 text-sm font-medium"
-                >
-                    Click &quot;Add Exercise&quot; to get started
-                </button>
-              </div>
+            <div className="text-center py-6 bg-gray-800/50 rounded-lg border-2 border-dashed border-gray-700">
+              <p className="text-gray-500 text-xs mb-2">No exercises added yet</p>
+              <button
+                onClick={addExercise}
+                className="text-blue-500 hover:text-blue-400 text-xs font-medium"
+              >
+                Click &quot;Add Exercise&quot; to get started
+              </button>
+            </div>
             ) : (
               exercises.map((exercise, index) => (
                 <div key={exercise.id}>
@@ -1098,16 +1178,18 @@ export default function WorkoutEditor() {
                       {/* Exercise Content */}
                       <div className="flex-1 space-y-3">
                         {/* Exercise Number and Name */}
-                        <div className="flex items-center gap-3">
-                          <div className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${
-                            exercise.groupId ? 'bg-purple-600' : 'bg-blue-600'
-                          }`}>
+                        <div className="flex items-center gap-2">
+                          <div
+                            className={`flex-shrink-0 w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${
+                              exercise.groupId ? 'bg-purple-600' : 'bg-blue-600'
+                            }`}
+                          >
                             {index + 1}
                           </div>
                           <div className="flex-1">
-                            <div className="font-semibold text-white">{exercise.exerciseId.name}</div>
+                            <div className="font-medium text-white text-sm">{exercise.exerciseId.name}</div>
                             {exercise.exerciseId.category && (
-                              <div className="text-xs text-gray-400 mt-0.5">
+                              <div className="text-[10px] text-gray-400 mt-0.5">
                                 {exercise.exerciseId.category} • {exercise.exerciseId.equipment}
                               </div>
                             )}
@@ -1117,160 +1199,162 @@ export default function WorkoutEditor() {
                         {/* Sets Section */}
                         <div className="mt-3 space-y-2">
                         {/* Header Row */}
-                        <div className="grid grid-cols-[40px_1fr_1fr_1fr_1fr_60px] gap-2 items-center mb-2 font-semibold text-gray-400">
-                            <div className="text-center">Set</div>
-                            <div className="text-center">Reps</div>
+                        <div className="grid grid-cols-[32px_1fr_1fr_1fr_1fr_50px] gap-1 items-center mb-1 font-medium text-gray-400 text-sm">
+                          <div className="text-center">Set</div>
+                          <div className="text-center">Reps</div>
 
-                            {/* Weight header as dropdown */}
-                            <div className="text-center">
-                                <select
-                                value={exercise.sets[0]?.weightUnit ?? 0}
-                                onChange={(e) =>
-                                    updateAllSetsField(exercise.id, 'weightUnit', e.target.value === '1' ? 1 : 0)
-                                }
-                                className="w-full bg-transparent text-gray-400 text-sm text-center focus:outline-none cursor-pointer"
-                                >
-                                <option value={0}>Weight (lbs)</option>
-                                <option value={1}>Weight (kg)</option>
-                                </select>
-                            </div>
+                          {/* Weight header as dropdown */}
+                          <div className="text-center">
+                            <select
+                              value={exercise.sets[0]?.weightUnit ?? 0}
+                              onChange={(e) =>
+                                updateAllSetsField(exercise.id, 'weightUnit', e.target.value === '1' ? 1 : 0)
+                              }
+                              className="w-full bg-transparent text-gray-400 text-xs text-center focus:outline-none cursor-pointer"
+                            >
+                              <option value={0}>Weight (lbs)</option>
+                              <option value={1}>Weight (kg)</option>
+                            </select>
+                          </div>
 
-                            {/* RIR/RPE header as dropdown */}
-                            <div className="text-center">
-                                <select
-                                value={exercise.sets[0]?.rirOrRpe ?? 0}
-                                onChange={(e) =>
-                                    updateAllSetsField(
-                                    exercise.id,
-                                    'rirOrRpe',
-                                    e.target.value === '1' ? 1 : 0
-                                    )
-                                }
-                                className="w-full bg-transparent text-gray-400 text-sm text-center focus:outline-none cursor-pointer"
-                                >
-                                <option value={0}>RIR</option>
-                                <option value={1}>RPE</option>
-                                </select>
-                            </div>
+                          {/* RIR/RPE header as dropdown */}
+                          <div className="text-center">
+                            <select
+                              value={exercise.sets[0]?.rirOrRpe ?? 0}
+                              onChange={(e) =>
+                                updateAllSetsField(exercise.id, 'rirOrRpe', e.target.value === '1' ? 1 : 0)
+                              }
+                              className="w-full bg-transparent text-gray-400 text-xs text-center focus:outline-none cursor-pointer"
+                            >
+                              <option value={0}>RIR</option>
+                              <option value={1}>RPE</option>
+                            </select>
+                          </div>
 
-                            {/* Duration/Velocity header as dropdown */}
-                            <div className="text-center">
-                                <select
-                                value={exercise.sets[0]?.durationOrVelocity ?? 0}
-                                onChange={(e) =>
-                                    updateAllSetsField(
-                                    exercise.id,
-                                    'durationOrVelocity',
-                                    e.target.value === '1' ? 1 : 0
-                                    )
-                                }
-                                className="w-full bg-transparent text-gray-400 text-sm text-center focus:outline-none cursor-pointer"
-                                >
-                                <option value={0}>Duration</option>
-                                <option value={1}>Velocity</option>
-                                </select>
-                            </div>
+                          {/* Duration/Velocity header as dropdown */}
+                          <div className="text-center">
+                            <select
+                              value={exercise.sets[0]?.durationOrVelocity ?? 0}
+                              onChange={(e) =>
+                                updateAllSetsField(exercise.id, 'durationOrVelocity', e.target.value === '1' ? 1 : 0)
+                              }
+                              className="w-full bg-transparent text-gray-400 text-xs text-center focus:outline-none cursor-pointer"
+                            >
+                              <option value={0}>Duration</option>
+                              <option value={1}>Velocity</option>
+                            </select>
+                          </div>
 
-                            <div className="text-center">Actions</div>
+                          <div className="text-center">Actions</div>
                         </div>
 
                         {/* Sets Rows */}
                         {exercise.sets.map((set, setIndex) => (
-                            <div key={setIndex} className="grid grid-cols-[40px_1fr_1fr_1fr_1fr_60px] gap-2 items-center mb-2">
-                            <div className="text-center font-semibold">{setIndex + 1}</div>
+                          <div
+                            key={setIndex}
+                            className="grid grid-cols-[32px_1fr_1fr_1fr_1fr_50px] gap-1 items-center mb-1"
+                          >
+                            <div className="text-center font-medium">{setIndex + 1}</div>
 
                             <input
-                            type="number"
-                            value={set.reps}
-                            onChange={(e) => updateSetField(exercise.id, setIndex, 'reps', e.target.value)}
-                            className="w-full bg-gray-900 border border-gray-700 rounded-lg px-2 py-1 text-center focus:outline-none focus:ring-2 focus:ring-blue-500"
-                            tabIndex={setIndex * 4 + 0} // column 0 = reps
-                            onKeyDown={(e) => handleArrowNavigation(e, exercise.id, setIndex, 0)}
+                              type="number"
+                              value={set.reps}
+                              onChange={(e) => updateSetField(exercise.id, setIndex, 'reps', e.target.value)}
+                              className="w-full bg-gray-900 border border-gray-700 rounded px-2 py-1 text-center text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                              tabIndex={setIndex * 4 + 0}
+                              onKeyDown={(e) => handleArrowNavigation(e, exercise.id, setIndex, 0)}
                             />
 
                             <input
-                            type="text"
-                            value={set.weight}
-                            onChange={(e) => updateSetField(exercise.id, setIndex, 'weight', e.target.value)}
-                            className="w-full bg-gray-900 border border-gray-700 rounded-lg px-2 py-1 text-center focus:outline-none focus:ring-2 focus:ring-blue-500"
-                            tabIndex={setIndex * 4 + 1} // column 1 = weight
-                            onKeyDown={(e) => handleArrowNavigation(e, exercise.id, setIndex, 1)}
+                              type="text"
+                              value={set.weight}
+                              onChange={(e) => updateSetField(exercise.id, setIndex, 'weight', e.target.value)}
+                              className="w-full bg-gray-900 border border-gray-700 rounded px-2 py-1 text-center text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                              tabIndex={setIndex * 4 + 1}
+                              onKeyDown={(e) => handleArrowNavigation(e, exercise.id, setIndex, 1)}
                             />
 
                             <input
-                            type="number"
-                            value={set.rir}
-                            onChange={(e) => updateSetField(exercise.id, setIndex, 'rir', Number(e.target.value))}
-                            className="w-full bg-gray-900 border border-gray-700 rounded-lg px-2 py-1 text-center focus:outline-none focus:ring-2 focus:ring-blue-500"
-                            tabIndex={setIndex * 4 + 2} // column 2 = RIR
-                            onKeyDown={(e) => handleArrowNavigation(e, exercise.id, setIndex, 2)}
+                              type="number"
+                              value={set.rir}
+                              onChange={(e) => updateSetField(exercise.id, setIndex, 'rir', Number(e.target.value))}
+                              className="w-full bg-gray-900 border border-gray-700 rounded px-2 py-1 text-center text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                              tabIndex={setIndex * 4 + 2}
+                              onKeyDown={(e) => handleArrowNavigation(e, exercise.id, setIndex, 2)}
                             />
 
                             <input
-                            type="number"
-                            value={set.duration ?? ''}
-                            onChange={(e) => updateSetField(exercise.id, setIndex, 'duration', e.target.value ? Number(e.target.value) : null)}
-                            className="w-full bg-gray-900 border border-gray-700 rounded-lg px-2 py-1 text-center focus:outline-none focus:ring-2 focus:ring-blue-500"
-                            tabIndex={setIndex * 4 + 3} // column 3 = duration
-                            onKeyDown={(e) => handleArrowNavigation(e, exercise.id, setIndex, 3)}
+                              type="number"
+                              value={set.duration ?? ''}
+                              onChange={(e) =>
+                                updateSetField(
+                                  exercise.id,
+                                  setIndex,
+                                  'duration',
+                                  e.target.value ? Number(e.target.value) : null
+                                )
+                              }
+                              className="w-full bg-gray-900 border border-gray-700 rounded px-2 py-1 text-center text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                              tabIndex={setIndex * 4 + 3}
+                              onKeyDown={(e) => handleArrowNavigation(e, exercise.id, setIndex, 3)}
                             />
 
                             <button
-                                onClick={() => removeSet(exercise.id, setIndex)}
-                                className="text-2xl text-red-500 px-2 py-1 rounded hover:bg-red-500/10"
+                              onClick={() => removeSet(exercise.id, setIndex)}
+                              className="text-xl text-red-500 px-2 py-1 rounded hover:bg-red-500/10 transition-colors"
                             >
-                                -
+                              -
                             </button>
-                            </div>
+                          </div>
                         ))}
 
                         {/* Add Set Button */}
                         <div className="text-right">
-                            <button
+                          <button
                             onClick={() => addSet(exercise.id)}
-                            className="text-sm px-3 py-1 bg-blue-600/20 text-blue-400 rounded-md hover:bg-blue-600/30 transition-colors mt-2"
-                            >
+                            className="text-xs px-2 py-1 bg-blue-600/20 text-blue-400 rounded-md hover:bg-blue-600/30 transition-colors mt-1"
+                          >
                             + Add Set
-                            </button>
+                          </button>
                         </div>
                         </div>
                         {/* Group Actions */}
                         <div className="flex gap-2">
                         {exercise.setStructure === 0 && (
-                            <button
+                          <button
                             onClick={() => {
-                                setGroupAddContext({ baseExerciseId: exercise.id, setStructure: 1 });
-                                setShowExerciseSearch(true);
+                              setGroupAddContext({ baseExerciseId: exercise.id, setStructure: 1 });
+                              setShowExerciseSearch(true);
                             }}
-                            className="text-sm px-3 py-1 bg-purple-600/20 text-purple-400 rounded-md hover:bg-purple-600/30 transition-colors"
-                            >
+                            className="text-xs px-2 py-1 bg-purple-600/20 text-purple-400 rounded-md hover:bg-purple-600/30 transition-colors"
+                          >
                             + Start Superset
-                            </button>
+                          </button>
                         )}
 
-                        {exercise.setStructure === 1 && (
-                            <button
-                            onClick={() => {
-                                setGroupAddContext({ baseExerciseId: exercise.id, setStructure: 2 });
-                                setShowExerciseSearch(true);
-                            }}
-                            className="text-sm px-3 py-1 bg-green-600/20 text-green-400 rounded-md hover:bg-green-600/30 transition-colors"
-                            >
-                            + Create Circuit
-                            </button>
-                        )}
+                      {exercise.setStructure === 1 && (
+                        <button
+                          onClick={() => {
+                            setGroupAddContext({ baseExerciseId: exercise.id, setStructure: 2 });
+                            setShowExerciseSearch(true);
+                          }}
+                          className="text-xs px-2 py-1 bg-green-600/20 text-green-400 rounded-md hover:bg-green-600/30 transition-colors"
+                        >
+                          + Create Circuit
+                        </button>
+                      )}
 
-                        {exercise.setStructure === 2 && (
-                            <button
-                            onClick={() => {
-                                setGroupAddContext({ baseExerciseId: exercise.id, setStructure: 2 });
-                                setShowExerciseSearch(true);
-                            }}
-                            className="text-sm px-3 py-1 bg-green-600/20 text-green-400 rounded-md hover:bg-green-600/30 transition-colors"
-                            >
-                            + Add to Circuit
-                            </button>
-                        )}
+                      {exercise.setStructure === 2 && (
+                        <button
+                          onClick={() => {
+                            setGroupAddContext({ baseExerciseId: exercise.id, setStructure: 2 });
+                            setShowExerciseSearch(true);
+                          }}
+                          className="text-xs px-2 py-1 bg-green-600/20 text-green-400 rounded-md hover:bg-green-600/30 transition-colors"
+                        >
+                          + Add to Circuit
+                        </button>
+                      )}
                         </div>
 
 

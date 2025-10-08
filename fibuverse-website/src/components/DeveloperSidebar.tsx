@@ -55,7 +55,7 @@ export default function DeveloperSidebar({ collapsed, onToggle }: DeveloperSideb
               }`}
             >
               <Icon className="w-5 h-5 text-gray-300" />
-              {!collapsed && <span className="text-base text-gray-100 font-bold">{it.name}</span>}
+              {!collapsed && <span className="text-sm text-gray-100 font-bold">{it.name}</span>}
             </Link>
           );
         })}

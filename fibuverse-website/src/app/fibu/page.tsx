@@ -110,31 +110,32 @@ function FibuPageContent() {
 
       <div className="flex flex-1 overflow-hidden">
         {/* Sidebar */}
-        <aside className="w-72 bg-gray-900 border-r border-gray-800 p-6 overflow-y-auto">
-          <h2 className="text-gray-400 text-xs font-semibold uppercase tracking-wide mb-4">
+        <aside className="w-60 bg-gray-900 border-r border-gray-800 p-4 overflow-y-auto">
+          <h2 className="text-gray-400 text-[10px] font-semibold uppercase tracking-wide mb-2">
             Available Agents
           </h2>
 
           {loadingAgents ? (
-            <p className="text-gray-500 text-sm">Loading agents...</p>
+            <p className="text-gray-500 text-xs">Loading agents...</p>
           ) : (
-            <nav className="flex flex-col gap-2">
+            <nav className="flex flex-col gap-1.5">
               {agents.map(agent => (
                 <button
                   key={agent.id}
                   onClick={() => handleSelectAgent(agent)}
-                  className={`text-left px-4 py-3 rounded-lg transition-all ${
+                  className={`text-left px-3 py-2 rounded-md text-sm transition-all ${
                     selectedAgent?.id === agent.id 
                       ? "bg-blue-600 text-white" 
                       : "bg-gray-800 hover:bg-gray-750 text-gray-300"
                   }`}
                 >
-                  <div className="font-medium">{agent.name}</div>
+                  <div className="font-medium truncate">{agent.name}</div>
                 </button>
               ))}
             </nav>
           )}
         </aside>
+
 
         {/* Main content */}
         <main className="flex-1 overflow-y-auto p-8">
@@ -143,7 +144,9 @@ function FibuPageContent() {
               {/* Agent Header */}
               <div>
                 <h1 className="text-3xl font-bold mb-2">{selectedAgent.name}</h1>
-                <p className="text-gray-400">{selectedAgent.description}</p>
+                  <p className="text-gray-400 text-xs leading-snug mt-1 line-clamp-2">
+                    {selectedAgent.description}
+                  </p>
               </div>
 
               {/* Network Visualization */}
@@ -221,150 +224,151 @@ return (
       {/* Header - Always Visible */}
       <button
         onClick={() => setIsExpanded(!isExpanded)}
-        className="w-full flex items-center justify-between p-4 hover:bg-gray-750 transition-colors"
+        className="w-full flex items-center justify-between p-3 hover:bg-gray-750 transition-colors"
       >
-        <div className="flex items-center gap-3">
-          <div className="text-lg font-semibold">Agent Network</div>
-          <div className="text-xs text-gray-400 bg-gray-700 px-2 py-1 rounded">
+        <div className="flex items-center gap-2">
+          <div className="text-sm font-semibold">Agent Network</div>
+          <div className="text-[10px] text-gray-400 bg-gray-700 px-1.5 py-0.5 rounded">
             {agent.layers.length} Layers • {agent.layers.reduce((total, layer) => total + layer.subagents.length, 0)} SubAgents
           </div>
         </div>
         <div className={`text-gray-400 transition-transform duration-300 ${isExpanded ? 'rotate-180' : ''}`}>
-          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
           </svg>
         </div>
       </button>
 
       {/* Expandable Content */}
-      <div className={`transition-all duration-300 ease-in-out ${
-        isExpanded ? 'max-h-[800px] opacity-100' : 'max-h-0 opacity-0'
-      }`}>
-        <div className="p-6 pt-2">
-          <div className="relative w-full bg-gradient-to-br from-gray-900/50 to-gray-800/50 rounded-2xl border border-gray-700/50 p-8 backdrop-blur-sm overflow-x-auto min-h-[400px]">
-            {/* Background Effects */}
-            <div className="absolute inset-0 opacity-10">
-              <div
-                className="absolute inset-0"
-                style={{
-                  backgroundImage: `
-                    radial-gradient(circle at 20% 20%, #facc15 1px, transparent 1px),
-                    radial-gradient(circle at 80% 80%, #3b82f6 1px, transparent 1px)
-                  `,
-                  backgroundSize: '50px 50px',
-                }}
-              />
-            </div>
+{/* Expandable Content */}
+<div className={`transition-all duration-300 ease-in-out ${
+  isExpanded ? 'max-h-[600px] opacity-100' : 'max-h-0 opacity-0'
+}`}>
+  <div className="p-4 pt-2">
+    <div className="relative w-full bg-gradient-to-br from-gray-900/50 to-gray-800/50 rounded-xl border border-gray-700/50 p-4 backdrop-blur-sm overflow-x-auto min-h-[280px]">
+      {/* Background Effects */}
+      <div className="absolute inset-0 opacity-10">
+        <div
+          className="absolute inset-0"
+          style={{
+            backgroundImage: `
+              radial-gradient(circle at 20% 20%, #facc15 1px, transparent 1px),
+              radial-gradient(circle at 80% 80%, #3b82f6 1px, transparent 1px)
+            `,
+            backgroundSize: '40px 40px',
+          }}
+        />
+      </div>
 
-            <div className="relative z-10 flex items-center justify-between h-full min-h-[350px]">
-              {/* Input Node */}
-              <div className="flex flex-col items-center">
-                <div className="w-16 h-16 rounded-full bg-blue-600 border-2 border-white/20 flex items-center justify-center text-2xl shadow-lg hover:scale-110 transition-all duration-300">
-                  📥
-                </div>
-                <div className="mt-2 text-xs text-gray-400 font-semibold">Input</div>
-              </div>
+      <div className="relative z-10 flex items-center justify-between h-full min-h-[250px]">
+        {/* Input Node */}
+        <div className="flex flex-col items-center">
+          <div className="w-12 h-12 rounded-full bg-blue-600 border-2 border-white/20 flex items-center justify-center text-xl shadow-lg hover:scale-110 transition-all duration-300">
+            📥
+          </div>
+          <div className="mt-1.5 text-[10px] text-gray-400 font-semibold">Input</div>
+        </div>
 
-              {/* Arrow */}
-              <div className="flex-shrink-0 px-8 relative">
-                <div className="text-4xl font-bold text-blue-400 drop-shadow-[0_0_10px_rgba(59,130,246,0.6)] animate-flow">
-                  ⟶
-                </div>
-              </div>
-
-              {/* Layers */}
-              {agent.layers.map((layer, layerIdx) => (
-                <div key={layer.layer_index} className="flex items-center">
-                  {/* Layer Column */}
-                  <div className="flex flex-col items-center gap-4 px-4">
-                    <div className="text-xs text-gray-400 font-semibold mb-2">
-                      Layer {layer.layer_index}
-                    </div>
-                    
-                    <div className={`flex ${layer.allow_parallel ? 'flex-col gap-4' : 'flex-col gap-2'}`}>
-                      {layer.subagents.map((subagent, agentIdx) => {
-                        const nodeId = `layer-${layerIdx}-agent-${agentIdx}`;
-                        const isActive = activeNode === nodeId;
-                        
-                        return (
-                          <div
-                            key={subagent.id}
-                            className="group relative cursor-pointer"
-                            onClick={() => setActiveNode(nodeId)}
-                          >
-                            {/* Node */}
-                            <div className={`w-14 h-14 rounded-full ${getAgentColor(subagent, isActive)}
-                              border-2 border-white/20 flex items-center justify-center text-xl
-                              transition-all duration-300 group-hover:scale-110 shadow-lg
-                              ${isActive ? 'animate-pulse scale-110 border-white/60' : ''}`}
-                            >
-                              {getAgentIcon(subagent)}
-                            </div>
-
-                            {/* Tooltip */}
-                            <div className="absolute left-1/2 -translate-x-1/2 -bottom-16 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none z-20">
-                              <div className="bg-black/90 text-white text-xs px-3 py-2 rounded-lg whitespace-nowrap shadow-xl">
-                                <div className="font-semibold">{subagent.name}</div>
-                                <div className="text-gray-400 mt-1 max-w-[200px] truncate">{subagent.description}</div>
-                              </div>
-                            </div>
-
-                            {/* Pulse rings for active node */}
-                            {isActive && (
-                              <>
-                                <div className="absolute inset-0 rounded-full border-2 border-yellow-400/50 animate-ping" />
-                                <div className="absolute -inset-1 rounded-full border border-yellow-400/30 animate-ping" style={{ animationDelay: '0.5s' }} />
-                              </>
-                            )}
-                          </div>
-                        );
-                      })}
-                    </div>
-
-                    {/* Parallel/Sequential Indicator */}
-                    <div className="text-[10px] text-gray-500 mt-2">
-                      {layer.allow_parallel ? '⚡ Parallel' : '→ Sequential'}
-                    </div>
-                  </div>
-
-                  {/* Arrow to next layer */}
-                  {layerIdx < agent.layers.length - 1 && (
-                    <div className="flex-shrink-0 px-8 relative">
-                      <div className="text-4xl font-bold text-blue-400 drop-shadow-[0_0_10px_rgba(59,130,246,0.6)] animate-flow">
-                        ⟶
-                      </div>
-                    </div>
-                  )}
-                </div>
-              ))}
-
-              {/* Arrow */}
-              <div className="flex-shrink-0 px-8 relative">
-                <div className="text-4xl font-bold text-blue-400 drop-shadow-[0_0_10px_rgba(59,130,246,0.6)] animate-flow">
-                  ⟶
-                </div>
-              </div>
-
-              {/* Output Node */}
-              <div className="flex flex-col items-center">
-                <div className="w-16 h-16 rounded-full bg-green-600 border-2 border-white/20 flex items-center justify-center text-2xl shadow-lg hover:scale-110 transition-all duration-300">
-                  📤
-                </div>
-                <div className="mt-2 text-xs text-gray-400 font-semibold">Output</div>
-              </div>
-            </div>
-
-            {/* Connection indicators */}
-            <div className="absolute bottom-4 left-4 flex items-center gap-2 text-xs text-gray-400 z-10">
-              <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse" />
-              <span>
-                {agent.layers.length} Layers • {' '}
-                {agent.layers.reduce((total, layer) => total + layer.subagents.length, 0)} SubAgents
-              </span>
-            </div>
+        {/* Arrow */}
+        <div className="flex-shrink-0 px-4 relative">
+          <div className="text-2xl font-bold text-blue-400 drop-shadow-[0_0_8px_rgba(59,130,246,0.6)] animate-flow">
+            ⟶
           </div>
         </div>
+
+        {/* Layers */}
+        {agent.layers.map((layer, layerIdx) => (
+          <div key={layer.layer_index} className="flex items-center">
+            {/* Layer Column */}
+            <div className="flex flex-col items-center gap-3 px-2">
+              <div className="text-[10px] text-gray-400 font-semibold mb-1">
+                Layer {layer.layer_index}
+              </div>
+              
+              <div className={`flex ${layer.allow_parallel ? 'flex-col gap-3' : 'flex-col gap-2'}`}>
+                {layer.subagents.map((subagent, agentIdx) => {
+                  const nodeId = `layer-${layerIdx}-agent-${agentIdx}`;
+                  const isActive = activeNode === nodeId;
+                  
+                  return (
+                    <div
+                      key={subagent.id}
+                      className="group relative cursor-pointer"
+                      onClick={() => setActiveNode(nodeId)}
+                    >
+                      {/* Node */}
+                      <div className={`w-10 h-10 rounded-full ${getAgentColor(subagent, isActive)}
+                        border-2 border-white/20 flex items-center justify-center text-base
+                        transition-all duration-300 group-hover:scale-110 shadow-lg
+                        ${isActive ? 'animate-pulse scale-110 border-white/60' : ''}`}
+                      >
+                        {getAgentIcon(subagent)}
+                      </div>
+
+                      {/* Tooltip */}
+                      <div className="absolute left-1/2 -translate-x-1/2 -bottom-14 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none z-20">
+                        <div className="bg-black/90 text-white text-[10px] px-2 py-1.5 rounded-lg whitespace-nowrap shadow-xl">
+                          <div className="font-semibold">{subagent.name}</div>
+                          <div className="text-gray-400 mt-0.5 max-w-[180px] truncate">{subagent.description}</div>
+                        </div>
+                      </div>
+
+                      {/* Pulse rings for active node */}
+                      {isActive && (
+                        <>
+                          <div className="absolute inset-0 rounded-full border-2 border-yellow-400/50 animate-ping" />
+                          <div className="absolute -inset-1 rounded-full border border-yellow-400/30 animate-ping" style={{ animationDelay: '0.5s' }} />
+                        </>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+
+              {/* Parallel/Sequential Indicator */}
+              <div className="text-[9px] text-gray-500 mt-1">
+                {layer.allow_parallel ? '⚡ Parallel' : '→ Sequential'}
+              </div>
+            </div>
+
+            {/* Arrow to next layer */}
+            {layerIdx < agent.layers.length - 1 && (
+              <div className="flex-shrink-0 px-4 relative">
+                <div className="text-2xl font-bold text-blue-400 drop-shadow-[0_0_8px_rgba(59,130,246,0.6)] animate-flow">
+                  ⟶
+                </div>
+              </div>
+            )}
+          </div>
+        ))}
+
+        {/* Arrow */}
+        <div className="flex-shrink-0 px-4 relative">
+          <div className="text-2xl font-bold text-blue-400 drop-shadow-[0_0_8px_rgba(59,130,246,0.6)] animate-flow">
+            ⟶
+          </div>
+        </div>
+
+        {/* Output Node */}
+        <div className="flex flex-col items-center">
+          <div className="w-12 h-12 rounded-full bg-green-600 border-2 border-white/20 flex items-center justify-center text-xl shadow-lg hover:scale-110 transition-all duration-300">
+            📤
+          </div>
+          <div className="mt-1.5 text-[10px] text-gray-400 font-semibold">Output</div>
+        </div>
       </div>
+
+      {/* Connection indicators */}
+      <div className="absolute bottom-3 left-3 flex items-center gap-1.5 text-[10px] text-gray-400 z-10">
+        <div className="w-1.5 h-1.5 bg-green-400 rounded-full animate-pulse" />
+        <span>
+          {agent.layers.length} Layers • {' '}
+          {agent.layers.reduce((total, layer) => total + layer.subagents.length, 0)} SubAgents
+        </span>
+      </div>
+    </div>
+  </div>
+</div>
 
       <style jsx>{`
         @keyframes flow {
@@ -439,17 +443,26 @@ function AgentInputForm({
     return true;
   });
 
+  const formatLabel = (key: string): string => {
+    return key
+      .split('_')
+      .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+      .join(' ');
+  };
+
   const renderInput = (key: string, meta: AgentInputMeta) => {
-    if (meta.type === "file" || key === "ai_image") {
+    if (meta.type === "textarea") {
       return (
-        <input
-          type="file"
-          accept="image/*"
-          onChange={(e) => onInputChange(key, e.target.files?.[0] ?? null)}
-          className="w-full p-3 rounded-lg bg-gray-900 border border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500 text-white"
+        <textarea
+          placeholder={`Enter ${formatLabel(key)}`}
+          value={(inputValues[key] as string) || ""}
+          onChange={(e) => onInputChange(key, e.target.value)}
+          className="w-full p-3 rounded-xl bg-gray-900/80 border border-gray-700/50 focus:outline-none focus:ring-2 focus:ring-yellow-400/50 focus:border-yellow-400/50 text-white placeholder-gray-500 transition-all duration-200 min-h-[100px] resize-y backdrop-blur-sm"
+          required={meta.required}
         />
       );
     }
+
 
     if (meta.type?.toLowerCase() === "dict") {
       return (
@@ -459,70 +472,137 @@ function AgentInputForm({
       );
     }
 
-    return (
-      <input
-        type={meta.type === "password" ? "password" : "text"}
-        placeholder={`Enter ${key}`}
-        value={(inputValues[key] as string) || ""}
-        onChange={(e) => onInputChange(key, e.target.value)}
-        className="w-full p-3 rounded-lg bg-gray-900 border border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500 text-white"
-        required={meta.required}
-      />
-    );
-  };
-
   return (
-    <div className="bg-gray-800 rounded-xl p-6 border border-gray-700">
-      <h3 className="text-lg font-semibold mb-4">Inputs</h3>
+    <input
+      type={meta.type === "password" ? "password" : "text"}
+      placeholder={`Enter ${formatLabel(key)}`}
+      value={(inputValues[key] as string) || ""}
+      onChange={(e) => onInputChange(key, e.target.value)}
+      className="w-full p-3 rounded-xl bg-gray-900/80 border border-gray-700/50 focus:outline-none focus:ring-2 focus:ring-yellow-400/50 focus:border-yellow-400/50 text-white placeholder-gray-500 transition-all duration-200 backdrop-blur-sm"
+      required={meta.required}
+    />
+  );
+};
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+return (
+  <div className="relative bg-gradient-to-br from-gray-900/80 via-gray-900/60 to-gray-800/40 backdrop-blur-xl rounded-3xl p-6 border border-gray-700/30 shadow-2xl overflow-hidden">
+    {/* Animated background gradients */}
+    <div className="absolute inset-0 bg-gradient-to-br from-yellow-400/5 via-transparent to-blue-400/5 rounded-3xl" />
+    
+    {/* Floating particles effect */}
+    <div className="absolute inset-0 overflow-hidden rounded-3xl pointer-events-none">
+      <div className="absolute -top-4 -right-4 w-24 h-24 bg-yellow-400/10 rounded-full blur-2xl" />
+      <div className="absolute -bottom-4 -left-4 w-32 h-32 bg-blue-400/10 rounded-full blur-2xl" />
+    </div>
+
+    <div className="relative z-10">
+      {/* Header */}
+      <div className="flex items-center gap-3 mb-6 pb-4 border-b border-gray-700/30">
+        <div className="relative">
+          {/* Icon glow effect */}
+          <div className="absolute inset-0 bg-gradient-to-br from-yellow-400 to-blue-400 rounded-xl blur-lg opacity-40" />
+          
+          {/* Icon */}
+          <div className="relative w-10 h-10 rounded-xl bg-gradient-to-br from-yellow-400/20 to-blue-400/20 border border-gray-700/50 flex items-center justify-center backdrop-blur-sm">
+            <svg className="w-5 h-5 text-yellow-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" />
+            </svg>
+          </div>
+        </div>
+        
+        <div>
+          <h3 className="text-lg font-bold text-white">Agent Configuration</h3>
+          <p className="text-xs text-gray-400">Configure inputs to launch your agent</p>
+        </div>
+      </div>
+
+      {/* Input Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
         {requiredInputs.map(({ key, meta }, idx) => (
-          <div key={`required-${key}-${idx}`}>
-            <label className="block text-sm font-medium text-gray-300 mb-2">
-              {key}
-              {meta.required && <span className="text-red-500 ml-1">*</span>}
+          <div key={`required-${key}-${idx}`} className="group">
+            <label className="flex items-center gap-2 text-sm font-semibold text-gray-200 mb-2">
+              <div className="w-1.5 h-1.5 bg-yellow-400 rounded-full"></div>
+              {formatLabel(key)}
+              {meta.required && <span className="text-red-400 text-xs">*</span>}
             </label>
             {meta.description && (
-              <p className="text-xs text-gray-400 mb-2">{meta.description}</p>
+              <p className="text-xs text-gray-400 mb-2 leading-relaxed pl-3.5">{meta.description}</p>
             )}
             {renderInput(key, meta)}
           </div>
         ))}
 
         {optionalInputs.length > 0 && showOptional && optionalInputs.map(({ key, meta }, idx) => (
-          <div key={`optional-${key}-${idx}`}>
-            <label className="block text-sm font-medium text-gray-300 mb-2">{key}</label>
+          <div key={`optional-${key}-${idx}`} className="group">
+            <label className="flex items-center gap-2 text-sm font-semibold text-gray-200 mb-2">
+              <div className="w-1.5 h-1.5 bg-blue-400 rounded-full"></div>
+              {formatLabel(key)}
+              <span className="text-xs text-gray-500 font-normal">(optional)</span>
+            </label>
             {meta.description && (
-              <p className="text-xs text-gray-400 mb-2">{meta.description}</p>
+              <p className="text-xs text-gray-400 mb-2 leading-relaxed pl-3.5">{meta.description}</p>
             )}
             {renderInput(key, meta)}
           </div>
         ))}
       </div>
 
+      {/* Advanced Options Toggle */}
       {optionalInputs.length > 0 && (
-        <div className="mt-4">
+        <div className="mb-6">
           <button
             type="button"
-            className="text-sm text-blue-400 hover:text-blue-300 font-medium"
+            className="group/toggle flex items-center gap-2 text-sm text-blue-400 hover:text-yellow-300 font-medium transition-colors duration-200 px-3 py-2 rounded-lg hover:bg-gray-800/50"
             onClick={() => setShowOptional(!showOptional)}
           >
-            {showOptional ? "Hide Advanced Inputs" : "Show Advanced Inputs"}
+            <div className="w-6 h-6 rounded-lg bg-gray-800/80 flex items-center justify-center group-hover/toggle:bg-gray-800 transition-colors">
+              <svg 
+                className={`w-3.5 h-3.5 transition-transform duration-300 ${showOptional ? 'rotate-180' : ''}`}
+                fill="none" 
+                stroke="currentColor" 
+                viewBox="0 0 24 24"
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+              </svg>
+            </div>
+            <span>{showOptional ? "Hide Advanced Options" : "Show Advanced Options"}</span>
+            <span className="px-2 py-0.5 rounded-full bg-gray-800/80 text-xs text-gray-400">
+              {optionalInputs.length}
+            </span>
           </button>
         </div>
       )}
 
+      {/* Submit Button */}
       <button
         onClick={onSubmit}
         disabled={loading}
-        className="w-full mt-6 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 disabled:cursor-not-allowed px-6 py-3 rounded-lg font-medium transition-colors"
+        className="relative w-full overflow-hidden rounded-2xl bg-gradient-to-r from-yellow-400 via-yellow-500 to-orange-500 p-[1px] shadow-lg hover:shadow-yellow-400/50 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 group/btn"
       >
-        {loading ? "Running..." : "Run Agent"}
+        <div className="relative flex items-center justify-center gap-2 rounded-2xl bg-gray-900 px-6 py-3.5 transition-all duration-300 group-hover/btn:bg-transparent">
+          {loading ? (
+            <>
+              <div className="relative">
+                <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+              </div>
+              <span className="font-semibold text-sm text-white">Processing Agent...</span>
+            </>
+          ) : (
+            <>
+              <svg className="w-5 h-5 text-white group-hover/btn:text-black transition-all duration-300 group-hover/btn:translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <span className="font-semibold text-sm text-white group-hover/btn:text-black transition-colors duration-300">
+                Launch Agent
+              </span>
+              <svg className="w-4 h-4 text-white group-hover/btn:text-black transition-all duration-300 group-hover/btn:translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+              </svg>
+            </>
+          )}
+        </div>
       </button>
     </div>
-  );
-}
-
-
-
-
+  </div>
+);}

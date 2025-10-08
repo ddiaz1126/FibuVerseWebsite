@@ -351,7 +351,7 @@ export default function ClientMetricsTab({
   // -------------------- Render Sections --------------------
   return (
     <div className="p-4 space-y-10">
-      <div className="flex justify-end mb-6">
+      <div className="flex justify-end mb-4">
         <button
           onClick={() =>
             router.push(
@@ -360,15 +360,15 @@ export default function ClientMetricsTab({
               )}&clientGender=${encodeURIComponent(clientGender || '')}&clientAge=${clientAge || ''}`
             )
           }
-          className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700"
+          className="px-2.5 py-1.5 text-sm bg-green-600 text-white rounded hover:bg-green-700"
         >
           + Add Metrics
         </button>
       </div>
       {/* Health Metrics */}
       <section>
-        <h2 className="text-2xl font-bold mb-4">📊 Health Metrics</h2>
-        <div className="flex gap-2 mb-4 flex-wrap">
+        <h2 className="text-lg font-medium mb-2">📊 Health Metrics</h2>
+        <div className="flex gap-1 mb-2 flex-wrap">
           {[
             "resting_hr",
             "max_hr",
@@ -380,7 +380,7 @@ export default function ClientMetricsTab({
             <button
               key={metric}
               onClick={() => setActiveHealthMetric(metric as typeof activeHealthMetric)}
-              className={`px-3 py-1 rounded ${
+              className={`px-1.5 py-0.5 text-xs rounded ${
                 activeHealthMetric === metric
                   ? "bg-blue-600 text-white"
                   : "bg-gray-800 text-gray-300 hover:bg-gray-700"
@@ -390,13 +390,13 @@ export default function ClientMetricsTab({
             </button>
           ))}
         </div>
-        <div className="bg-gray-900 p-4 rounded shadow">{renderHealthChart()}</div>
+        <div className="bg-gray-900 p-2 rounded shadow">{renderHealthChart()}</div>
       </section>
 
       {/* Body Measurements */}
       <section>
-        <h2 className="text-2xl font-bold mb-4">⚖️ Body Measurements</h2>
-        <div className="flex gap-2 mb-4 flex-wrap">
+        <h2 className="text-lg font-medium mb-2">⚖️ Body Measurements</h2>
+        <div className="flex gap-1 mb-2 flex-wrap">
           {[
             "weight_kg",
             "height_cm",
@@ -409,7 +409,7 @@ export default function ClientMetricsTab({
             <button
               key={metric}
               onClick={() => setActiveBodyMetric(metric as typeof activeBodyMetric)}
-              className={`px-3 py-1 rounded ${
+              className={`px-1.5 py-0.5 text-xs rounded ${
                 activeBodyMetric === metric
                   ? "bg-green-600 text-white"
                   : "bg-gray-800 text-gray-300 hover:bg-gray-700"
@@ -419,13 +419,13 @@ export default function ClientMetricsTab({
             </button>
           ))}
         </div>
-        <div className="bg-gray-900 p-4 rounded shadow">{renderBodyChart()}</div>
+        <div className="bg-gray-900 p-2 rounded shadow">{renderBodyChart()}</div>
       </section>
 
       {/* Fitness Tests */}
       <section>
-        <h2 className="text-2xl font-bold mb-4">🏅 Fitness Tests</h2>
-        <div className="flex gap-2 mb-4 flex-wrap">
+        <h2 className="text-lg font-medium mb-2">🏅 Fitness Tests</h2>
+        <div className="flex gap-1 mb-2 flex-wrap">
           {[
             "sit_and_reach_cm",
             "hand_dynamometer_kg",
@@ -441,7 +441,7 @@ export default function ClientMetricsTab({
             <button
               key={metric}
               onClick={() => setFitnessTests(metric as typeof activeFitnessTests)}
-              className={`px-3 py-1 rounded ${
+              className={`px-1.5 py-0.5 text-xs rounded ${
                 activeSkinfoldMetric === metric
                   ? "bg-purple-600 text-white"
                   : "bg-gray-800 text-gray-300 hover:bg-gray-700"
@@ -451,13 +451,14 @@ export default function ClientMetricsTab({
             </button>
           ))}
         </div>
-        <div className="bg-gray-900 p-4 rounded shadow">{renderFitnessTestsChart()}</div>
+        <div className="bg-gray-900 p-2 rounded shadow">{renderFitnessTestsChart()}</div>
       </section>
+
 
       {/* Body Fat Skinfolds */}
       <section>
-        <h2 className="text-2xl font-bold mb-4">🩺 Body Fat Skinfolds</h2>
-        <div className="flex gap-2 mb-4 flex-wrap">
+        <h2 className="text-lg font-medium mb-2">🩺 Body Fat Skinfolds</h2>
+        <div className="flex gap-1 mb-2 flex-wrap">
           {[
             "chest",
             "abdomen",
@@ -472,7 +473,7 @@ export default function ClientMetricsTab({
             <button
               key={metric}
               onClick={() => setActiveSkinfoldMetric(metric as typeof activeSkinfoldMetric)}
-              className={`px-3 py-1 rounded ${
+              className={`px-1.5 py-0.5 text-xs rounded ${
                 activeSkinfoldMetric === metric
                   ? "bg-purple-600 text-white"
                   : "bg-gray-800 text-gray-300 hover:bg-gray-700"
@@ -482,9 +483,8 @@ export default function ClientMetricsTab({
             </button>
           ))}
         </div>
-        <div className="bg-gray-900 p-4 rounded shadow">{renderSkinfoldChart()}</div>
+        <div className="bg-gray-900 p-2 rounded shadow">{renderSkinfoldChart()}</div>
       </section>
-
     </div>
   );
 }

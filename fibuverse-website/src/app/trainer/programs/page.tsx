@@ -16,8 +16,12 @@ import WorkoutEditor from "@/components/programs/WorkoutEditor";
 import { Client, WorkoutListItem, WeightsSessionInsights, Workout } from '@/api/trainerTypes';
 import { Program } from "@/api/trainerTypes";
 import { WorkoutDetailView } from "@/components/programs/WorkoutDetailView"
+import ProgramDetailView from "@/components/programs/ProgramDetailView"
+
+import { useRouter } from 'next/navigation';
 
 export default function ProgramsPage() {
+  const router = useRouter();
   const today = new Date();
   const [selectedDate, setSelectedDate] = useState(today);
   const [currentMonth, setCurrentMonth] = useState(today);
@@ -41,6 +45,7 @@ export default function ProgramsPage() {
   const [trainerWorkouts, setTrainerWorkouts] = useState<WorkoutListItem[]>([]);
   const [loadingWorkouts, setLoadingWorkouts] = useState(false);
   const [selectedWorkout, setSelectedWorkout] = useState<Workout | null>(null);
+  const [selectedProgram, setSelectedProgram] = useState<number | null>(null);
 
   // For Programs tab - fetch templates
   useEffect(() => {
@@ -144,6 +149,7 @@ export default function ProgramsPage() {
     try {
       const workout = await getSpecificWorkout(workoutId);
       console.log("Selected workout:", workout);
+      setSelectedProgram(null); // Clear program selection
       // Here you can set state, e.g.:
       setSelectedWorkout(workout);
     } catch (err) {
@@ -151,17 +157,24 @@ export default function ProgramsPage() {
     }
   };
 
+  // Add handler for program selection
+  const handleProgramSelect = (programId: number) => {
+    setSelectedProgram(programId);
+    setSelectedWorkout(null); // Clear workout selection
+  };
+
+
   return (
     <div className="flex h-screen bg-gray-900 text-white">
       {/* Left sidebar: Programs & Workouts */}
-      <div className="w-64 border-r border-gray-800 flex flex-col">
+      <div className="w-56 border-r border-gray-800 flex flex-col">
         {/* Tabs */}
-        <div className="flex gap-2 bg-gray-800 p-0 rounded-lg">
+        <div className="flex gap-1 bg-gray-800 p-0 rounded-md">
           <button
             onClick={() => setActiveTab("workouts")}
-            className={`flex-1 py-2 px-4 rounded-md transition-all duration-200 font-medium ${
-              activeTab === "workouts" 
-                ? "bg-blue-600 text-white shadow-lg" 
+            className={`flex-1 py-1.5 px-3 rounded-md text-sm font-medium transition-all duration-200 ${
+              activeTab === "workouts"
+                ? "bg-blue-600 text-white shadow-lg"
                 : "text-gray-400 hover:bg-gray-700 hover:text-white"
             }`}
           >
@@ -169,9 +182,9 @@ export default function ProgramsPage() {
           </button>
           <button
             onClick={() => setActiveTab("programs")}
-            className={`flex-1 py-2 px-4 rounded-md transition-all duration-200 font-medium ${
-              activeTab === "programs" 
-                ? "bg-blue-600 text-white shadow-lg" 
+            className={`flex-1 py-1.5 px-3 rounded-md text-sm font-medium transition-all duration-200 ${
+              activeTab === "programs"
+                ? "bg-blue-600 text-white shadow-lg"
                 : "text-gray-400 hover:bg-gray-700 hover:text-white"
             }`}
           >
@@ -179,17 +192,25 @@ export default function ProgramsPage() {
           </button>
         </div>
 
-          {/* Create Workout Button */}
-          {activeTab === "workouts" && (
-            <div className="p-3">
-              <button
-                onClick={() => setSelectedWorkout(null)}
-                className="w-full bg-green-600 hover:bg-green-700 text-white py-2 px-3 rounded-md font-medium shadow-md transition-all duration-200"
-              >
-                + Create Workout
-              </button>
-            </div>
-          )}
+        {/* Create Button */}
+        {["workouts", "programs"].includes(activeTab) && (
+                  <div className="p-2">
+                    <button
+                      onClick={() => {
+                        if (activeTab === "workouts") {
+                          setSelectedProgram(null); // Clear program selection
+                          setSelectedWorkout(null);
+                        } else {
+                          // Navigate to create program page
+                          router.push('/create-program');
+                        }
+                      }}
+                      className="w-full bg-green-600 hover:bg-green-700 text-white py-1.5 px-3 rounded-md text-sm font-medium shadow-md transition-all duration-200"
+                    >
+                      + Create {activeTab === "workouts" ? "Workout" : "Program"}
+                    </button>
+                  </div>
+                )}
 
 
         {/* Search */}
@@ -202,28 +223,25 @@ export default function ProgramsPage() {
         </div>
 
         {/* List */}
-        <div className="flex-1 overflow-y-auto">
+        <div className="flex-1 overflow-y-auto text-sm">
           {activeTab === "workouts" && (
             <>
-              {loadingWorkouts && <div className="p-3 text-gray-400">Loading workouts...</div>}
+              {loadingWorkouts && <div className="p-2 text-gray-400">Loading workouts...</div>}
               {!loadingWorkouts && trainerWorkouts.length === 0 && (
-                <div className="p-3 text-gray-400">No assigned workouts found</div>
+                <div className="p-2 text-gray-400">No assigned workouts found</div>
               )}
               {trainerWorkouts.map((workout) => (
                 <div
                   key={workout.id}
-                  className="p-3 hover:bg-gray-800 cursor-pointer border-b border-gray-800"
+                  className="p-2 hover:bg-gray-800 cursor-pointer border-b border-gray-800"
                   onClick={() => handleWorkoutSelect(workout.id!)}
                 >
-                  <div className="font-medium">{workout.workout_name}</div>
-                  {/* <div className="text-sm text-gray-400 mt-1">
-                    Client: {workout.workoutName || `ID: ${workout.client_id}`}
-                  </div> */}
-                  <div className="text-xs text-gray-500 mt-1">
-                    {workout.workout_date 
-                      ? new Date(workout.workout_date).toLocaleDateString() 
-                      : 'No date'}
-                    </div>
+                  <div className="font-medium text-sm">{workout.workout_name}</div>
+                  <div className="text-xs text-gray-500 mt-0.5">
+                    {workout.workout_date
+                      ? new Date(workout.workout_date).toLocaleDateString()
+                      : "No date"}
+                  </div>
                 </div>
               ))}
             </>
@@ -231,17 +249,21 @@ export default function ProgramsPage() {
 
           {activeTab === "programs" && (
             <>
-              {loading && <div className="p-3 text-gray-400">Loading programs...</div>}
-              {error && <div className="p-3 text-red-500">{error}</div>}
+              {loading && <div className="p-2 text-gray-400">Loading programs...</div>}
+              {error && <div className="p-2 text-red-500">{error}</div>}
               {!loading && !error && programs.length === 0 && (
-                <div className="p-3 text-gray-400">No programs found</div>
+                <div className="p-2 text-gray-400">No programs found</div>
               )}
               {programs.map((program) => (
                 <div
                   key={program.id}
-                  className="p-3 hover:bg-gray-800 cursor-pointer"
+                  className="p-2 hover:bg-gray-800 cursor-pointer border-b border-gray-800"
+                  onClick={() => handleProgramSelect(program.id)}
                 >
-                  {program.name}
+                  <div className="font-medium text-sm">{program.name}</div>
+                  <div className="text-xs text-gray-500 mt-0.5">
+                    {program.is_template ? "Template" : "Assigned"} • {program.program_workouts?.length || 0} workouts
+                  </div>
                 </div>
               ))}
             </>
@@ -249,51 +271,54 @@ export default function ProgramsPage() {
         </div>
       </div>
 
-      {/* Middle column */}
-      {selectedWorkout ? (
-        <WorkoutDetailView workout={selectedWorkout} />
-      ) : (
-        <WorkoutEditor />
-      )}
+        {/* Middle column */}
+        <div className="flex-1 overflow-hidden">
+          {selectedProgram ? (
+            <ProgramDetailView programId={selectedProgram} />
+          ) : selectedWorkout ? (
+            <WorkoutDetailView workout={selectedWorkout} />
+          ) : (
+            <WorkoutEditor />
+          )}
+        </div>
 
       {/* Right column: Calendar + Client Analysis */}
       <div className="w-96 flex flex-col border-l border-gray-800">
         {/* Calendar */}
-        <div className="p-4 border-b border-gray-800">
-          <div className="flex items-center justify-between mb-2">
+        <div className="p-2 border-b border-gray-800">
+          {/* Month Navigation */}
+          <div className="flex items-center justify-between mb-1">
             <button
               onClick={() =>
                 setCurrentMonth(
                   new Date(currentMonth.setMonth(currentMonth.getMonth() - 1))
                 )
               }
-              className="px-2 py-1 rounded hover:bg-gray-800"
+              className="px-1 py-0.5 rounded hover:bg-gray-800"
             >
               ←
             </button>
-            <h2 className="text-lg font-semibold">
-              {format(currentMonth, "MMMM yyyy")}
-            </h2>
+            <h2 className="text-sm font-semibold">{format(currentMonth, "MMMM yyyy")}</h2>
             <button
               onClick={() =>
                 setCurrentMonth(
                   new Date(currentMonth.setMonth(currentMonth.getMonth() + 1))
                 )
               }
-              className="px-2 py-1 rounded hover:bg-gray-800"
+              className="px-1 py-0.5 rounded hover:bg-gray-800"
             >
               →
             </button>
           </div>
 
-          <div className="grid grid-cols-7 gap-1 text-xs mb-2">
+          {/* Weekday Headers */}
+          <div className="grid grid-cols-7 gap-1 text-[10px] mb-1">
             {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((d) => (
-              <div key={d} className="text-center font-semibold">
-                {d}
-              </div>
+              <div key={d} className="text-center font-semibold">{d}</div>
             ))}
           </div>
 
+          {/* Days Grid */}
           <div className="grid grid-cols-7 gap-1">
             {days.map((day) => {
               const isSelected = isSameDay(day, selectedDate);
@@ -301,17 +326,13 @@ export default function ProgramsPage() {
               return (
                 <div
                   key={day.toISOString()}
-                  className={`h-12 flex flex-col items-center justify-center rounded cursor-pointer transition ${
-                    isSelected
-                      ? "bg-blue-600 text-white"
-                      : "bg-gray-800 hover:bg-gray-700"
+                  className={`h-10 flex flex-col items-center justify-center rounded cursor-pointer transition ${
+                    isSelected ? "bg-blue-600 text-white" : "bg-gray-800 hover:bg-gray-700"
                   } ${!isSameMonth(day, monthStart) ? "text-gray-500" : ""}`}
                   onClick={() => setSelectedDate(day)}
                 >
-                  <div>{format(day, "d")}</div>
-                  {isWorkoutDay && (
-                    <div className="h-1 w-1 bg-green-400 rounded-full mt-1" />
-                  )}
+                  <div className="text-xs">{format(day, "d")}</div>
+                  {isWorkoutDay && <div className="h-1 w-1 bg-green-400 rounded-full mt-1" />}
                 </div>
               );
             })}
@@ -319,13 +340,13 @@ export default function ProgramsPage() {
         </div>
         <div className="w-64 p-4 bg-gray-900 text-white flex flex-col gap-4">
         {/* Title */}
-        <h3 className="text-lg font-bold">Select Client</h3>
-        
+        <h3 className="text-sm font-semibold mb-1">Select Client</h3>
+
         {/* Dropdown */}
         <div className="relative">
           <button
             onClick={handleDropdownClick}
-            className="w-full flex justify-between items-center px-4 py-2 bg-gray-800 rounded hover:bg-gray-700 focus:outline-none"
+            className="w-full flex justify-between items-center px-3 py-1 bg-gray-800 rounded hover:bg-gray-700 text-sm focus:outline-none"
           >
             {selectedClient ? `${selectedClient.first_name} ${selectedClient.last_name}` : "None"}
             <span className={`transform transition-transform ${dropdownOpen ? "rotate-180" : ""}`}>
@@ -335,14 +356,14 @@ export default function ProgramsPage() {
 
           {/* Dropdown menu */}
           {dropdownOpen && (
-            <ul className="absolute mt-1 w-full bg-gray-800 rounded shadow-lg z-10 max-h-60 overflow-auto">
+            <ul className="absolute mt-1 w-full bg-gray-800 rounded shadow-lg z-10 max-h-48 overflow-auto text-sm">
               {clients.length === 0 ? (
-                <li className="px-4 py-2 text-gray-400">No clients loaded</li>
+                <li className="px-3 py-1 text-gray-400">No clients loaded</li>
               ) : (
                 clients.map((client) => (
                   <li
                     key={client.id}
-                    className="px-4 py-2 hover:bg-gray-700 cursor-pointer"
+                    className="px-3 py-1 hover:bg-gray-700 cursor-pointer"
                     onClick={() => handleClientSelect(client)}
                   >
                     {client.first_name} {client.last_name}
@@ -354,21 +375,22 @@ export default function ProgramsPage() {
         </div>
 
         {/* Usage instruction */}
-        <p className="text-sm text-gray-400 whitespace-nowrap text-ellipsis">
+        <p className="text-xs text-gray-400 whitespace-nowrap text-ellipsis">
           Select a client to view metrics while building their workout.
         </p>
-      </div>
+        </div>
 
         {/* Client Analysis */}
-        <div className="flex-1 p-4 flex flex-col gap-4">
+        <div className="flex-1 p-1 flex flex-col gap-2">
 
           {/* ----------------- Recent 3 Weeks Weights Summary ----------------- */}
-          <section className="space-y-4 max-h-[600px] overflow-auto p-2">
-            <h2 className="text-2xl font-bold mb-4">Recent 3 Weeks Summary</h2>
-            <div className="mb-4 text-sm text-gray-400">
-              <span>Total Workouts: {weightsSessionInsights?.recent_3_weeks.total_workouts}</span>
-              <span className="ml-4">Average: {weightsSessionInsights?.recent_3_weeks.workouts_per_week} workouts/week</span>
-              <span className="ml-4">
+          <section className="space-y-2 max-h-[450px] overflow-auto p-1">
+            <h2 className="text-lg font-semibold mb-1">Recent 3 Weeks Summary</h2>
+
+            <div className="mb-1 text-[10px] text-gray-400 flex flex-wrap gap-2">
+              <span>Total: {weightsSessionInsights?.recent_3_weeks.total_workouts}</span>
+              <span>Avg: {weightsSessionInsights?.recent_3_weeks.workouts_per_week}/week</span>
+              <span>
                 Period: {weightsSessionInsights?.recent_3_weeks.cutoff_date
                   ? new Date(weightsSessionInsights.recent_3_weeks.cutoff_date).toLocaleDateString()
                   : "-"} - Today
