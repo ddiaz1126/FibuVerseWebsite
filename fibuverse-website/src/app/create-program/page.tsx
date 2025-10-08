@@ -11,9 +11,9 @@ import {
   isSameDay,
   isSameMonth,
 } from "date-fns";
-import { Plus, X, Copy, Trash2, Search, Calendar, Dumbbell } from 'lucide-react';
-import { getTrainerWorkouts, getClientWeightsSessionData, getTrainerClients } from "@/api/trainer";
-import { Client, WorkoutListItem, Workout, WeightsSessionInsights } from '@/api/trainerTypes';
+import { Plus, X, Copy, Trash2, Calendar } from 'lucide-react';
+import { getTrainerWorkouts, getClientWeightsSessionData, getTrainerClients, getSpecificWorkout, sendProgram } from "@/api/trainer";
+import { Client, WorkoutListItem, WeightsSessionInsights, ProgramWorkout } from '@/api/trainerTypes';
 import { useRouter } from 'next/navigation';
 import WorkoutEditor from "@/components/programs/WorkoutEditor";
 import FibuChat from "@/components/FibuChat";
@@ -29,6 +29,8 @@ export default function ProgramBuilder() {
   const [draggedWorkout, setDraggedWorkout] = useState<number | null>(null);
   const [loadingWorkouts, setLoadingWorkouts] = useState(false);
   const [trainerWorkouts, setTrainerWorkouts] = useState<WorkoutListItem[]>([]);
+  const [workoutDetails, setWorkoutDetails] = useState<{[key: number]: ProgramWorkout}>({})
+
   const [isCreatingWorkout, setIsCreatingWorkout] = useState(false);
   const [sidebarWidth, setSidebarWidth] = useState(320); // default width
   const [isResizing, setIsResizing] = useState(false);
@@ -43,7 +45,7 @@ export default function ProgramBuilder() {
   const [selectedDate, setSelectedDate] = useState(today);
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [selectedClient, setSelectedClient] = useState<Client | null>(null);
-  const [loading, setLoading] = useState(false);
+  const [, setLoading] = useState(false);
   const [weightsSessionInsights, setWeightsSessionInsights] = useState<WeightsSessionInsights | null>(null);
   const [clients, setClients] = useState<Client[]>([]);
   const monthStart = startOfMonth(currentMonth);
@@ -53,7 +55,6 @@ export default function ProgramBuilder() {
   const [isRightPanelOpen, setIsRightPanelOpen] = useState(true);
   const [chatOpen, setChatOpen] = useState(false);
   const [chatWidth, setChatWidth] = useState(360);
-
 
   const days = eachDayOfInterval({ start: startDate, end: endDate });
     // For Workouts tab - fetch assigned workouts (where clientId is null)
@@ -88,52 +89,89 @@ export default function ProgramBuilder() {
     setWeeks([...weeks, { id: Date.now(), days: Array(7).fill(null) }]);
   };
 
-  const duplicateWeek = (weekIndex) => {
+  const duplicateWeek = (weekIndex: number) => {
     const newWeek = { id: Date.now(), days: [...weeks[weekIndex].days] };
     const newWeeks = [...weeks];
     newWeeks.splice(weekIndex + 1, 0, newWeek);
     setWeeks(newWeeks);
   };
 
-  const deleteWeek = (weekIndex) => {
+  const deleteWeek = (weekIndex: number) => {
     if (weeks.length > 1) {
       setWeeks(weeks.filter((_, i) => i !== weekIndex));
     }
   };
 
-  const handleWorkoutDrop = (e, weekIndex, dayIndex) => {
+  const handleWorkoutDrop = async (e: React.DragEvent, weekIndex: number, dayIndex: number) => {
     e.preventDefault();
-    if (draggedWorkout) {
-      const newWeeks = [...weeks];
-      newWeeks[weekIndex].days[dayIndex] = draggedWorkout;
-      setWeeks(newWeeks);
-      setDraggedWorkout(null);
+    
+    if (!draggedWorkout) return;
+    
+    // Update the grid with the workout ID
+    const newWeeks = [...weeks];
+    newWeeks[weekIndex].days[dayIndex] = draggedWorkout;
+    setWeeks(newWeeks);
+    setDraggedWorkout(null);
+    
+    // Fetch full workout details if we don't have them yet
+    if (!workoutDetails[draggedWorkout]) {
+      try {
+        const workout = await getSpecificWorkout(draggedWorkout);
+        
+        // Transform Workout to ProgramWorkout
+        const programWorkout: ProgramWorkout = {
+          id: 0, // Temporary, will be set when saved to backend
+          program: 0, // Will be set when saving the program
+          week_index: weekIndex,
+          day_index: dayIndex,
+          order: null,
+          date: null,
+          workout: workout
+        };
+        
+        setWorkoutDetails(prev => ({
+          ...prev,
+          [draggedWorkout]: programWorkout
+        }));
+        
+        console.log("Added workout to program:", programWorkout);
+      } catch (error) {
+        console.error("Failed to fetch workout details:", error);
+      }
     }
   };
 
-  const clearCell = (weekIndex, dayIndex) => {
+  const clearCell = (weekIndex: number, dayIndex: number) => {
     const newWeeks = [...weeks];
     newWeeks[weekIndex].days[dayIndex] = null;
     setWeeks(newWeeks);
   };
 
-  const getWorkoutById = (id) => trainerWorkouts.find(w => w.id === id);
+  const getWorkoutById = (id: number) =>
+    trainerWorkouts.find(w => w.id === id);
 
-  const handleSave = () => {
-    const programWorkouts = [];
+  const handleSave = async () => {  // ✅ Make it async
+    const programWorkouts: ProgramWorkout[] = [];
     let dayCounter = 1;
 
     weeks.forEach((week, weekIndex) => {
-      week.days.forEach((workoutId, dayIndex) => {
+      week.days.forEach((workoutId) => {
         if (workoutId !== null) {
-          programWorkouts.push({
-            program: null,
-            week_index: weekIndex + 1,
-            day_index: dayCounter,
-            order: dayCounter,
-            date: null,
-            workout: getWorkoutById(workoutId)
-          });
+          const workoutData = workoutDetails[workoutId];
+
+          if (workoutData) {
+            programWorkouts.push({
+              id: 0, // Provide a default value for 'id'
+              program: 0,
+              week_index: weekIndex + 1,
+              day_index: dayCounter,
+              order: dayCounter,
+              date: null,
+              workout: workoutData.workout
+            });
+          } else {
+            console.warn(`Missing workout details for ID: ${workoutId}`);
+          }
         }
         dayCounter++;
       });
@@ -147,9 +185,32 @@ export default function ProgramBuilder() {
     };
 
     console.log('Saving program:', program);
-    alert('Program saved! Check console for data structure.');
+    console.log('First workout exercises:', program.program_workouts[0]?.workout?.exercises);
+    
+    try {
+      // ✅ Await the API call
+      await sendProgram({
+        name: program.name,
+        description: program.description,
+        is_template: program.is_template,
+        program_workouts: program.program_workouts.map(pw => ({
+          program: pw.program, // number | null is fine
+          week_index: pw.week_index ?? 0, // coerce undefined/null to 0
+          day_index: pw.day_index ?? 0,
+          order: pw.order ?? 0,
+          date: pw.date ?? null,
+          workout: pw.workout
+        }))
+      });
+      
+      // ✅ Only navigate on success
+      router.push('/trainer/programs');
+    } catch (error) {
+      console.error('Failed to save program:', error);
+      // ✅ Show error to user
+      alert('Failed to save program. Please try again.');
+    }
   };
-
   // Sidebar
   useEffect(() => {
   const handleMouseMove = (e: MouseEvent) => {
@@ -219,10 +280,11 @@ export default function ProgramBuilder() {
 return (
     <div className="flex h-screen bg-gray-900">
       {/* Left Sidebar - Workout Library */}
-        <div
-          className="border-r border-gray-800 flex flex-col bg-gray-900"
-          style={{ width: sidebarWidth }}
-        >
+          <div
+            className="border-r border-gray-800 flex flex-col bg-gray-900 pl-4"
+            style={{ width: sidebarWidth }}
+          >
+
           {isCreatingWorkout ? (
             <>
               <div className="p-4 border-b border-gray-800 flex justify-between items-center bg-gray9800">
@@ -234,7 +296,9 @@ return (
                   Cancel
                 </button>
               </div>
-              <WorkoutEditor />
+              <WorkoutEditor 
+                onSave={() => setIsCreatingWorkout(false)} 
+              />
             </>
           ) : (
           // Show workout list when NOT creating
@@ -338,7 +402,7 @@ return (
                 disabled={!programName}
                 className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-600 disabled:cursor-not-allowed"
               >
-                Save Template
+                Save Program
               </button>
             </div>
           </div>
@@ -383,40 +447,77 @@ return (
                           const workout = workoutId ? getWorkoutById(workoutId) : null;
                           
                           return (
-                            <td key={dayIndex} className="px-4 py-4">
-                              <div
-                                onDragOver={(e) => e.preventDefault()}
-                                onDrop={(e) => handleWorkoutDrop(e, weekIndex, dayIndex)}
-                                className={`relative w-full h-48 rounded border-2 transition-all ${
-                                  workout 
-                                    ? 'bg-blue-900/30 border-blue-600 hover:border-blue-500' 
-                                    : 'bg-gray-700 border-dashed border-gray-600 hover:border-blue-500'
-                                }`}
-                              >
-                                {workout ? (
-                                  <div className="p-3 h-full flex flex-col">
-                                    <div className="flex items-start justify-between gap-2 mb-2">
-                                      <div className="text-sm font-semibold text-white line-clamp-2 flex-1">
-                                        {workout.workout_name}
-                                      </div>
-                                      <button
-                                        onClick={() => clearCell(weekIndex, dayIndex)}
-                                        className="flex-shrink-0 p-1 hover:bg-blue-800 rounded"
-                                      >
-                                        <X className="w-4 h-4 text-gray-400" />
-                                      </button>
+                          <td key={dayIndex} className="px-4 py-4">
+                            <div
+                              onDragOver={(e) => e.preventDefault()}
+                              onDrop={(e) => handleWorkoutDrop(e, weekIndex, dayIndex)}
+                              className={`relative w-full h-48 rounded border-2 transition-all ${
+                                workout 
+                                  ? 'bg-blue-900/30 border-blue-600 hover:border-blue-500' 
+                                  : 'bg-gray-700 border-dashed border-gray-600 hover:border-blue-500'
+                              }`}
+                            >
+                              {workout ? (
+                                <div className="p-3 h-full flex flex-col">
+                                  <div className="flex items-start justify-between gap-2 mb-2">
+                                    <div className="text-sm font-semibold text-white line-clamp-2 flex-1">
+                                      {workout.workout_name}
                                     </div>
-                                    <div className="text-xs text-gray-400 mt-auto">
-                                      {workout.num_exercises} exercises
+                                    <button
+                                      onClick={() => clearCell(weekIndex, dayIndex)}
+                                      className="flex-shrink-0 p-1 hover:bg-blue-800 rounded"
+                                    >
+                                      <X className="w-4 h-4 text-gray-400" />
+                                    </button>
+                                  </div>
+                                  
+                                  {/* Workout Details */}
+                                  {workoutDetails[workoutId] ? (
+                                    <div className="text-[10px] text-gray-400 space-y-0.5 overflow-y-auto flex-1">
+                                      {workoutDetails[workoutId].workout.exercises.map((exercise, idx) => {
+                                        // Get unique reps values
+                                        const repsValues = [...new Set(exercise.sets.map(s => s.reps))];
+                                        const repsDisplay = repsValues.join(',');
+                                        
+                                        // Get weight info from first set
+                                        const firstSet = exercise.sets[0];
+                                        const weightUnit = firstSet?.weightUnit === 1 ? 'kg' : 'lbs';
+                                        const weight = firstSet?.weight || 0;
+                                        
+                                        // RIR or RPE
+                                        const rirOrRpe = firstSet?.rirOrRpe === 1 ? 'RPE' : 'RIR';
+                                        const rirValue = firstSet?.rir || 0;
+                                        
+                                        // Duration or Velocity
+                                        let durationVelocity = '';
+                                        if (firstSet?.durationOrVelocity === 0 && firstSet?.duration) {
+                                          durationVelocity = ` ${firstSet.duration}s`;
+                                        } else if (firstSet?.durationOrVelocity === 1) {
+                                          durationVelocity = ' Velocity';
+                                        }
+                                        
+                                        return (
+                                          <div key={idx} className="leading-tight">
+                                            {exercise.exerciseOrder}.{exercise.groupId || 0} {exercise.exerciseName} {exercise.sets.length}x{repsDisplay} @{weight}{weightUnit} {rirValue}{rirOrRpe}{durationVelocity}
+                                          </div>
+                                        );
+                                      })}
                                     </div>
+                                  ) : (
+                                    <div className="text-xs text-gray-400 italic">Loading...</div>
+                                  )}
+                                  
+                                  <div className="text-xs text-gray-400 mt-2 pt-2 border-t border-gray-600">
+                                    {workout.num_exercises} exercises • {workout.duration} min
                                   </div>
-                                ) : (
-                                  <div className="h-full flex items-center justify-center text-gray-500">
-                                    <Calendar className="w-6 h-6" />
-                                  </div>
-                                )}
-                              </div>
-                            </td>
+                                </div>
+                              ) : (
+                                <div className="h-full flex items-center justify-center text-gray-500">
+                                  <Calendar className="w-6 h-6" />
+                                </div>
+                              )}
+                            </div>
+                          </td>
                           );
                         })}
                         <td className="px-4 py-4 align-top">

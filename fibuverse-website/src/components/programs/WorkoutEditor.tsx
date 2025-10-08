@@ -2,6 +2,9 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Plus, X, GripVertical, Link2, Search } from 'lucide-react';
 import { searchExerciseLibrary, getTrainerClients, sendTrainerWorkout } from "@/api/trainer";
 import { SessionData, Exercise, ExerciseSet, Client, WorkoutPayload} from "@/api/trainerTypes";
+import { AIWorkoutResponse } from '@/api/globalTypes';
+import { RunCompositeResponse, runCompositeAgentFormData } from "@/api/developer";
+import { useRouter } from 'next/navigation'; 
 
 /*
 Structure
@@ -12,12 +15,15 @@ Structure
 - Group Ids are given but not updated during, still unique so groups stay intact, will be updated at the end. 
 */
 
+interface WorkoutEditorProps {
+  onSave?: () => void; // Optional callback
+  // ... other props
+}
 
-export default function WorkoutEditor() {
+export default function WorkoutEditor({ onSave }: WorkoutEditorProps) {
   const [exercises, setExercises] = useState<SessionData[]>([]);
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
   const [draggedGroupId, setDraggedGroupId] = useState<number | null>(null);
-  const [uploadedFile, ] = useState(null);
   const [isRecording, setIsRecording] = useState(false);
   const [isAIGeneratorOpen, setIsAIGeneratorOpen] = useState(false);
   const [showExerciseSearch, setShowExerciseSearch] = useState(false);
@@ -41,6 +47,11 @@ export default function WorkoutEditor() {
   // refs for debounce/abort
   const debounceRef = useRef<number | null>(null);
   const abortCtrlRef = useRef<AbortController | null>(null);
+  const router = useRouter();
+
+  // Agents
+  const [, setRunning] = useState<boolean>(false);
+  const [uploadedFile, setUploadedFile] = useState<File | null>(null);
 
 
 //   const handleFileUpload = (e) => {
@@ -64,11 +75,86 @@ export default function WorkoutEditor() {
     }
   };
 
-  const generateWorkoutFromAI = () => {
-    console.log('Generating workout from AI...');
-    // TODO: Send uploadedFile or audio to backend API
-    // The backend will process and return workout data
+  const generateWorkoutFromAI = async () => {
+    const AGENT_ID = 20;
+    setRunning(true);
+    
+    const formData = new FormData();
+    formData.append("id", AGENT_ID.toString());
+    
+    if (uploadedFile) {
+      formData.append("ai_image", uploadedFile);
+    }
+    
+    try {
+      const res: RunCompositeResponse = await runCompositeAgentFormData(formData);
+      console.log('Generating workout from AI...', res);
+      
+      if (res.status === 'success' && res.outputs) {
+        const data = res.outputs as unknown as { workout: AIWorkoutResponse };
+        const workout = data.workout;
+        
+        if (workout && workout.session_data) {
+          const transformedExercises: SessionData[] = workout.session_data.map((ex, index) => {
+            const exercise: Exercise = {
+              id: ex.id || ex.exercise_id || index,
+              name: ex.name,
+              category: ex.category || '',
+              equipment: ex.equipment || '',
+              description: '',
+              instructions: ''
+            };
+
+            // Handle sets - check if it exists and is an array
+            let sets: ExerciseSet[] = [];
+            if (ex.sets && Array.isArray(ex.sets)) {
+              sets = ex.sets.map(s => ({
+                setsOrder: s.setsOrder,
+                reps: s.reps,
+                rir: s.rir,
+                rirOrRpe: s.rirOrRpe,
+                weight: s.weight,
+                weightUnit: s.weightUnit,
+                duration: s.duration || null,
+                durationOrVelocity: s.durationOrVelocity
+              }));
+            }
+
+            return {
+              id: index,
+              exerciseId: exercise,
+              exerciseName: ex.name,
+              exerciseOrder: ex.exercise_order,
+              groupId: ex.group_id || 0,
+              setStructure: ex.set_structure,
+              sets: sets
+            };
+          });
+          
+          setExercises(transformedExercises);
+          setWorkoutName(workout.workout_name || '');
+          setWorkoutType(workout.workout_type || '');
+          setWorkoutDate(workout.workout_date || null);
+          setNotes(workout.notes || '');
+          
+          setIsAIGeneratorOpen(false);
+          setUploadedFile(null);
+          
+          console.log(`Loaded ${transformedExercises.length} exercises from AI`);
+        }
+      }
+    } catch (error) {
+      console.error('Failed to generate workout from AI:', error);
+    } finally {
+      setRunning(false);
+    }
   };
+    const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+        setUploadedFile(file);
+      }
+    };
 
     const searchExercises = useCallback(
     async (query: string) => {
@@ -598,6 +684,10 @@ export default function WorkoutEditor() {
             const response = await sendTrainerWorkout(payload);
             console.log("Workout saved successfully:", response);
             alert("Workout saved successfully!");
+            // Call the optional callback after successful save
+            onSave?.();
+            router.refresh(); // Refresh current route data
+
             
             // Optional: Clear the form or redirect
             // resetWorkoutForm();
@@ -647,7 +737,7 @@ export default function WorkoutEditor() {
 
 
   return (
-    <div className="flex-1 border-r border-gray-800 overflow-y-auto bg-gray-900">
+    <div className="flex-1 h-full border-r border-gray-800 overflow-y-auto bg-gray-900">
       <div className="max-w-3xl mx-auto p-6">
         {/* Header */}
         <div className="mb-2">
@@ -741,6 +831,7 @@ export default function WorkoutEditor() {
                     id="file-upload"
                     className="hidden"
                     accept="image/*,.pdf,.txt,.doc,.docx"
+                    onChange={handleFileUpload}
                   />
                   <label htmlFor="file-upload" className="cursor-pointer flex flex-col items-center justify-center py-2">
                     {uploadedFile ? (
@@ -755,8 +846,8 @@ export default function WorkoutEditor() {
                         <svg className="w-8 h-8 text-purple-400 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
                         </svg>
-                        <p className="text-sm font-medium text-gray-300 mb-0.5">Upload Image or File</p>
-                        <p className="text-xs text-gray-500">PNG, JPG, PDF, TXT up to 10MB</p>
+                        <p className="text-sm font-medium text-gray-300 mb-0.5">Upload Image</p>
+                        <p className="text-xs text-gray-500">PNG, JPG to 10MB</p>
                       </>
                     )}
                   </label>
@@ -784,7 +875,7 @@ export default function WorkoutEditor() {
                       )}
                     </button>
                     <p className="text-xs font-medium text-gray-300 mb-0.5">
-                      {isRecording ? 'Recording...' : 'Record Audio'}
+                      {isRecording ? 'Recording...' : 'Record Audio (Not Working Yet)'}
                     </p>
                     <p className="text-[10px] text-gray-500">
                       {isRecording ? 'Click to stop' : 'Describe your workout verbally'}

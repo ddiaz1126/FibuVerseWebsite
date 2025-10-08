@@ -229,15 +229,6 @@ export default function TrainerDashboard() {
   const reversedDayAlerts = dayAlerts.slice().reverse();
   const currentDay = reversedDayAlerts[selectedDayIndex];
 
-  const colors = [
-    "rgba(255, 99, 132, 0.6)",
-    "rgba(54, 162, 235, 0.6)",
-    "rgba(255, 206, 86, 0.6)",
-    "rgba(75, 192, 192, 0.6)",
-    "rgba(153, 102, 255, 0.6)",
-    "rgba(255, 159, 64, 0.6)",
-  ];
-
     // pick which dataset to show based on tab
   const currentData =
     metrics &&
@@ -249,23 +240,59 @@ export default function TrainerDashboard() {
     return <p className="text-gray-400">Loading chart...</p>;
   }
 
-  const labels: string[] = Array.from(
-    new Set(
-      Object.values(currentData).flatMap((daily: DailyMetric[]) =>
-        daily.map((d: DailyMetric) => d.date)
-      )
-    )
-  ).sort();
 
-  const datasets = Object.entries(currentData).map(
-    ([client, daily]: [string, DailyMetric[]], idx: number) => ({
-      label: client,
-      data: daily
-        .sort((a, b) => a.date.localeCompare(b.date))
-        .map((d: DailyMetric) => d.total),
-      backgroundColor: colors[idx % colors.length],
-    })
-  );
+  const prepareChartData = () => {
+    if (!metrics) return { labels: [], datasets: [] };
+
+    const dataSource = activeTab === "workouts" 
+      ? metrics.workouts_per_client_daily 
+      : metrics.calories_per_client_daily;
+
+    // Collect all unique dates across all clients
+    const allDates = new Set<string>();
+    Object.values(dataSource).forEach((clientData: DailyMetric[]) => {
+      clientData.forEach((entry: DailyMetric) => {
+        allDates.add(entry.date);
+      });
+    });
+
+    const sortedDates = Array.from(allDates).sort();
+
+    // Create a dataset for each client
+    const datasets = Object.entries(dataSource).map(([clientName, clientData]: [string, DailyMetric[]]) => {
+      // Create a map of date -> value for this client
+      const dataMap = new Map<string, number>();
+      clientData.forEach((entry: DailyMetric) => {
+        // Use the correct field name based on the active tab
+        const value = activeTab === "workouts" 
+          ? (entry as unknown as { total_workouts: number }).total_workouts
+          : (entry as unknown as { total_calories: number }).total_calories || 0;
+        dataMap.set(entry.date, value);
+      });
+
+      // Fill data array with values for each date (0 if no data for that date)
+      const data = sortedDates.map(date => dataMap.get(date) || 0);
+
+      // Generate a random color for each client
+      const hue = Math.floor(Math.random() * 360);
+      const backgroundColor = `hsla(${hue}, 70%, 50%, 0.6)`;
+      const borderColor = `hsla(${hue}, 70%, 50%, 1)`;
+
+      return {
+        label: clientName,
+        data: data,
+        backgroundColor: backgroundColor,
+        borderColor: borderColor,
+        borderWidth: 1,
+      };
+    });
+
+    return {
+      labels: sortedDates,
+      datasets: datasets,
+    };
+  };
+  const { labels: clientLabels, datasets: clientDatasets } = prepareChartData();
 
   return (
 <div className="flex-1 p-8 overflow-auto">
@@ -305,7 +332,6 @@ export default function TrainerDashboard() {
 
       {/* Graph + Articles side by side */}
       <div className="flex flex-col md:flex-row gap-6">
-        {/* Client Activity Graph */}
         <div className="flex-1 bg-gray-800 p-6 rounded-lg shadow">
           <h2 className="text-xl font-semibold mb-4">Client Activity</h2>
           <div className="flex space-x-4 mb-4">
@@ -326,38 +352,39 @@ export default function TrainerDashboard() {
               Calories
             </button>
           </div>
-          <div className="w-full h-[500px] bg-gray-900 p-4 rounded shadow">
-            <Bar
-              data={{
-                labels: labels.length ? labels : [""],
-                datasets: datasets.length
-                  ? datasets
-                  : [
-                      {
-                        label: "No Data",
-                        data: [0],
-                        backgroundColor: "rgba(200,200,200,0.3)",
+            <div className="w-full h-[500px] bg-gray-900 p-4 rounded shadow">
+              <Bar
+                data={{
+                  labels: clientLabels.length ? clientLabels : ["No Data"],
+                  datasets: clientDatasets.length
+                    ? clientDatasets
+                    : [
+                        {
+                          label: "No Data",
+                          data: [0],
+                          backgroundColor: "rgba(200,200,200,0.3)",
+                        },
+                      ],
+                }}
+                options={{
+                  maintainAspectRatio: false,
+                  responsive: true,
+                  plugins: { legend: { position: "top" } },
+                  scales: {
+                    x: { title: { display: true, text: "Date" } },
+                    y: {
+                      title: {
+                        display: true,
+                        text: activeTab === "workouts" ? "Workouts" : "Calories",
                       },
-                    ],
-              }}
-              options={{
-                maintainAspectRatio: false,
-                responsive: true,
-                plugins: { legend: { position: "top" } },
-                scales: {
-                  x: { title: { display: true, text: "Date" } },
-                  y: {
-                    title: {
-                      display: true,
-                      text: activeTab === "workouts" ? "Workouts" : "Calories",
+                      beginAtZero: true,
                     },
-                    beginAtZero: true,
                   },
-                },
-              }}
-            />
-          </div>
+                }}
+              />
+            </div>
         </div>
+
 
         {/* Research Papers */}
         <div className="flex-1 bg-gray-800 p-6 rounded-lg shadow flex flex-col">

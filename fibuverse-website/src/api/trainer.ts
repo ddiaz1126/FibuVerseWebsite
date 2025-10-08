@@ -958,3 +958,171 @@ export async function getSpecificWorkout(workoutId: number): Promise<Workout> {
 
   return workout;
 }
+
+interface SendProgramPayload {
+  name: string;
+  description: string;
+  is_template: boolean;
+  program_workouts: {
+    program: number | null;
+    week_index: number;
+    day_index: number;
+    order: number;
+    date: string | null;
+    workout: Workout; // Full workout object with exercises
+  }[];
+}
+
+// Create Program
+export async function sendProgram(payload: SendProgramPayload) {
+  try {
+    const data = await postWithAutoRefresh("/trainers/send-program/", payload);
+    console.log("Program created successfully:", data);
+    return data;
+  } catch (err: unknown) {
+    if (err instanceof Error) {
+      console.error("[SendProgram] error:", err.message);
+    } else {
+      console.error("[SendProgram] unexpected error:", err);
+    }
+    throw err;
+  }
+}
+
+// Define the backend response type
+interface ProgramBackendResponse {
+  id: number;
+  name: string;
+  description: string;
+  is_template: boolean;
+  client_id: number | null;
+  client_name: string | null;
+  start_date: string | null;
+  end_date: string | null;
+  workout_type: string | null;
+  created_at: string;
+  updated_at: string;
+  program_workouts: {
+    id: number;
+    program: number;
+    week_index: number;
+    day_index: number;
+    order: number;
+    date: string | null;
+    workout: {
+      id: number;
+      workout_name: string;
+      workout_date: string;
+      workout_type: string;
+      duration: number;
+      heart_rate: number | null;
+      calories_burned: number | null;
+      notes: string;
+      trainer_id: number;
+      client_id: number | null;
+      prebuilt_workout: number;
+      session_data: {
+        id: number;
+        name: string;
+        description: string | null;
+        duration: number | null;
+        exercise_order: number;
+        group_id: number | null;
+        set_structure: number | null;
+        sets: {
+          sets_order: number;
+          reps: string;
+          weight: number;
+          weight_unit: number;
+          rir: number;
+          rir_or_rpe: number;
+          duration: number | null;
+          duration_or_velocity: number;
+        }[];
+      }[];
+    };
+  }[];
+}
+
+export async function getProgram(programId: number): Promise<Program> {
+  try {
+    const response = await fetchWithAutoRefresh(
+      `/trainers/get-program/${programId}/`
+    ) as ProgramBackendResponse;
+
+    console.log("program response", response);
+
+    // Transform backend response to match frontend types
+    const program: Program = {
+      id: response.id,
+      name: response.name,
+      description: response.description,
+      is_template: response.is_template,
+      client_id: response.client_id,
+      client_name: response.client_name,
+      start_date: response.start_date,
+      end_date: response.end_date,
+      workout_type: response.workout_type,
+      created_at: response.created_at,
+      updated_at: response.updated_at,
+      program_workouts: response.program_workouts.map((pw) => ({
+        id: pw.id,
+        program: pw.program,
+        week_index: pw.week_index,
+        day_index: pw.day_index,
+        order: pw.order,
+        date: pw.date ?? undefined,
+        workout: {
+          workoutId: pw.workout.id,
+          workoutName: pw.workout.workout_name,
+          workoutDate: pw.workout.workout_date,
+          workoutType: pw.workout.workout_type,
+          duration: pw.workout.duration,
+          heartRate: pw.workout.heart_rate ?? undefined,
+          caloriesBurned: pw.workout.calories_burned ?? undefined,
+          notes: pw.workout.notes,
+          trainerId: pw.workout.trainer_id,
+          clientId: pw.workout.client_id ?? undefined,
+          prebuiltWorkout: pw.workout.prebuilt_workout,
+          numExercises: pw.workout.session_data?.length || 0,
+          // Transform session_data to exercises
+          exercises: pw.workout.session_data?.map((ex) => ({
+            id: ex.id,
+            exerciseId: {
+              id: ex.id,
+              name: ex.name,
+              category: '',
+              equipment: '',
+              description: ex.description || '',
+              instructions: '',
+            },
+            exerciseName: ex.name ?? undefined,
+            exerciseOrder: ex.exercise_order,
+            groupId: ex.group_id ?? undefined,
+            setStructure: ex.set_structure ?? undefined,
+            sets: ex.sets.map((set) => ({
+              setsOrder: set.sets_order,
+              reps: set.reps,
+              weight: set.weight,
+              weightUnit: (set.weight_unit ?? 0) as 0 | 1,
+              rir: set.rir,
+              rirOrRpe: set.rir_or_rpe ? 1 : 0,
+              duration: set.duration ?? undefined,
+              durationOrVelocity: (set.duration_or_velocity ?? 0) as 0 | 1,
+            }))
+          })) || []
+        }
+      }))
+    };
+
+    console.log("Transformed program:", program);
+    return program;
+  } catch (err: unknown) {
+    if (err instanceof Error) {
+      console.error("[GetProgram] error:", err.message);
+    } else {
+      console.error("[GetProgram] unexpected error:", err);
+    }
+    throw err;
+  }
+}

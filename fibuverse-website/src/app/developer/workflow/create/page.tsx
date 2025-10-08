@@ -491,7 +491,7 @@ export default function CreateWorkflowPage() {
               key={key}
               className="relative group"
               draggable
-              onDragStart={(e) => handleDragStart(e, layer.id, agentId)}
+              onDragStart={(e) => handleDragStart(e, layer.id, agentId.toString())}
               onDragEnd={handleDragEnd}
             >
               {/* Node */}

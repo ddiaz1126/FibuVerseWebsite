@@ -16,6 +16,8 @@ import WorkoutEditor from "@/components/programs/WorkoutEditor";
 import { Client, WorkoutListItem, WeightsSessionInsights, Workout } from '@/api/trainerTypes';
 import { Program } from "@/api/trainerTypes";
 import { WorkoutDetailView } from "@/components/programs/WorkoutDetailView"
+import ProgramDetailView from "@/components/programs/ProgramDetailView"
+
 import { useRouter } from 'next/navigation';
 
 export default function ProgramsPage() {
@@ -43,6 +45,7 @@ export default function ProgramsPage() {
   const [trainerWorkouts, setTrainerWorkouts] = useState<WorkoutListItem[]>([]);
   const [loadingWorkouts, setLoadingWorkouts] = useState(false);
   const [selectedWorkout, setSelectedWorkout] = useState<Workout | null>(null);
+  const [selectedProgram, setSelectedProgram] = useState<number | null>(null);
 
   // For Programs tab - fetch templates
   useEffect(() => {
@@ -146,12 +149,20 @@ export default function ProgramsPage() {
     try {
       const workout = await getSpecificWorkout(workoutId);
       console.log("Selected workout:", workout);
+      setSelectedProgram(null); // Clear program selection
       // Here you can set state, e.g.:
       setSelectedWorkout(workout);
     } catch (err) {
       console.error("Failed to fetch workout by ID:", err);
     }
   };
+
+  // Add handler for program selection
+  const handleProgramSelect = (programId: number) => {
+    setSelectedProgram(programId);
+    setSelectedWorkout(null); // Clear workout selection
+  };
+
 
   return (
     <div className="flex h-screen bg-gray-900 text-white">
@@ -187,6 +198,7 @@ export default function ProgramsPage() {
                     <button
                       onClick={() => {
                         if (activeTab === "workouts") {
+                          setSelectedProgram(null); // Clear program selection
                           setSelectedWorkout(null);
                         } else {
                           // Navigate to create program page
@@ -245,9 +257,13 @@ export default function ProgramsPage() {
               {programs.map((program) => (
                 <div
                   key={program.id}
-                  className="p-2 hover:bg-gray-800 cursor-pointer text-sm"
+                  className="p-2 hover:bg-gray-800 cursor-pointer border-b border-gray-800"
+                  onClick={() => handleProgramSelect(program.id)}
                 >
-                  {program.name}
+                  <div className="font-medium text-sm">{program.name}</div>
+                  <div className="text-xs text-gray-500 mt-0.5">
+                    {program.is_template ? "Template" : "Assigned"} • {program.program_workouts?.length || 0} workouts
+                  </div>
                 </div>
               ))}
             </>
@@ -255,12 +271,16 @@ export default function ProgramsPage() {
         </div>
       </div>
 
-      {/* Middle column */}
-      {selectedWorkout ? (
-        <WorkoutDetailView workout={selectedWorkout} />
-      ) : (
-        <WorkoutEditor />
-      )}
+        {/* Middle column */}
+        <div className="flex-1 overflow-hidden">
+          {selectedProgram ? (
+            <ProgramDetailView programId={selectedProgram} />
+          ) : selectedWorkout ? (
+            <WorkoutDetailView workout={selectedWorkout} />
+          ) : (
+            <WorkoutEditor />
+          )}
+        </div>
 
       {/* Right column: Calendar + Client Analysis */}
       <div className="w-96 flex flex-col border-l border-gray-800">

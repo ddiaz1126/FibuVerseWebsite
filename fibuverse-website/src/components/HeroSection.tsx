@@ -147,9 +147,6 @@ const HeroSection: React.FC<HeroSectionProps> = ({
               </h2>
               <div className="h-px bg-gradient-to-r from-transparent via-yellow-400 to-transparent flex-1" />
             </div>
-            <p className="text-gray-400 text-center text-sm">
-              Specialized AI companions for your fitness journey
-            </p>
           </div>
 
           {/* Agents Scroll Container */}
@@ -234,7 +231,7 @@ const HeroSection: React.FC<HeroSectionProps> = ({
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
                               </svg>
                             </div>
-                            <span className="text-xs text-gray-400">Fast</span>
+                            {/* <span className="text-xs text-gray-400">Fast</span> */}
                           </div>
                           <div className="flex items-center gap-2">
                             <div className="w-8 h-8 bg-gray-800/80 rounded-lg flex items-center justify-center">
