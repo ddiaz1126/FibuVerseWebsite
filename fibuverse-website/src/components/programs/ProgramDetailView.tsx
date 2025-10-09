@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
-import { Calendar, ArrowLeft, Edit } from 'lucide-react';
+import { Calendar, Edit } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { getProgram } from '@/api/trainer';
 import { Program, Workout, ProgramWorkout } from '@/api/trainerTypes';

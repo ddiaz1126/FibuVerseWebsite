@@ -54,7 +54,6 @@ export default function ProgramBuilder() {
   const monthEnd = endOfMonth(monthStart);
   const startDate = startOfWeek(monthStart, { weekStartsOn: 0 });
   const endDate = endOfWeek(monthEnd, { weekStartsOn: 0 });
-  const [isRightPanelOpen, setIsRightPanelOpen] = useState(true);
   const [chatOpen, setChatOpen] = useState(false);
   const [chatWidth, setChatWidth] = useState(360);
 

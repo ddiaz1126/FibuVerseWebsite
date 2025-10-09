@@ -93,7 +93,7 @@ export default function TrainerDashboard() {
 
   const [running, setRunning] = useState<boolean>(false);
   const [papers, setPapers] = useState<ResearchPaper[]>([]);
-  const [activeTab, setActiveTab] = useState<"workouts" | "calories">("workouts");
+  const [activeTab, ] = useState<"workouts" | "calories">("workouts");
 
   // default selected index -> today (newest, index 6)
   const [selectedDayIndex, setSelectedDayIndex] = useState<number>(6);
@@ -243,58 +243,6 @@ export default function TrainerDashboard() {
     return <p className="text-gray-400">Loading chart...</p>;
   }
 
-
-  const prepareChartData = () => {
-    if (!metrics) return { labels: [], datasets: [] };
-
-    const dataSource = activeTab === "workouts" 
-      ? metrics.workouts_per_client_daily 
-      : metrics.calories_per_client_daily;
-
-    // Collect all unique dates across all clients
-    const allDates = new Set<string>();
-    Object.values(dataSource).forEach((clientData: DailyMetric[]) => {
-      clientData.forEach((entry: DailyMetric) => {
-        allDates.add(entry.date);
-      });
-    });
-
-    const sortedDates = Array.from(allDates).sort();
-
-    // Create a dataset for each client
-    const datasets = Object.entries(dataSource).map(([clientName, clientData]: [string, DailyMetric[]]) => {
-      // Create a map of date -> value for this client
-      const dataMap = new Map<string, number>();
-      clientData.forEach((entry: DailyMetric) => {
-        // Use the correct field name based on the active tab
-        const value = activeTab === "workouts" 
-          ? (entry as unknown as { total_workouts: number }).total_workouts
-          : (entry as unknown as { total_calories: number }).total_calories || 0;
-        dataMap.set(entry.date, value);
-      });
-
-      // Fill data array with values for each date (0 if no data for that date)
-      const data = sortedDates.map(date => dataMap.get(date) || 0);
-
-      // Generate a random color for each client
-      const hue = Math.floor(Math.random() * 360);
-      const backgroundColor = `hsla(${hue}, 70%, 50%, 0.6)`;
-      const borderColor = `hsla(${hue}, 70%, 50%, 1)`;
-
-      return {
-        label: clientName,
-        data: data,
-        backgroundColor: backgroundColor,
-        borderColor: borderColor,
-        borderWidth: 1,
-      };
-    });
-
-    return {
-      labels: sortedDates,
-      datasets: datasets,
-    };
-  };
   const togglePaper = (idx: number) => {
     setExpandedPapers(prev => {
       const newSet = new Set(prev);
