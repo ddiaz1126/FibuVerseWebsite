@@ -1,17 +1,17 @@
 "use client";
 
 import { useState } from "react";
-import {
-  addDays,
-  format,
-  startOfMonth,
-  endOfMonth,
-  startOfWeek,
-  endOfWeek,
-  eachDayOfInterval,
-  isSameDay,
-  isSameMonth,
-} from "date-fns";
+// import {
+//   addDays,
+//   format,
+//   startOfMonth,
+//   endOfMonth,
+//   startOfWeek,
+//   endOfWeek,
+//   eachDayOfInterval,
+//   isSameDay,
+//   isSameMonth,
+// } from "date-fns";
 
 interface NutritionPlan {
   id: number;
@@ -27,149 +27,156 @@ export default function NutritionPage() {
 
   const [selectedPlan, setSelectedPlan] = useState<NutritionPlan | null>(plans[0]);
   const [search, setSearch] = useState("");
-  const [currentMonth, setCurrentMonth] = useState(new Date());
+  // const [currentMonth,] = useState(new Date());
 
-  const monthStart = startOfMonth(currentMonth);
-  const monthEnd = endOfMonth(monthStart);
-  const startDate = startOfWeek(monthStart, { weekStartsOn: 0 });
-  const endDate = endOfWeek(monthEnd, { weekStartsOn: 0 });
-  const days = eachDayOfInterval({ start: startDate, end: endDate });
+  // const monthStart = startOfMonth(currentMonth);
+  // const monthEnd = endOfMonth(monthStart);
+  // const startDate = startOfWeek(monthStart, { weekStartsOn: 0 });
+  // const endDate = endOfWeek(monthEnd, { weekStartsOn: 0 });
+  // const days = eachDayOfInterval({ start: startDate, end: endDate });
 
-  const prevMonth = () =>
-    setCurrentMonth(addDays(monthStart, -1 * monthStart.getDate()));
-  const nextMonth = () => setCurrentMonth(addDays(monthEnd, 1));
+  // const prevMonth = () =>
+  //   setCurrentMonth(addDays(monthStart, -1 * monthStart.getDate()));
+  // const nextMonth = () => setCurrentMonth(addDays(monthEnd, 1));
 
   return (
-    <div className="flex h-full min-h-screen bg-gray-900 text-white">
-      {/* Left inner sidebar */}
-      <div className="w-1/4 border-r border-gray-700 p-4 flex flex-col">
-        <input
-          type="text"
-          placeholder="Search plans..."
-          className="p-2 rounded bg-gray-800 mb-4 placeholder-gray-400 text-white"
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-        />
-        <div className="flex-1 overflow-y-auto">
-          {plans
-            .filter((p) =>
-              p.name.toLowerCase().includes(search.toLowerCase())
-            )
-            .map((plan) => (
-              <button
-                key={plan.id}
-                onClick={() => setSelectedPlan(plan)}
-                className={`w-full text-left px-3 py-2 rounded mb-1 hover:bg-gray-700 transition ${
-                  selectedPlan?.id === plan.id ? "bg-gray-700" : ""
-                }`}
-              >
-                {plan.name}
-              </button>
-            ))}
-        </div>
-      </div>
-
-      {/* Right section */}
-      <div className="flex-1 p-4 flex flex-col gap-4">
-        {/* Top: Calendar + Plan metadata */}
-        <div className="flex gap-4">
-          {/* Plan metadata */}
-          <div className="flex-1 bg-gray-800 p-4 rounded shadow flex flex-col gap-2">
-            <div className="text-lg font-semibold">
-              {selectedPlan?.name || "Select a plan"}
-            </div>
-            <label>
-              Plan Date:
-              <input type="date" className="mt-1 p-2 rounded bg-gray-700 w-full" />
-            </label>
-            <label>
-              Total Calories:
-              <input type="number" className="mt-1 p-2 rounded bg-gray-700 w-full" />
-            </label>
-            <label>
-              Protein (g):
-              <input type="number" className="mt-1 p-2 rounded bg-gray-700 w-full" />
-            </label>
-            <label>
-              Carbs (g):
-              <input type="number" className="mt-1 p-2 rounded bg-gray-700 w-full" />
-            </label>
-            <label>
-              Fat (g):
-              <input type="number" className="mt-1 p-2 rounded bg-gray-700 w-full" />
-            </label>
-            <label>
-              Notes:
-              <textarea className="mt-1 p-2 rounded bg-gray-700 w-full" rows={3} />
-            </label>
-          </div>
-
-          {/* Calendar */}
-          <div className="w-1/3 bg-gray-800 p-4 rounded shadow">
-            <div className="flex justify-between items-center mb-2">
-              <button
-                onClick={prevMonth}
-                className="px-2 py-1 bg-gray-700 rounded hover:bg-gray-600"
-              >
-                Prev
-              </button>
-              <div className="font-semibold text-lg">
-                {format(currentMonth, "MMMM yyyy")}
-              </div>
-              <button
-                onClick={nextMonth}
-                className="px-2 py-1 bg-gray-700 rounded hover:bg-gray-600"
-              >
-                Next
-              </button>
-            </div>
-            <div className="grid grid-cols-7 gap-1 text-center">
-              {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((d) => (
-                <div key={d} className="font-semibold">
-                  {d}
-                </div>
-              ))}
-              {days.map((day) => (
-                <div
-                  key={day.toISOString()}
-                  className={`h-16 flex items-center justify-center rounded cursor-pointer transition ${
-                    isSameDay(day, new Date())
-                      ? "bg-blue-600 text-white"
-                      : "bg-gray-700 hover:bg-gray-600"
-                  } ${!isSameMonth(day, monthStart) ? "text-gray-500" : ""}`}
+    <div className="flex h-screen bg-gray-900 text-white">
+      <div className="flex h-full text-sm gap-3 p-3 w-full">
+        {/* Left inner sidebar */}
+        <div className="w-1/6 bg-gray-800/50 backdrop-blur-sm border border-gray-700 rounded-xl p-3 flex flex-col gap-2 shadow-lg">
+          <input
+            type="text"
+            placeholder="Search plans..."
+            className="p-1.5 rounded-lg bg-gray-900/50 border border-gray-700 placeholder-gray-400 text-white text-xs focus:outline-none focus:border-blue-500/50 transition-colors"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
+          <div className="flex-1 overflow-y-auto space-y-1">
+            {plans
+              .filter((p) =>
+                p.name.toLowerCase().includes(search.toLowerCase())
+              )
+              .map((plan) => (
+                <button
+                  key={plan.id}
+                  onClick={() => setSelectedPlan(plan)}
+                  className={`w-full text-left px-2 py-1.5 rounded-lg hover:bg-gray-700/50 transition-all border text-xs ${
+                    selectedPlan?.id === plan.id
+                      ? "bg-gray-700 font-semibold border-gray-600 shadow-lg"
+                      : "border-transparent"
+                  }`}
                 >
-                  {format(day, "d")}
-                </div>
+                  {plan.name}
+                </button>
               ))}
-            </div>
           </div>
         </div>
 
-        {/* Bottom: Nutrition Plan Editor */}
-        <div className="flex-1 bg-gray-800 p-4 rounded shadow">
-          <div className="text-lg font-semibold mb-2">Plan Editor</div>
-          <div className="flex flex-col gap-2">
-            <label>
-              Meal Name:
-              <input
-                type="text"
-                className="mt-1 p-2 rounded bg-gray-700 w-full"
-              />
-            </label>
-            <label>
-              Food Items:
-              <textarea
-                className="mt-1 p-2 rounded bg-gray-700 w-full"
-                rows={4}
-              />
-            </label>
-            <label>
-              Macros per meal:
-              <input
-                type="text"
-                className="mt-1 p-2 rounded bg-gray-700 w-full"
-              />
-            </label>
+        {/* Right section */}
+        <div className="flex-1 flex flex-col gap-3">
+          {/* Top: Calendar + Plan metadata */}
+          <div className="flex gap-3">
+            {/* Plan metadata */}
+            <div className="flex-1 bg-gray-800/50 backdrop-blur-sm border border-gray-700 rounded-xl p-3 shadow-lg">
+              <div className="text-sm font-bold mb-2 text-white">
+                {selectedPlan?.name || "Select a plan"}
+              </div>
+              <div className="space-y-2">
+                <div>
+                  <label className="block text-gray-300 mb-1 text-[10px] font-medium">
+                    Plan Date
+                  </label>
+                  <input
+                    type="date"
+                    className="w-full p-1.5 rounded-lg bg-gray-900/50 border border-gray-700 focus:outline-none focus:border-blue-500/50 transition-colors text-white text-xs"
+                  />
+                </div>
+                <div>
+                  <label className="block text-gray-300 mb-1 text-[10px] font-medium">
+                    Total Calories
+                  </label>
+                  <input
+                    type="number"
+                    className="w-full p-1.5 rounded-lg bg-gray-900/50 border border-gray-700 focus:outline-none focus:border-blue-500/50 transition-colors text-white text-xs"
+                  />
+                </div>
+                <div>
+                  <label className="block text-gray-300 mb-1 text-[10px] font-medium">
+                    Protein (g)
+                  </label>
+                  <input
+                    type="number"
+                    className="w-full p-1.5 rounded-lg bg-gray-900/50 border border-gray-700 focus:outline-none focus:border-blue-500/50 transition-colors text-white text-xs"
+                  />
+                </div>
+                <div>
+                  <label className="block text-gray-300 mb-1 text-[10px] font-medium">
+                    Carbs (g)
+                  </label>
+                  <input
+                    type="number"
+                    className="w-full p-1.5 rounded-lg bg-gray-900/50 border border-gray-700 focus:outline-none focus:border-blue-500/50 transition-colors text-white text-xs"
+                  />
+                </div>
+                <div>
+                  <label className="block text-gray-300 mb-1 text-[10px] font-medium">
+                    Fat (g)
+                  </label>
+                  <input
+                    type="number"
+                    className="w-full p-1.5 rounded-lg bg-gray-900/50 border border-gray-700 focus:outline-none focus:border-blue-500/50 transition-colors text-white text-xs"
+                  />
+                </div>
+                <div>
+                  <label className="block text-gray-300 mb-1 text-[10px] font-medium">
+                    Notes
+                  </label>
+                  <textarea
+                    className="w-full p-1.5 rounded-lg bg-gray-900/50 border border-gray-700 focus:outline-none focus:border-blue-500/50 transition-colors text-white text-xs resize-none"
+                    rows={3}
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Calendar */}
+            <div className="w-1/3 bg-gray-800/50 backdrop-blur-sm border border-gray-700 rounded-xl p-3 shadow-lg">
+              <div className="text-sm font-semibold mb-2">Calendar placeholder</div>
+            </div>
+          </div>
+
+          {/* Bottom: Nutrition Plan Editor */}
+          <div className="flex-1 bg-gray-800/50 backdrop-blur-sm border border-gray-700 rounded-xl p-3 shadow-lg">
+            <div className="text-sm font-bold mb-2 text-white">Plan Editor</div>
+            <div className="space-y-2">
+              <div>
+                <label className="block text-gray-300 mb-1 text-[10px] font-medium">
+                  Meal Name
+                </label>
+                <input
+                  type="text"
+                  className="w-full p-1.5 rounded-lg bg-gray-900/50 border border-gray-700 focus:outline-none focus:border-blue-500/50 transition-colors text-white text-xs"
+                />
+              </div>
+              <div>
+                <label className="block text-gray-300 mb-1 text-[10px] font-medium">
+                  Food Items
+                </label>
+                <textarea
+                  className="w-full p-1.5 rounded-lg bg-gray-900/50 border border-gray-700 focus:outline-none focus:border-blue-500/50 transition-colors text-white text-xs resize-none"
+                  rows={4}
+                />
+              </div>
+              <div>
+                <label className="block text-gray-300 mb-1 text-[10px] font-medium">
+                  Macros per meal
+                </label>
+                <input
+                  type="text"
+                  className="w-full p-1.5 rounded-lg bg-gray-900/50 border border-gray-700 focus:outline-none focus:border-blue-500/50 transition-colors text-white text-xs"
+                />
+              </div>
+            </div>
           </div>
         </div>
       </div>
