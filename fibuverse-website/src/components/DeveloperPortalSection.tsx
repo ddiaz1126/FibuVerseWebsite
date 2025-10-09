@@ -143,11 +143,11 @@ return (
         <div className="text-center mb-16">
           <div className="inline-flex items-center gap-3 mb-4">
             <div className="p-2 bg-yellow-500/10 rounded-lg border border-yellow-500/20">
-              <Layers className="w-5 h-5 text-yellow-400" />
+              <Layers className="w-4 h-4 text-yellow-400" />
             </div>
-            <h2 className="text-2xl font-bold text-white">Developer Portal</h2>
+            <h2 className="text-xl font-bold text-white">Developer Portal</h2>
           </div>
-          <p className="text-base text-gray-300 max-w-4xl mx-auto leading-relaxed mb-8">
+          <p className="text-sm text-gray-300 max-w-3xl mx-auto leading-relaxed mb-8">
             Build, test, and extend the Fibu ecosystem — integrate AI agents into your apps, 
             explore APIs, and experiment in a secure sandbox environment.
           </p>
@@ -158,7 +158,7 @@ return (
           {/* Left Side - AI Agent Network Visualization */}
           <div className="relative">
             <div className="relative w-full h-96 bg-gradient-to-br from-gray-900/50 to-gray-800/50 rounded-2xl border border-gray-700/50 p-8 backdrop-blur-sm overflow-hidden">
-              <h3 className="text-base font-semibold text-white mb-4 text-center">AI Agent Ecosystem</h3>
+              <h3 className="text-sm font-semibold text-white mb-4 text-center">AI Agent Ecosystem</h3>
               
               {/* SVG for connections */}
               <svg className="absolute inset-0 w-full h-full" style={{ zIndex: 1 }}>
@@ -252,10 +252,10 @@ return (
                     </div>
                   </div>
                   <div className="flex-1">
-                    <h3 className="text-base font-semibold text-white group-hover:text-yellow-400 transition-colors duration-300 mb-2">
+                    <h3 className="text-sm font-semibold text-white group-hover:text-yellow-400 transition-colors duration-300 mb-2">
                       {feature.title}
                     </h3>
-                    <p className="text-gray-300 text-sm leading-relaxed">
+                    <p className="text-gray-300 text-xs leading-relaxed">
                       {feature.description}
                     </p>
                   </div>

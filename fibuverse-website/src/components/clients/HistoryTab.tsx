@@ -73,13 +73,21 @@ export default function HistoryTab({ cardioSessions = [], weightWorkouts = [] }:
   allSessions.sort((a, b) => new Date(b.date || 0).getTime() - new Date(a.date || 0).getTime());
 
   return (
-      <div className="p-4">
-        <h2 className="text-lg font-semibold mb-4 text-white">Workout History</h2>
+<div className="p-4">
+        <h2 className="text-sm font-semibold mb-3 flex items-center gap-2 text-white">
+          <svg className="w-4 h-4 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          Workout History
+        </h2>
 
         {allSessions.length === 0 ? (
-          <div className="text-center py-8">
-            <div className="text-gray-500 text-base">No workouts logged yet</div>
-            <p className="text-gray-400 text-xs mt-1">Start tracking your fitness journey!</p>
+          <div className="bg-gray-800/50 backdrop-blur-sm rounded-xl p-8 border border-gray-700 text-center">
+            <svg className="w-12 h-12 mx-auto mb-3 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+            </svg>
+            <div className="text-gray-400 text-sm font-medium mb-1">No workouts logged yet</div>
+            <p className="text-gray-500 text-xs">Start tracking your fitness journey!</p>
           </div>
         ) : (
           <div className="space-y-2">
@@ -89,42 +97,47 @@ export default function HistoryTab({ cardioSessions = [], weightWorkouts = [] }:
               return (
                 <div
                   key={idx}
-                  className="p-3 bg-gray-800 rounded-xl border border-gray-700 hover:border-gray-600 transition-all hover:shadow-md"
+                  className="bg-gray-800/50 backdrop-blur-sm rounded-lg border border-gray-700 hover:border-gray-600 transition-all hover:shadow-lg p-3"
                 >
-                  <div className="flex justify-between items-start mb-1">
-                    <div className="flex items-center gap-2">
-                      <span
-                        className={`w-2 h-2 rounded-full ${
-                          isCardio ? "bg-green-500" : "bg-yellow-500"
-                        }`}
-                      ></span>
-                      <span className="font-medium text-white text-sm">
+                  <div className="flex justify-between items-start mb-2">
+                    <div className="flex items-center gap-2 flex-1 min-w-0">
+                      <div className={`w-2 h-2 rounded-full flex-shrink-0 ${
+                        isCardio ? "bg-green-400 shadow-sm shadow-green-400/50" : "bg-orange-400 shadow-sm shadow-orange-400/50"
+                      }`}></div>
+                      <span className="font-semibold text-white text-xs truncate">
                         {isCardio ? session.cardio_name : session.workout_name}
                       </span>
                     </div>
-                    <span className="text-xs text-gray-400 bg-gray-700 px-1.5 py-0.5 rounded">
-                      {session.date ? format(new Date(session.date), "MMM d, yyyy") : "Unknown date"}
+                    <span className="text-[10px] text-gray-400 bg-gray-900/50 px-2 py-1 rounded-lg border border-gray-700 flex-shrink-0 ml-2">
+                      {session.date ? format(new Date(session.date), "MMM d, yyyy") : "Unknown"}
                     </span>
                   </div>
 
-                  <div className="flex gap-3 text-xs text-gray-400 ml-4">
+                  <div className="flex gap-3 text-[10px] text-gray-400 ml-4">
                     {session.duration != null && (
-                      <div className="flex items-center gap-1">
-                        <span>⏱</span>
+                      <div className="flex items-center gap-1 bg-gray-900/30 px-2 py-1 rounded">
+                        <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
                         <span>{session.duration} min</span>
                       </div>
                     )}
                     {isCardio ? (
                       session.distance != null && (
-                        <div className="flex items-center gap-1">
-                          <span>📍</span>
+                        <div className="flex items-center gap-1 bg-gray-900/30 px-2 py-1 rounded">
+                          <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                          </svg>
                           <span>{session.distance} m</span>
                         </div>
                       )
                     ) : (
                       session.num_exercises != null && (
-                        <div className="flex items-center gap-1">
-                          <span>💪</span>
+                        <div className="flex items-center gap-1 bg-gray-900/30 px-2 py-1 rounded">
+                          <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                          </svg>
                           <span>{session.num_exercises} exercises</span>
                         </div>
                       )

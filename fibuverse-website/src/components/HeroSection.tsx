@@ -61,185 +61,185 @@ const HeroSection: React.FC<HeroSectionProps> = ({
     })));
   }, []);
 
-  return (
-    <section className="relative w-full min-h-screen flex flex-col overflow-hidden bg-black">
-      {/* Extended background for entire section */}
-      <div className="absolute inset-0">
-        <div className="absolute inset-0 bg-gradient-to-br from-blue-900/20 via-purple-900/10 to-gray-900" />
+return (
+  <section className="relative w-full min-h-screen flex flex-col overflow-hidden bg-black">
+    {/* Extended background for entire section */}
+    <div className="absolute inset-0">
+      <div className="absolute inset-0 bg-gradient-to-br from-blue-900/20 via-purple-900/10 to-gray-900" />
 
-        {/* Continuous tech grid */}
-        <div className="absolute inset-0 opacity-15">
+      {/* Continuous tech grid */}
+      {/* <div className="absolute inset-0 opacity-15">
+        <div
+          className="absolute inset-0"
+          style={{
+            backgroundImage: `
+              linear-gradient(to right, #facc15 1px, transparent 1px),
+              linear-gradient(to bottom, #facc15 1px, transparent 1px)
+            `,
+            backgroundSize: '100px 100px',
+            animation: 'grid-drift 30s linear infinite',
+          }}
+        />
+      </div> */}
+
+      {/* Enhanced fitness silhouettes */}
+      <div className="absolute bottom-0 left-0 w-full h-60 opacity-8">
+        <div className="absolute bottom-0 left-10 w-24 h-36 bg-gradient-to-t from-blue-500/60 to-transparent rounded-t-full transform -skew-x-12 blur-sm" />
+        <div className="absolute bottom-0 right-16 w-20 h-32 bg-gradient-to-t from-purple-500/60 to-transparent rounded-t-full transform skew-x-12 blur-sm" />
+        <div className="absolute bottom-0 left-1/3 w-28 h-36 bg-gradient-to-t from-cyan-500/60 to-transparent rounded-t-full blur-sm" />
+        <div className="absolute bottom-0 right-1/3 w-24 h-28 bg-gradient-to-t from-emerald-500/60 to-transparent rounded-t-full transform -skew-x-8 blur-sm" />
+      </div>
+
+      {/* Ambient glow effects */}
+      <div className="absolute top-1/4 right-1/4 w-48 h-48 bg-yellow-400/5 rounded-full blur-2xl animate-pulse" />
+      <div className="absolute bottom-1/3 left-1/4 w-36 h-36 bg-blue-400/8 rounded-full blur-2xl animate-pulse" style={{ animationDelay: '2s' }} />
+      <div className="absolute top-2/3 right-1/5 w-40 h-40 bg-purple-400/6 rounded-full blur-2xl animate-pulse" style={{ animationDelay: '4s' }} />
+      
+      {/* Bottom gradient to black */}
+      <div className="absolute bottom-0 left-0 w-full h-24 bg-gradient-to-t from-black via-black/80 to-transparent" />
+    </div>
+
+    {/* Hero Content */}
+    <div className="relative z-10 flex flex-col md:flex-row justify-center items-center px-4 py-12 min-h-[300px]">
+      {/* Left content */}
+      <div className="flex-1 relative">
+        <h1 className="text-2xl font-bold mb-2 max-w-2xl text-white">
+          Welcome to FibuVerse!
+        </h1>
+        <p className="text-sm text-gray-300 max-w-2xl mb-4 text-left">
+          An ecosystem of fitness-tech tools to inspire growth, discovery, and transformation.        
+          </p>
+      </div>
+
+      {/* Right agent count */}
+      <div className="flex-1 flex justify-center md:justify-end mt-6 md:mt-0 relative">
+        <div className="bg-gray-900/70 border border-yellow-500/30 rounded-xl p-4 text-center shadow-md backdrop-blur-sm w-52 relative overflow-hidden">
           <div
-            className="absolute inset-0"
+            className="absolute inset-0 rounded-xl"
             style={{
-              backgroundImage: `
-                linear-gradient(to right, #facc15 1px, transparent 1px),
-                linear-gradient(to bottom, #facc15 1px, transparent 1px)
-              `,
-              backgroundSize: '100px 100px',
-              animation: 'grid-drift 30s linear infinite',
+              background: 'linear-gradient(45deg, transparent 30%, #facc15 50%, transparent 70%)',
+              animation: 'border-glow 3s linear infinite',
+              opacity: 0.3,
             }}
           />
+          <div className="relative">
+            <div className="text-4xl font-bold text-yellow-400">
+              {displayCount.toLocaleString()}
+            </div>
+            <div className="text-gray-300 mt-1 text-sm">Active Agents</div>
+          </div>
         </div>
+      </div>
+    </div>
 
-        {/* Enhanced fitness silhouettes */}
-        <div className="absolute bottom-0 left-0 w-full h-80 opacity-8">
-          <div className="absolute bottom-0 left-10 w-32 h-48 bg-gradient-to-t from-blue-500/60 to-transparent rounded-t-full transform -skew-x-12 blur-sm" />
-          <div className="absolute bottom-0 right-20 w-28 h-40 bg-gradient-to-t from-purple-500/60 to-transparent rounded-t-full transform skew-x-12 blur-sm" />
-          <div className="absolute bottom-0 left-1/3 w-36 h-44 bg-gradient-to-t from-cyan-500/60 to-transparent rounded-t-full blur-sm" />
-          <div className="absolute bottom-0 right-1/3 w-30 h-36 bg-gradient-to-t from-emerald-500/60 to-transparent rounded-t-full transform -skew-x-8 blur-sm" />
-        </div>
-
-        {/* Ambient glow effects */}
-        <div className="absolute top-1/4 right-1/4 w-64 h-64 bg-yellow-400/5 rounded-full blur-3xl animate-pulse" />
-        <div className="absolute bottom-1/3 left-1/4 w-48 h-48 bg-blue-400/8 rounded-full blur-2xl animate-pulse" style={{ animationDelay: '2s' }} />
-        <div className="absolute top-2/3 right-1/5 w-56 h-56 bg-purple-400/6 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '4s' }} />
+    {/* Agents Section - Full width with scrollable cards */}
+    {agents.length > 0 && (
+      <div className="relative z-10 w-full px-4 pb-12">
+        {/* Background decoration */}
+        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-yellow-500/5 to-transparent blur-2xl pointer-events-none" />
         
-        {/* Bottom gradient to black */}
-        <div className="absolute bottom-0 left-0 w-full h-32 bg-gradient-to-t from-black via-black/80 to-transparent" />
-      </div>
-
-      {/* Hero Content */}
-      <div className="relative z-10 flex flex-col md:flex-row justify-center items-center px-8 py-16 min-h-[500px]">
-        {/* Left content */}
-        <div className="flex-1 relative">
-          <h1 className="text-3xl font-bold mb-4 max-w-3xl text-white">
-            Welcome to FibuVerse!
-          </h1>
-          <p className="text-base text-gray-300 max-w-3xl mb-6 text-left">
-          An AI ecosystem built to empower trainers — turning data into actionable insights, without ever replacing the human touch.
-          </p>
-        </div>
-
-        {/* Right agent count */}
-        <div className="flex-1 flex justify-center md:justify-end mt-8 md:mt-0 relative">
-          <div className="bg-gray-900/70 border border-yellow-500/40 rounded-2xl p-6 text-center shadow-lg backdrop-blur-sm w-64 relative overflow-hidden">
-            <div
-              className="absolute inset-0 rounded-2xl"
-              style={{
-                background: 'linear-gradient(45deg, transparent 30%, #facc15 50%, transparent 70%)',
-                animation: 'border-glow 3s linear infinite',
-                opacity: 0.3,
-              }}
-            />
-            <div className="relative">
-              <div className="text-5xl font-bold text-yellow-400">
-                {displayCount.toLocaleString()}
-              </div>
-              <div className="text-gray-300 mt-2">Active Agents</div>
-            </div>
+        {/* Header */}
+        <div className="mb-3 max-w-full">
+          <div className="flex items-center gap-2 mb-1">
+            <div className="h-px bg-gradient-to-r from-transparent via-yellow-400 to-transparent flex-1 max-w-[50px]" />
+            <h2 className="text-lg font-bold bg-gradient-to-r from-white to-gray-300 bg-clip-text text-transparent">
+              AI Agents
+            </h2>
+            <div className="h-px bg-gradient-to-r from-transparent via-yellow-400 to-transparent flex-1 max-w-[50px]" />
           </div>
         </div>
-      </div>
 
-      {/* Agents Section - Full width with scrollable cards */}
-      {agents.length > 0 && (
-        <div className="relative z-10 w-full px-8 pb-16">
-          {/* Background decoration */}
-          <div className="absolute inset-0 bg-gradient-to-b from-transparent via-yellow-500/5 to-transparent blur-3xl pointer-events-none" />
-          
-          {/* Header */}
-          <div className="mb-8 max-w-full">
-            <div className="flex items-center gap-3 mb-3">
-              <div className="h-px bg-gradient-to-r from-transparent via-yellow-400 to-transparent flex-1 max-w-[100px]" />
-              <h2 className="text-3xl font-bold bg-gradient-to-r from-white to-gray-300 bg-clip-text text-transparent">
-                AI Agents
-              </h2>
-              <div className="h-px bg-gradient-to-r from-transparent via-yellow-400 to-transparent flex-1" />
-            </div>
-          </div>
 
           {/* Agents Scroll Container */}
           {loading ? (
-            <div className="w-full flex items-center justify-center py-16">
-              <div className="flex flex-col items-center space-y-4">
+            <div className="w-full flex items-center justify-center py-12">
+              <div className="flex flex-col items-center space-y-3">
                 <div className="relative">
-                  <div className="w-12 h-12 border-2 border-yellow-400 border-t-transparent rounded-full animate-spin"></div>
-                  <div className="absolute inset-0 w-12 h-12 border-2 border-yellow-400/30 rounded-full animate-ping"></div>
+                  <div className="w-10 h-10 border-2 border-yellow-400 border-t-transparent rounded-full animate-spin"></div>
+                  <div className="absolute inset-0 w-10 h-10 border-2 border-yellow-400/30 rounded-full animate-ping"></div>
                 </div>
-                <p className="text-gray-400 text-sm font-medium">Summoning agents...</p>
+                <p className="text-gray-400 text-xs font-medium">Summoning agents...</p>
               </div>
             </div>
           ) : (
             <div className="relative">
               {/* Scroll indicators */}
-              <div className="absolute left-0 top-1/2 -translate-y-1/2 w-16 h-full bg-gradient-to-r from-black to-transparent pointer-events-none z-20" />
-              <div className="absolute right-0 top-1/2 -translate-y-1/2 w-16 h-full bg-gradient-to-l from-black to-transparent pointer-events-none z-20" />
+              <div className="absolute left-0 top-1/2 -translate-y-1/2 w-12 h-full bg-gradient-to-r from-black to-transparent pointer-events-none z-20" />
+              <div className="absolute right-0 top-1/2 -translate-y-1/2 w-12 h-full bg-gradient-to-l from-black to-transparent pointer-events-none z-20" />
               
-              <div className="flex gap-6 overflow-x-auto pb-8 pt-4 scrollbar-hide scroll-smooth">
+              <div className="flex gap-4 overflow-x-auto pb-6 pt-3 scrollbar-hide scroll-smooth">
                 {agents.map((agent, index) => (
                   <div
                     key={agent.id}
-                    className="group min-w-[300px] max-w-[340px] h-auto flex-shrink-0"
+                    className="group min-w-[240px] max-w-[280px] h-auto flex-shrink-0"
                     style={{ animationDelay: `${index * 100}ms` }}
                   >
-                    <div className="relative h-full bg-gradient-to-br from-gray-900/80 via-gray-900/60 to-gray-800/40 backdrop-blur-xl border border-gray-700/30 rounded-3xl p-6 shadow-2xl hover:shadow-yellow-400/20 transition-all duration-500 hover:-translate-y-2 overflow-hidden">
+                    <div className="relative h-full bg-gradient-to-br from-gray-900/80 via-gray-900/60 to-gray-800/40 backdrop-blur-xl border border-gray-700/30 rounded-2xl p-4 shadow-lg hover:shadow-yellow-400/20 transition-all duration-500 hover:-translate-y-1 overflow-hidden">
                       {/* Animated background gradient */}
-                      <div className="absolute inset-0 bg-gradient-to-br from-yellow-400/10 via-transparent to-blue-400/10 opacity-0 group-hover:opacity-100 transition-opacity duration-700 rounded-3xl" />
+                      <div className="absolute inset-0 bg-gradient-to-br from-yellow-400/10 via-transparent to-blue-400/10 opacity-0 group-hover:opacity-100 transition-opacity duration-700 rounded-2xl" />
                       
                       {/* Floating particles effect */}
-                      <div className="absolute inset-0 overflow-hidden rounded-3xl">
-                        <div className="absolute -top-4 -right-4 w-24 h-24 bg-yellow-400/20 rounded-full blur-2xl group-hover:scale-150 transition-transform duration-1000" />
-                        <div className="absolute -bottom-4 -left-4 w-32 h-32 bg-blue-400/20 rounded-full blur-2xl group-hover:scale-125 transition-transform duration-1000 delay-200" />
+                      <div className="absolute inset-0 overflow-hidden rounded-2xl">
+                        <div className="absolute -top-3 -right-3 w-20 h-20 bg-yellow-400/20 rounded-full blur-xl group-hover:scale-125 transition-transform duration-1000" />
+                        <div className="absolute -bottom-3 -left-3 w-24 h-24 bg-blue-400/20 rounded-full blur-xl group-hover:scale-110 transition-transform duration-1000 delay-200" />
                       </div>
                       
                       {/* Content */}
                       <div className="relative z-10 flex flex-col h-full">
                         {/* Avatar and Status */}
-                        <div className="relative mb-6">
+                        <div className="relative mb-4">
                           <div className="relative inline-block">
                             {/* Avatar glow effect */}
-                            <div className="absolute inset-0 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-2xl blur-xl opacity-50 group-hover:opacity-80 transition-opacity duration-500" />
+                            <div className="absolute inset-0 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-xl blur-md opacity-40 group-hover:opacity-70 transition-opacity duration-500" />
                             
                             {/* Avatar */}
-                            <div className="relative w-16 h-16 bg-gradient-to-br from-yellow-400 via-yellow-500 to-orange-500 rounded-2xl flex items-center justify-center shadow-xl group-hover:scale-110 transition-transform duration-300">
-                              <span className="text-black font-bold text-xl">
+                            <div className="relative w-12 h-12 bg-gradient-to-br from-yellow-400 via-yellow-500 to-orange-500 rounded-xl flex items-center justify-center shadow-md group-hover:scale-105 transition-transform duration-300">
+                              <span className="text-black font-bold text-lg">
                                 {agent.name[0].toUpperCase()}
                               </span>
                             </div>
                             
                             {/* Status indicator */}
                             <div className="absolute -top-1 -right-1 flex items-center justify-center">
-                              <div className="absolute w-4 h-4 bg-green-400 rounded-full animate-ping"></div>
-                              <div className="w-4 h-4 bg-green-400 rounded-full border-2 border-gray-900"></div>
+                              <div className="absolute w-3 h-3 bg-green-400 rounded-full animate-ping"></div>
+                              <div className="w-3 h-3 bg-green-400 rounded-full border-2 border-gray-900"></div>
                             </div>
                           </div>
                         </div>
 
                         {/* Agent Info */}
-                        <div className="flex-1 mb-6">
-                          <h3 className="text-lg font-bold text-white mb-1 group-hover:text-yellow-300 transition-colors duration-300">
+                        <div className="flex-1 mb-4">
+                          <h3 className="text-base font-bold text-white mb-1 group-hover:text-yellow-300 transition-colors duration-300">
                             {agent.name}
                           </h3>
                           
                           {/* Role/Category tag */}
-                          <div className="inline-flex items-center gap-1 px-3 py-1 bg-yellow-400/10 border border-yellow-400/30 rounded-full mb-4">
-                            <div className="w-1.5 h-1.5 bg-yellow-400 rounded-full"></div>
-                            <span className="text-xs text-yellow-300 font-medium">AI Specialist</span>
+                          <div className="inline-flex items-center gap-1 px-2 py-0.5 bg-yellow-400/10 border border-yellow-400/30 rounded-full mb-2">
+                            <div className="w-1 h-1 bg-yellow-400 rounded-full"></div>
+                            <span className="text-[10px] text-yellow-300 font-medium">AI Specialist</span>
                           </div>
                           
-                          <p className="text-gray-300 text-sm leading-relaxed line-clamp-3">
+                          <p className="text-gray-300 text-xs leading-snug line-clamp-3">
                             {agent.description}
                           </p>
                         </div>
 
                         {/* Stats or Features */}
-                        <div className="flex gap-4 mb-6 pt-4 border-t border-gray-700/50">
+                        <div className="flex gap-3 mb-4 pt-2 border-t border-gray-700/50 text-xs">
                           <div className="flex items-center gap-2">
-                            <div className="w-8 h-8 bg-gray-800/80 rounded-lg flex items-center justify-center">
-                              <svg className="w-4 h-4 text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <div className="w-6 h-6 bg-gray-800/80 rounded-lg flex items-center justify-center">
+                              <svg className="w-3 h-3 text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
                               </svg>
                             </div>
-                            {/* <span className="text-xs text-gray-400">Fast</span> */}
                           </div>
                           <div className="flex items-center gap-2">
-                            <div className="w-8 h-8 bg-gray-800/80 rounded-lg flex items-center justify-center">
-                              <svg className="w-4 h-4 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <div className="w-6 h-6 bg-gray-800/80 rounded-lg flex items-center justify-center">
+                              <svg className="w-3 h-3 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                               </svg>
                             </div>
-                            <span className="text-xs text-gray-400">Verified</span>
+                            <span className="text-[10px] text-gray-400">Verified</span>
                           </div>
                         </div>
 
@@ -247,13 +247,13 @@ const HeroSection: React.FC<HeroSectionProps> = ({
                         {onTryAgent && (
                           <button
                             onClick={() => onTryAgent(agent.id)}
-                            className="relative w-full overflow-hidden rounded-2xl bg-gradient-to-r from-yellow-400 via-yellow-500 to-orange-500 p-[1px] shadow-lg group/btn hover:shadow-yellow-400/50 transition-all duration-300"
+                            className="relative w-full overflow-hidden rounded-xl bg-gradient-to-r from-yellow-400 via-yellow-500 to-orange-500 p-[1px] shadow-md group/btn hover:shadow-yellow-400/40 transition-all duration-300"
                           >
-                            <div className="relative flex items-center justify-center gap-2 rounded-2xl bg-gray-900 px-6 py-3 transition-all duration-300 group-hover/btn:bg-transparent">
-                              <span className="font-semibold text-sm text-white group-hover/btn:text-black transition-colors duration-300">
+                            <div className="relative flex items-center justify-center gap-1.5 rounded-xl bg-gray-900 px-4 py-2.5 transition-all duration-300 group-hover/btn:bg-transparent">
+                              <span className="font-semibold text-xs text-white group-hover/btn:text-black transition-colors duration-300">
                                 Launch Agent
                               </span>
-                              <svg className="w-4 h-4 text-white group-hover/btn:text-black transition-all duration-300 group-hover/btn:translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <svg className="w-3 h-3 text-white group-hover/btn:text-black transition-all duration-300 group-hover/btn:translate-x-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
                               </svg>
                             </div>
