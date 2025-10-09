@@ -146,106 +146,109 @@ export const WorkoutDetailView: React.FC<WorkoutDetailViewProps> = ({ workout, o
     
 
   return (
-    <div className="min-h-screen bg-gray-900 text-white p-6">
-      <div className="max-w-4xl mx-auto">
-        {/* Header */}
-        <div className="bg-gray-800 rounded-lg shadow border border-gray-700 p-6 mb-6">
+<div className="min-h-screen bg-gray-900 text-white p-4">
+  <div className="max-w-4xl mx-auto">
+    {/* Header */}
+    <div className="bg-gray-800 rounded-lg shadow border border-gray-700 p-4 mb-4">
+        {/* Header content goes here */}
         <div className="flex justify-between items-start mb-4">
-            <div>
-              <h1 className="text-lg font-semibold text-white mb-1">
-                {workout.workoutName}
-              </h1>
-              <div className="flex items-center gap-1 text-[10px]">
-                <span className="px-1.5 py-0.5 bg-green-400 text-gray-900 rounded-full font-medium">
-                  {workout.workoutType}
-                </span>
-              </div>
+          <div>
+            <div className="flex items-center gap-3 group mb-1">
+              <div className="h-0.5 w-12 bg-gradient-to-r from-transparent to-yellow-500/50 group-hover:to-yellow-500 transition-all duration-300"></div>
+                <h1 className="text-base font-bold text-white group-hover:text-yellow-400 transition-colors duration-300">
+                  {workout.workoutName}
+                </h1>
+              <div className="h-0.5 w-12 bg-gradient-to-l from-transparent to-yellow-500/50 group-hover:to-yellow-500 transition-all duration-300"></div>
             </div>
+            <div className="flex items-center gap-1 text-[9px]">
+            <span className="px-1 py-0.5 bg-yellow-400 text-gray-900 rounded-full font-semibold">
+              {workout.workoutType}
+            </span>
+            </div>
+          </div>
 
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2">
             {/* Assign button */}
             <button
               onClick={() => assignAndSaveWorkout()}
-              className="px-3 py-1.5 bg-green-500 hover:bg-green-600 text-white font-semibold rounded-md shadow transition text-sm"
+                className="px-2 py-1 bg-green-500 hover:bg-green-600 text-white font-medium rounded-md shadow transition text-xs"
             >
               Assign
             </button>
             {showModal && (
-            <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-                <div className="bg-gray-900 rounded-xl border border-gray-700 w-full max-w-2xl max-h-[80vh] flex flex-col">
+              <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-2">
+                <div className="bg-gray-900 rounded-lg border border-gray-700 w-full max-w-xl max-h-[80vh] flex flex-col">
                 {/* Header */}
-                <div className="p-6 border-b border-gray-800">
-                    <div className="flex items-center justify-between">
-                    <h3 className="text-2xl font-bold">Select Clients</h3>
+                <div className="px-4 py-3 border-b border-gray-800">
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-lg font-semibold">Select Clients</h3>
                     <button
-                        onClick={() => setShowModal(false)}
-                        className="p-2 hover:bg-gray-800 rounded-lg transition-colors"
+                      onClick={() => setShowModal(false)}
+                      className="p-1 hover:bg-gray-800 rounded transition-colors"
                     >
-                        <X size={24} />
+                      <X size={20} />
                     </button>
-                    </div>
+                  </div>
                 </div>
 
                 {/* Client List */}
-                <div className="flex-1 overflow-y-auto p-6">
+                <div className="flex-1 overflow-y-auto p-3">
                 {loading ? (
-                    <div className="text-center py-12">
-                    <p className="text-gray-400">Loading clients...</p>
-                    </div>
+                  <div className="text-center py-6">
+                    <p className="text-gray-400 text-sm">Loading clients...</p>
+                  </div>
                 ) : clients.length > 0 ? (
-                    <div className="space-y-3">
+                  <div className="space-y-2">
                     {clients.map((client) => (
-                        <div key={client.id} className="space-y-2">
-                        <label className="flex items-center gap-3 p-4 bg-gray-800 hover:bg-gray-750 rounded-lg border border-gray-700 hover:border-blue-500 transition-all cursor-pointer group">
-                            <input
+                      <div key={client.id} className="space-y-1">
+                        <label className="flex items-center gap-2 p-2 bg-gray-800 hover:bg-gray-750 rounded border border-gray-700 hover:border-blue-500 transition-all cursor-pointer group text-sm">
+                          <input
                             type="checkbox"
                             checked={isClientSelected(client.id)}
                             onChange={() => handleClientToggle(client.id)}
-                            className="w-4 h-4 rounded border-gray-600 text-blue-600 focus:ring-blue-500 focus:ring-offset-gray-900"
-                            />
-                            <span className="text-white group-hover:text-blue-400 transition-colors">
+                            className="w-3 h-3 rounded border-gray-600 text-blue-600 focus:ring-blue-500 focus:ring-offset-gray-900"
+                          />
+                          <span className="text-white group-hover:text-blue-400 transition-colors">
                             {client.first_name} {client.last_name}
-                            </span>
+                          </span>
                         </label>
-                        
-                        {/* Date picker - only show if client is selected */}
+
+                        {/* Date picker */}
                         {isClientSelected(client.id) && (
-                            <div className="ml-7 pl-4 border-l-2 border-gray-700">
-                            <label className="block text-sm text-gray-400 mb-1">
-                                Assign Date:
-                            </label>
+                          <div className="ml-5 pl-3 border-l-2 border-gray-700">
+                            <label className="block text-xs text-gray-400 mb-1">Assign Date:</label>
                             <input
-                                type="date"
-                                value={getClientDate(client.id)}
-                                onChange={(e) => handleDateChange(client.id, e.target.value)}
-                                className="px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                              type="date"
+                              value={getClientDate(client.id)}
+                              onChange={(e) => handleDateChange(client.id, e.target.value)}
+                              className="px-2 py-1 bg-gray-800 border border-gray-700 rounded text-white text-xs focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-transparent"
                             />
-                            </div>
+                          </div>
                         )}
-                        </div>
+                      </div>
                     ))}
-                    </div>
+                  </div>
                 ) : (
-                    <div className="text-center py-12">
-                    <p className="text-gray-400">No clients found</p>
-                    </div>
+                  <div className="text-center py-6">
+                    <p className="text-gray-400 text-sm">No clients found</p>
+                  </div>
                 )}
-                </div>
+              </div>
 
                 {/* Footer Actions */}
-                <div className="p-6 border-t border-gray-800 flex justify-end gap-3">
-                    <button
+                <div className="px-4 py-3 border-t border-gray-800 flex justify-end gap-2">
+                  <button
                     onClick={() => setShowModal(false)}
-                    className="px-4 py-2 bg-gray-800 text-gray-300 rounded-lg hover:bg-gray-700 transition-colors border border-gray-700"
-                    >
+                    className="px-3 py-1 bg-gray-800 text-gray-300 rounded hover:bg-gray-700 border border-gray-700 text-xs"
+                  >
                     Cancel
-                    </button>
-                    <button
+                  </button>
+                  <button
                     onClick={handleSaveClients}
-                    className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-                    >
+                    className="px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 text-xs"
+                  >
                     Save
-                    </button>
+                  </button>
                 </div>
                 </div>
             </div>
@@ -253,60 +256,60 @@ export const WorkoutDetailView: React.FC<WorkoutDetailViewProps> = ({ workout, o
 
             {/* Close button */}
             {onClose && (
-                <button
+              <button
                 onClick={onClose}
-                className="text-gray-400 hover:text-gray-200 transition-colors p-2 hover:bg-gray-700 rounded"
-                >
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                className="text-gray-400 hover:text-gray-200 transition-colors p-1 hover:bg-gray-700 rounded"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                 </svg>
-                </button>
+              </button>
             )}
             </div>
         </div>
 
         {/* Workout Info + Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-5 gap-3 mt-4 text-sm">
+        <div className="grid grid-cols-1 md:grid-cols-5 gap-3 mt-3 text-sm">
           {/* Date */}
           <div className="flex items-center gap-2">
-            <div className="p-1.5 bg-gray-700 rounded">
+            <div className="p-1.5 bg-gray-700/50 rounded-lg">
               <Calendar className="w-4 h-4 text-green-400" />
             </div>
             <div>
-              <p className="text-xs text-gray-400 font-semibold uppercase">Date</p>
+              <p className="text-[10px] text-gray-400 font-semibold uppercase">Date</p>
               <p className="text-xs font-bold text-gray-100">{formatDate(workout.workoutDate ?? "")}</p>
             </div>
           </div>
 
           {/* Duration */}
           <div className="flex items-center gap-2">
-            <div className="p-1.5 bg-gray-700 rounded">
+            <div className="p-1.5 bg-gray-700/50 rounded-lg">
               <Dumbbell className="w-4 h-4 text-blue-400" />
             </div>
             <div>
-              <p className="text-xs text-gray-400 font-semibold uppercase">Duration</p>
+              <p className="text-[10px] text-gray-400 font-semibold uppercase">Duration</p>
               <p className="text-xs font-bold text-gray-100">{workout.duration} min</p>
             </div>
           </div>
 
           {/* Total Exercises */}
           <div className="flex items-center gap-2">
-            <div className="p-1.5 bg-gray-700 rounded">
+            <div className="p-1.5 bg-gray-700/50 rounded-lg">
               <Activity className="w-4 h-4 text-yellow-400" />
             </div>
             <div>
-              <p className="text-xs text-gray-400 font-semibold uppercase">Exercises</p>
+              <p className="text-[10px] text-gray-400 font-semibold uppercase">Exercises</p>
               <p className="text-xs font-bold text-gray-100">{workout.exercises.length}</p>
             </div>
           </div>
 
           {/* Total Sets */}
           <div className="flex items-center gap-2">
-            <div className="p-1.5 bg-gray-700 rounded">
+            <div className="p-1.5 bg-gray-700/50 rounded-lg">
               <Layers className="w-4 h-4 text-purple-400" />
             </div>
             <div>
-              <p className="text-xs text-gray-400 font-semibold uppercase">Sets</p>
+              <p className="text-[10px] text-gray-400 font-semibold uppercase">Sets</p>
               <p className="text-xs font-bold text-gray-100">
                 {workout.exercises.reduce((sum, ex) => sum + ex.sets.length, 0)}
               </p>
@@ -315,11 +318,11 @@ export const WorkoutDetailView: React.FC<WorkoutDetailViewProps> = ({ workout, o
 
           {/* Volume */}
           <div className="flex items-center gap-2">
-            <div className="p-1.5 bg-gray-700 rounded">
+            <div className="p-1.5 bg-gray-700/50 rounded-lg">
               <BarChart3 className="w-4 h-4 text-red-400" />
             </div>
             <div>
-              <p className="text-xs text-gray-400 font-semibold uppercase">Volume</p>
+              <p className="text-[10px] text-gray-400 font-semibold uppercase">Volume</p>
               <p className="text-xs font-bold text-gray-100">
                 {workout.exercises.reduce(
                   (total, ex) =>
@@ -335,19 +338,22 @@ export const WorkoutDetailView: React.FC<WorkoutDetailViewProps> = ({ workout, o
             </div>
           </div>
         </div>
-
         </div>
 
         {/* Exercises */}
         <div className="space-y-3">
           {Object.entries(groupedExercises).map(([key, exercises], groupIndex) => (
-            <div key={key} className="bg-gray-800 rounded-lg shadow border border-gray-700 p-4">
+            <div key={key} className="bg-gray-800/50 backdrop-blur-sm rounded-xl shadow-lg border border-gray-700 p-4">
               
               {exercises.length > 1 && (
-                <div className="mb-2 pb-2 border-b border-gray-700">
-                  <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wide">
-                    Superset {groupIndex + 1}
-                  </h3>
+                <div className="mb-3 pb-2 border-b border-gray-700">
+                  <div className="flex items-center gap-2">
+                    <div className="h-0.5 w-8 bg-gradient-to-r from-transparent to-purple-500/50"></div>
+                    <h3 className="text-xs font-bold text-purple-400 uppercase tracking-wide">
+                      Superset {groupIndex + 1}
+                    </h3>
+                    <div className="h-0.5 flex-1 bg-gradient-to-l from-transparent to-purple-500/50"></div>
+                  </div>
                 </div>
               )}
 
@@ -355,9 +361,9 @@ export const WorkoutDetailView: React.FC<WorkoutDetailViewProps> = ({ workout, o
                 <div key={exercise.exerciseName} className={idx > 0 ? 'mt-4 pt-4 border-t border-gray-700' : ''}>
                   
                   {/* Exercise Header */}
-                  <div className="flex items-center justify-between mb-2">
+                  <div className="flex items-center justify-between mb-3">
                     <div className="flex items-center gap-2">
-                      <span className="text-[10px] font-bold text-gray-500">
+                      <span className="px-2 py-0.5 bg-blue-500/20 text-blue-400 rounded-md text-[10px] font-bold border border-blue-500/30">
                         {exercise.groupId}.{exercise.exerciseOrder}
                       </span>
                       <h3 className="text-sm font-bold text-white">{exercise.exerciseName}</h3>
@@ -369,27 +375,29 @@ export const WorkoutDetailView: React.FC<WorkoutDetailViewProps> = ({ workout, o
                     <div className="overflow-x-auto">
                       <table className="w-full text-xs">
                         <thead>
-                          <tr className="border-b border-gray-700">
-                            <th className="py-1 px-2 font-bold text-gray-400 uppercase tracking-wide text-left">Set</th>
-                            <th className="py-1 px-2 font-bold text-gray-400 uppercase tracking-wide text-left">Weight</th>
-                            <th className="py-1 px-2 font-bold text-gray-400 uppercase tracking-wide text-left">Reps</th>
-                            <th className="py-1 px-2 font-bold text-gray-400 uppercase tracking-wide text-left">
+                          <tr className="border-b border-gray-700 bg-gray-900/50">
+                            <th className="py-2 px-3 font-bold text-gray-400 uppercase tracking-wide text-left">Set</th>
+                            <th className="py-2 px-3 font-bold text-gray-400 uppercase tracking-wide text-left">Weight</th>
+                            <th className="py-2 px-3 font-bold text-gray-400 uppercase tracking-wide text-left">Reps</th>
+                            <th className="py-2 px-3 font-bold text-gray-400 uppercase tracking-wide text-left">
                               {getRirRpeLabel(exercise.sets[0].rirOrRpe)}
                             </th>
                             {exercise.sets.some(s => s.duration) && (
-                              <th className="py-1 px-2 font-bold text-gray-400 uppercase tracking-wide text-left">Duration</th>
+                              <th className="py-2 px-3 font-bold text-gray-400 uppercase tracking-wide text-left">Duration</th>
                             )}
                           </tr>
                         </thead>
                         <tbody>
-                          {exercise.sets.map((set) => (
-                            <tr key={set.setsOrder} className="border-b border-gray-700 hover:bg-gray-750 transition-colors">
-                              <td className="py-1 px-2 font-bold text-white">{set.setsOrder}</td>
-                              <td className="py-1 px-2 text-gray-300">{set.weight} {getWeightUnit(set.weightUnit)}</td>
-                              <td className="py-1 px-2 text-gray-300">{set.reps}</td>
-                              <td className="py-1 px-2 text-gray-300">{set.rir}</td>
+                          {exercise.sets.map((set, setIdx) => (
+                            <tr key={set.setsOrder} className={`border-b border-gray-700/50 hover:bg-gray-700/30 transition-all ${
+                              setIdx % 2 === 0 ? 'bg-gray-800/30' : ''
+                            }`}>
+                              <td className="py-2 px-3 font-bold text-white">{set.setsOrder}</td>
+                              <td className="py-2 px-3 text-gray-300 font-medium">{set.weight} {getWeightUnit(set.weightUnit)}</td>
+                              <td className="py-2 px-3 text-gray-300 font-medium">{set.reps}</td>
+                              <td className="py-2 px-3 text-gray-300 font-medium">{set.rir}</td>
                               {exercise.sets.some(s => s.duration) && (
-                                <td className="py-1 px-2 text-gray-300">{set.duration ? `${set.duration}s` : '-'}</td>
+                                <td className="py-2 px-3 text-gray-300 font-medium">{set.duration ? `${set.duration}s` : '-'}</td>
                               )}
                             </tr>
                           ))}
@@ -402,7 +410,6 @@ export const WorkoutDetailView: React.FC<WorkoutDetailViewProps> = ({ workout, o
             </div>
           ))}
         </div>
-
       </div>
     </div>
   );

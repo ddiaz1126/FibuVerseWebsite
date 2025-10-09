@@ -522,157 +522,185 @@ export default function WeightsAnalysisTab({ weightsMeta, weightsSessionInsights
   };
 
   return (
-    <div className="p-4 space-y-10">
+<div className="p-4 space-y-4">
       {/* ----------------- Overview Section ----------------- */}
-      <section>
-        <h2 className="text-lg font-medium mb-2">📊 Workouts Overview</h2>
-        <div className="flex gap-1.5 flex-wrap mb-2">
-          {/* Total Workouts */}
-          <button className="bg-gray-800 text-white px-2 py-1 text-xs rounded shadow hover:bg-gray-700">
-            Total Workouts: {weightsMeta.workouts_per_week.reduce((sum, w) => sum + w.total, 0)}
-          </button>
-
-          {/* Avg Duration */}
-          <button className="bg-gray-800 text-white px-2 py-1 text-xs rounded shadow hover:bg-gray-700">
-            Avg Duration:{" "}
-            {Math.round(
-              weightsMeta.avg_duration.reduce((sum, m) => sum + m.avg_duration, 0) /
-              weightsMeta.avg_duration.length
-            )}{" "}
-            min
-          </button>
-
-          {/* Placeholder buttons for future metrics */}
-          <button className="bg-gray-800 text-white px-2 py-1 text-xs rounded shadow hover:bg-gray-700">
-            Total Exercises: --
-          </button>
-        </div>
-      </section>
-
-      {/* ----------------- Recent Training Summary (Last 3 Weeks) ----------------- */}
-      <section>
-        <h2 className="text-lg font-medium mb-2">Recent Training Summary (Last 3 Weeks)</h2>
-        
-        {weightsSessionInsights?.recent_3_weeks && (
-          <div className="mb-2 text-xs text-gray-400">
-            <span>Total Workouts: {weightsSessionInsights.recent_3_weeks.total_workouts}</span>
-            <span className="ml-3">Average: {weightsSessionInsights.recent_3_weeks.workouts_per_week} workouts/week</span>
-            <span className="ml-3">Period: {new Date(weightsSessionInsights.recent_3_weeks.cutoff_date).toLocaleDateString()} - Today</span>
+      <section className="bg-gray-800/50 backdrop-blur-sm rounded-xl p-4 shadow-lg border border-gray-700">
+        <h2 className="text-sm font-semibold mb-3 flex items-center gap-2 text-white">
+          <svg className="w-4 h-4 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+          </svg>
+          Workouts Overview
+        </h2>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <div className="bg-gray-900/50 p-3 rounded-lg border border-gray-700">
+            <p className="text-[9px] text-gray-400 mb-1">Total Workouts</p>
+            <p className="text-xl font-bold text-blue-400">
+              {weightsMeta.workouts_per_week.reduce((sum, w) => sum + w.total, 0)}
+            </p>
           </div>
-        )}
-        
-        <div className="flex gap-1.5 mb-2 flex-wrap">
-          {[
-            "sets_per_muscle_group",
-            "sets_per_exercise",
-            "equipment_usage",
-            "volume_per_muscle_group",
-            "weight_progression",
-          ].map((metric) => (
-            <button
-              key={metric}
-              onClick={() =>
-                setActiveRecentMetric(
-                  metric as
-                    | "sets_per_muscle_group"
-                    | "sets_per_exercise"
-                    | "equipment_usage"
-                    | "volume_per_muscle_group"
-                    | "weight_progression"
-                )
-              }
-              className={`px-2 py-1 text-xs rounded ${
-                activeRecentMetric === metric
-                  ? "bg-blue-600 text-white"
-                  : "bg-gray-800 text-gray-300 hover:bg-gray-700"
-              }`}
-            >
-              {metric.replace(/_/g, " ").toUpperCase()}
-            </button>
-          ))}
+          <div className="bg-gray-900/50 p-3 rounded-lg border border-gray-700">
+            <p className="text-[9px] text-gray-400 mb-1">Avg Duration</p>
+            <p className="text-xl font-bold text-green-400">
+              {Math.round(
+                weightsMeta.avg_duration.reduce((sum, m) => sum + m.avg_duration, 0) /
+                weightsMeta.avg_duration.length
+              )} <span className="text-xs">min</span>
+            </p>
+          </div>
+          <div className="bg-gray-900/50 p-3 rounded-lg border border-gray-700">
+            <p className="text-[9px] text-gray-400 mb-1">Total Exercises</p>
+            <p className="text-xl font-bold text-gray-500">--</p>
+          </div>
         </div>
-
-        <div className="bg-gray-900 p-3 rounded shadow">{renderRecentMetricsChart()}</div>
       </section>
 
+      {/* Two Column Grid for Charts */}
+      <div className="grid lg:grid-cols-2 gap-4">
+        {/* ----------------- Recent Training Summary (Last 3 Weeks) ----------------- */}
+        <section className="bg-gray-800/50 backdrop-blur-sm rounded-xl p-4 shadow-lg border border-gray-700">
+          <h2 className="text-sm font-semibold mb-2 flex items-center gap-2 text-white">
+            <svg className="w-4 h-4 text-orange-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            Recent Training Summary
+          </h2>
+          
+          {weightsSessionInsights?.recent_3_weeks && (
+            <div className="mb-2 text-[10px] text-gray-400 flex flex-wrap gap-2">
+              <span className="bg-gray-900/50 px-2 py-1 rounded">
+                Total: {weightsSessionInsights.recent_3_weeks.total_workouts}
+              </span>
+              <span className="bg-gray-900/50 px-2 py-1 rounded">
+                Avg: {weightsSessionInsights.recent_3_weeks.workouts_per_week}/wk
+              </span>
+              <span className="bg-gray-900/50 px-2 py-1 rounded">
+                {new Date(weightsSessionInsights.recent_3_weeks.cutoff_date).toLocaleDateString()} - Today
+              </span>
+            </div>
+          )}
+          
+          <div className="flex gap-1 mb-3 flex-wrap bg-gray-900/50 p-1 rounded-lg border border-gray-700">
+            {[
+              "sets_per_muscle_group",
+              "sets_per_exercise",
+              "equipment_usage",
+              "volume_per_muscle_group",
+              "weight_progression",
+            ].map((metric) => (
+              <button
+                key={metric}
+                onClick={() =>
+                  setActiveRecentMetric(
+                    metric as
+                      | "sets_per_muscle_group"
+                      | "sets_per_exercise"
+                      | "equipment_usage"
+                      | "volume_per_muscle_group"
+                      | "weight_progression"
+                  )
+                }
+                className={`px-2 py-1 text-[10px] font-medium rounded-lg transition-all duration-200 ${
+                  activeRecentMetric === metric
+                    ? "bg-orange-600 text-white shadow-lg shadow-orange-500/20"
+                    : "text-gray-400 hover:text-white hover:bg-gray-700/50"
+                }`}
+              >
+                {metric.replace(/_/g, " ").toUpperCase()}
+              </button>
+            ))}
+          </div>
 
-      {/* ----------------- Workout Metrics Section ----------------- */}
-      <section>
-        <h2 className="text-lg font-medium mb-2">💪 Workout Metrics</h2>
-        
-        <div className="flex gap-1.5 mb-2 flex-wrap">
-          {[
-            "workouts_per_week",
-            "avg_duration",
-            "exercises_per_workout",
-            "muscle_group_stats",
-            "equipment_stats",
-            "difficulty_stats",
-          ].map((metric) => (
-            <button
-              key={metric}
-              onClick={() =>
-                setActiveMetric(
-                  metric as
-                    | "workouts_per_week"
-                    | "avg_duration"
-                    | "exercises_per_workout"
-                    | "muscle_group_stats"
-                    | "equipment_stats"
-                    | "difficulty_stats"
-                )
-              }
-              className={`px-2 py-1 text-xs rounded ${
-                activeMetric === metric
-                  ? "bg-blue-600 text-white"
-                  : "bg-gray-800 text-gray-300 hover:bg-gray-700"
-              }`}
-            >
-              {metric.replace(/_/g, " ").toUpperCase()}
-            </button>
-          ))}
-        </div>
+          <div className="bg-gray-900/50 p-3 rounded-lg border border-gray-700">{renderRecentMetricsChart()}</div>
+        </section>
 
-        <div className="bg-gray-900 p-3 rounded shadow">{renderChart()}</div>
-      </section>
+        {/* ----------------- Workout Metrics Section ----------------- */}
+        <section className="bg-gray-800/50 backdrop-blur-sm rounded-xl p-4 shadow-lg border border-gray-700">
+          <h2 className="text-sm font-semibold mb-3 flex items-center gap-2 text-white">
+            <svg className="w-4 h-4 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+            </svg>
+            Workout Metrics
+          </h2>
+          
+          <div className="flex gap-1 mb-3 flex-wrap bg-gray-900/50 p-1 rounded-lg border border-gray-700">
+            {[
+              "workouts_per_week",
+              "avg_duration",
+              "exercises_per_workout",
+              "muscle_group_stats",
+              "equipment_stats",
+              "difficulty_stats",
+            ].map((metric) => (
+              <button
+                key={metric}
+                onClick={() =>
+                  setActiveMetric(
+                    metric as
+                      | "workouts_per_week"
+                      | "avg_duration"
+                      | "exercises_per_workout"
+                      | "muscle_group_stats"
+                      | "equipment_stats"
+                      | "difficulty_stats"
+                  )
+                }
+                className={`px-2 py-1 text-[10px] font-medium rounded-lg transition-all duration-200 ${
+                  activeMetric === metric
+                    ? "bg-purple-600 text-white shadow-lg shadow-purple-500/20"
+                    : "text-gray-400 hover:text-white hover:bg-gray-700/50"
+                }`}
+              >
+                {metric.replace(/_/g, " ").toUpperCase()}
+              </button>
+            ))}
+          </div>
 
-      {/* ----------------- Session Metrics Section ----------------- */}
-      <section>
-        <h2 className="text-lg font-medium mb-2">🏋️ Session Metrics</h2>
+          <div className="bg-gray-900/50 p-3 rounded-lg border border-gray-700">{renderChart()}</div>
+        </section>
 
-        <div className="flex gap-1.5 mb-2 flex-wrap">
-          {[
-            "volume_per_exercise",
-            "avg_effort_per_exercise",
-            "avg_reps_per_exercise",
-            "weight_progression",
-            "sets_per_exercise",
-          ].map((metric) => (
-            <button
-              key={metric}
-              onClick={() =>
-                setActiveSessionMetric(
-                  metric as
-                    | "volume_per_exercise"
-                    | "avg_effort_per_exercise"
-                    | "avg_reps_per_exercise"
-                    | "weight_progression"
-                    | "sets_per_exercise"
-                )
-              }
-              className={`px-2 py-1 text-xs rounded ${
-                activeSessionMetric === metric
-                  ? "bg-blue-600 text-white"
-                  : "bg-gray-800 text-gray-300 hover:bg-gray-700"
-              }`}
-            >
-              {metric.replace(/_/g, " ").toUpperCase()}
-            </button>
-          ))}
-        </div>
+        {/* ----------------- Session Metrics Section ----------------- */}
+        <section className="bg-gray-800/50 backdrop-blur-sm rounded-xl p-4 shadow-lg border border-gray-700 lg:col-span-2">
+          <h2 className="text-sm font-semibold mb-3 flex items-center gap-2 text-white">
+            <svg className="w-4 h-4 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            Session Metrics
+          </h2>
 
-        <div className="bg-gray-900 p-3 rounded shadow">{renderSessionChart()}</div>
-      </section>
+          <div className="flex gap-1 mb-3 flex-wrap bg-gray-900/50 p-1 rounded-lg border border-gray-700">
+            {[
+              "volume_per_exercise",
+              "avg_effort_per_exercise",
+              "avg_reps_per_exercise",
+              "weight_progression",
+              "sets_per_exercise",
+            ].map((metric) => (
+              <button
+                key={metric}
+                onClick={() =>
+                  setActiveSessionMetric(
+                    metric as
+                      | "volume_per_exercise"
+                      | "avg_effort_per_exercise"
+                      | "avg_reps_per_exercise"
+                      | "weight_progression"
+                      | "sets_per_exercise"
+                  )
+                }
+                className={`px-2 py-1 text-[10px] font-medium rounded-lg transition-all duration-200 ${
+                  activeSessionMetric === metric
+                    ? "bg-green-600 text-white shadow-lg shadow-green-500/20"
+                    : "text-gray-400 hover:text-white hover:bg-gray-700/50"
+                }`}
+              >
+                {metric.replace(/_/g, " ").toUpperCase()}
+              </button>
+            ))}
+          </div>
+
+          <div className="bg-gray-900/50 p-3 rounded-lg border border-gray-700">{renderSessionChart()}</div>
+        </section>
+      </div>
     </div>
   );
 }

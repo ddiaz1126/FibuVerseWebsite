@@ -1,363 +1,703 @@
 {
 "resting_hr": {
-    "description": "Resting heart rate indicates cardiovascular fitness and heart health. Lower rates typically suggest better aerobic fitness, while higher rates may indicate stress or low cardiovascular endurance.",
-    "male": {
-      "20-29": { "low": 50, "healthy": 60, "overweight": 70, "high": 80 },
-      "30-39": { "low": 52, "healthy": 62, "overweight": 72, "high": 82 }
-    },
-    "female": {
-      "20-29": { "low": 55, "healthy": 65, "overweight": 75, "high": 85 },
-      "30-39": { "low": 57, "healthy": 67, "overweight": 77, "high": 87 }
-    }
+  "description": "Resting heart rate indicates cardiovascular fitness and heart health. Lower rates typically suggest better aerobic fitness, while higher rates may indicate stress or low cardiovascular endurance.",
+  "male": {
+    "20-29": { "low": 50, "healthy": 60, "overweight": 70, "high": 80 },
+    "30-39": { "low": 52, "healthy": 62, "overweight": 72, "high": 82 },
+    "40-49": { "low": 54, "healthy": 64, "overweight": 74, "high": 84 },
+    "50-59": { "low": 56, "healthy": 66, "overweight": 76, "high": 86 },
+    "60-69": { "low": 58, "healthy": 68, "overweight": 78, "high": 88 },
+    "70-80": { "low": 60, "healthy": 70, "overweight": 80, "high": 90 }
   },
-  "max_hr": {
-    "description": "Maximum heart rate (Max HR) is the highest number of beats per minute your heart can achieve during intense exercise. It is a key indicator for setting training zones, evaluating cardiovascular capacity, and safely guiding high-intensity workouts. Monitoring Max HR allows trainers to optimize performance while minimizing the risk of overexertion or cardiac stress.",
-    "male": {
-      "20-29": { "low": 180, "healthy": 190, "high": 200 },
-      "30-39": { "low": 175, "healthy": 185, "high": 195 }
-    },
-    "female": {
-      "20-29": { "low": 175, "healthy": 185, "high": 195 },
-      "30-39": { "low": 170, "healthy": 180, "high": 190 }
-    }
-  },
-  "vo2max": {
-    "description": "VO2 max measures maximal oxygen uptake and aerobic capacity. Higher values are indicative of superior cardiovascular endurance and overall fitness.",
-    "male": {
-      "20-29": { "poor": 30, "average": 40, "good": 50, "excellent": 60 },
-      "30-39": { "poor": 28, "average": 38, "good": 48, "excellent": 58 }
-    },
-    "female": {
-      "20-29": { "poor": 25, "average": 35, "good": 45, "excellent": 55 },
-      "30-39": { "poor": 23, "average": 33, "good": 43, "excellent": 53 }
-    }
-  },
-  "hrv_ms": {
-    "description": "Heart Rate Variability (HRV) measures the variation in time between consecutive heartbeats. Higher HRV generally indicates better autonomic nervous system function, cardiovascular resilience, and recovery capacity. It is a useful metric for tracking fitness, stress levels, and overall cardiovascular health.",
-    "male": {
-      "20-29": { "low": 20, "healthy": 50, "high": 100 },
-      "30-39": { "low": 18, "healthy": 45, "high": 90 }
-    },
-    "female": {
-      "20-29": { "low": 15, "healthy": 45, "high": 90 },
-      "30-39": { "low": 14, "healthy": 42, "high": 85 }
-    }
-  },
-  "systolic_bp": {
-    "description": "Systolic blood pressure represents the pressure in the arteries when the heart contracts and pumps blood. Maintaining a healthy systolic blood pressure is critical for reducing the risk of heart disease, stroke, and kidney damage. Consistent monitoring helps guide lifestyle and training interventions for optimal cardiovascular health.",
-    "male": {
-      "20-29": { "low": 90, "healthy": 120, "high": 140 },
-      "30-39": { "low": 95, "healthy": 125, "high": 145 }
-    },
-    "female": {
-      "20-29": { "low": 90, "healthy": 115, "high": 135 },
-      "30-39": { "low": 95, "healthy": 120, "high": 140 }
-    }
-  },
-  "diastolic_bp": {
-    "description": "Diastolic blood pressure is the pressure in the arteries when the heart is resting between beats. Healthy diastolic values are important to maintain proper blood flow, reduce cardiac strain, and minimize the risk of hypertension-related complications. Monitoring diastolic pressure complements systolic readings for a complete cardiovascular assessment.",
-    "male": {
-      "20-29": { "low": 60, "healthy": 80, "high": 90 },
-      "30-39": { "low": 65, "healthy": 85, "high": 95 }
-    },
-    "female": {
-      "20-29": { "low": 60, "healthy": 75, "high": 85 },
-      "30-39": { "low": 65, "healthy": 80, "high": 90 }
-    }
-  },
-  "fat_mass": {
-    "description": "Fat mass represents the total weight of all body fat in kilograms or as a percentage of body weight. Maintaining an optimal fat mass is crucial for metabolic health, cardiovascular risk reduction, and physical performance. Excess fat mass can increase the risk of chronic conditions such as diabetes, hypertension, and heart disease, while too little fat can impair hormonal balance and energy reserves.",
-    "male": {
-      "20-29": { "low": 8, "healthy": 15, "overweight": 25, "high": 30 },
-      "30-39": { "low": 10, "healthy": 18, "overweight": 28, "high": 33 }
-    },
-    "female": {
-      "20-29": { "low": 18, "healthy": 25, "overweight": 35, "high": 40 },
-      "30-39": { "low": 20, "healthy": 28, "overweight": 38, "high": 43 }
-    }
-  },
-  "lean_body_mass": {
-    "description": "Lean body mass is the total weight of the body minus fat, including muscles, bones, water, and organs. Higher lean mass supports strength, endurance, and overall metabolic health. Tracking lean body mass helps trainers optimize strength and conditioning programs while preserving functional capacity.",
-    "male": {
-      "20-29": { "low": 50, "healthy": 65, "high": 80 },
-      "30-39": { "low": 48, "healthy": 63, "high": 78 }
-    },
-    "female": {
-      "20-29": { "low": 35, "healthy": 50, "high": 65 },
-      "30-39": { "low": 33, "healthy": 48, "high": 63 }
-    }
-  },
-  "fev_1": {
-    "description": "Forced Expiratory Volume in 1 second (FEV1) measures lung function by determining the volume of air a person can forcibly exhale in one second. It is a key indicator of respiratory health and pulmonary capacity. Higher FEV1 values correlate with stronger lung function and better aerobic performance.",
-    "male": {
-      "20-29": { "low": 3.0, "healthy": 4.0, "high": 5.0 },
-      "30-39": { "low": 2.8, "healthy": 3.8, "high": 4.8 }
-    },
-    "female": {
-      "20-29": { "low": 2.0, "healthy": 3.0, "high": 4.0 },
-      "30-39": { "low": 1.8, "healthy": 2.8, "high": 3.8 }
-    }
-  },
-  "fvc_ratio": {
-    "description": "The FVC ratio (FEV1/FVC) assesses the proportion of air exhaled in the first second relative to the total forced vital capacity. It is used to identify obstructive or restrictive lung conditions. A healthy FVC ratio indicates efficient lung function, which is vital for endurance and overall cardiovascular health.",
-    "male": {
-      "20-29": { "low": 0.7, "healthy": 0.8, "high": 0.9 },
-      "30-39": { "low": 0.68, "healthy": 0.78, "high": 0.88 }
-    },
-    "female": {
-      "20-29": { "low": 0.7, "healthy": 0.8, "high": 0.9 },
-      "30-39": { "low": 0.68, "healthy": 0.78, "high": 0.88 }
-    }
-  },
-  "o2_saturation": {
-    "description": "Oxygen saturation (SpO2) measures the percentage of hemoglobin in the blood that is saturated with oxygen. Maintaining healthy oxygen levels is critical for cardiovascular performance, cellular metabolism, and overall energy levels. Values below the healthy range can indicate respiratory or circulatory issues requiring attention.",
-    "male": {
-      "20-29": { "low": 92, "healthy": 96, "high": 100 },
-      "30-39": { "low": 92, "healthy": 95, "high": 100 }
-    },
-    "female": {
-      "20-29": { "low": 92, "healthy": 96, "high": 100 },
-      "30-39": { "low": 92, "healthy": 95, "high": 100 }
-    }
-  },
-    "weight_kg": {
-    "description": "Body weight in kilograms is a basic metric for tracking overall health and fitness. It helps trainers assess progress, guide nutrition, and evaluate the effectiveness of training programs.",
-    "male": {
-        "20-29": { "low": 55, "healthy": 70, "high": 85, "obese": 100 },
-        "30-39": { "low": 60, "healthy": 75, "high": 90, "obese": 105 }
-    },
-    "female": {
-        "20-29": { "low": 45, "healthy": 60, "high": 75, "obese": 90 },
-        "30-39": { "low": 50, "healthy": 65, "high": 80, "obese": 95 }
-    }
-    },
-    "height_cm": {
-    "description": "Height in centimeters is a fundamental anthropometric measure. While it doesn’t change in adulthood, it is used alongside weight to calculate BMI and other body composition metrics.",
-    "male": {
-        "20-39": { "below average": 160, "average": 175, "above average": 190 }
-    },
-    "female": {
-        "20-39": { "below average": 150, "average": 162, "above average": 175 }
-    }
-    },
-    "bmi": {
-    "description": "Body Mass Index (BMI) is calculated from weight and height to categorize individuals into underweight, healthy weight, overweight, or obese. It is a quick screening tool, though it does not directly measure body fat.",
-    "male": {
-        "20-29": { "underweight": 18.5, "healthy": 24.9, "overweight": 29.9, "obese": 35 },
-        "30-39": { "underweight": 18.5, "healthy": 24.9, "overweight": 29.9, "obese": 35 }
-    },
-    "female": {
-        "20-29": { "underweight": 18.5, "healthy": 24.9, "overweight": 29.9, "obese": 35 },
-        "30-39": { "underweight": 18.5, "healthy": 24.9, "overweight": 29.9, "obese": 35 }
-    }
-    },
-    "waist_cm": {
-    "description": "Waist circumference is a measure of abdominal fat, an important predictor of cardiovascular risk and metabolic health. Lower waist measurements generally indicate better health outcomes.",
-    "male": {
-        "20-29": { "low": 70, "healthy": 85, "high": 100, "obese": 110 },
-        "30-39": { "low": 72, "healthy": 87, "high": 102, "obese": 112 }
-    },
-    "female": {
-        "20-29": { "low": 60, "healthy": 75, "high": 90, "obese": 100 },
-        "30-39": { "low": 62, "healthy": 77, "high": 92, "obese": 102 }
-    }
-    },
-    "hip_cm": {
-    "description": "Hip circumference is used together with waist measurement to calculate waist-to-hip ratio, a marker for fat distribution and risk of metabolic disease.",
-    "male": {
-        "20-29": { "low": 85, "healthy": 95, "high": 105, "obese": 115 },
-        "30-39": { "low": 87, "healthy": 97, "high": 107, "obese": 117 }
-    },
-    "female": {
-        "20-29": { "low": 90, "healthy": 100, "high": 110, "obese": 120 },
-        "30-39": { "low": 92, "healthy": 102, "high": 112, "obese": 122 }
-    }
-    },
-    "waist_to_height_ratio": {
-    "description": "The waist-to-height ratio is calculated as waist circumference divided by height. It is a strong predictor of cardiovascular risk and helps assess central obesity more accurately than BMI alone.",
-    "male": {
-        "20-29": { "low": 0.40, "healthy": 0.50, "high": 0.60, "obese": 0.65 },
-        "30-39": { "low": 0.42, "healthy": 0.52, "high": 0.62, "obese": 0.67 }
-    },
-    "female": {
-        "20-29": { "low": 0.40, "healthy": 0.50, "high": 0.60, "obese": 0.65 },
-        "30-39": { "low": 0.42, "healthy": 0.52, "high": 0.62, "obese": 0.67 }
-    }
-    },
-    "body_fat_percentage": {
-    "description": "Body fat percentage measures the proportion of fat mass in the body. It is a direct indicator of body composition, helping trainers assess fitness, monitor progress, and reduce health risks associated with excess fat.",
-        "male": {
-            "20-29": { "low": 8, "healthy": 15, "overweight": 25, "obese": 30 },
-            "30-39": { "low": 10, "healthy": 18, "overweight": 28, "obese": 33 }
-        },
-        "female": {
-            "20-29": { "low": 18, "healthy": 25, "overweight": 35, "obese": 40 },
-            "30-39": { "low": 20, "healthy": 28, "overweight": 38, "obese": 43 }
-        }
-    },
-    "chest": {
-    "description": "Chest skinfold measurement estimates subcutaneous fat in the chest area. This is useful for tracking overall body fat distribution and changes in upper body composition.",
-    "male": {
-        "20-29": { "low": 5, "healthy": 12, "overweight": 20, "obese": 30 },
-        "30-39": { "low": 6, "healthy": 13, "overweight": 22, "obese": 32 }
-    },
-    "female": {
-        "20-29": { "low": 10, "healthy": 18, "overweight": 28, "obese": 38 },
-        "30-39": { "low": 12, "healthy": 20, "overweight": 30, "obese": 40 }
-    }
-    },
-    "abdomen": {
-    "description": "Abdominal skinfold reflects fat accumulation in the central trunk region, an important indicator for metabolic health and cardiovascular risk.",
-    "male": {
-        "20-29": { "low": 8, "healthy": 15, "overweight": 25, "obese": 35 },
-        "30-39": { "low": 10, "healthy": 17, "overweight": 27, "obese": 37 }
-    },
-    "female": {
-        "20-29": { "low": 12, "healthy": 20, "overweight": 30, "obese": 40 },
-        "30-39": { "low": 14, "healthy": 22, "overweight": 32, "obese": 42 }
-    }
-    },
-    "thigh": {
-    "description": "Thigh skinfold measures fat in the upper leg. It helps trainers monitor lower body fat distribution and assess muscular development in conjunction with leg strength tests.",
-    "male": {
-        "20-29": { "low": 8, "healthy": 14, "overweight": 22, "obese": 32 },
-        "30-39": { "low": 9, "healthy": 15, "overweight": 24, "obese": 34 }
-    },
-    "female": {
-        "20-29": { "low": 12, "healthy": 20, "overweight": 30, "obese": 40 },
-        "30-39": { "low": 14, "healthy": 22, "overweight": 32, "obese": 42 }
-    }
-    },
-    "triceps": {
-    "description": "Triceps skinfold indicates fat stored on the back of the arm. This site is commonly used to estimate overall body fat percentage and monitor fat loss progress.",
-    "male": {
-        "20-29": { "low": 5, "healthy": 10, "overweight": 18, "obese": 28 },
-        "30-39": { "low": 6, "healthy": 12, "overweight": 20, "obese": 30 }
-    },
-    "female": {
-        "20-29": { "low": 10, "healthy": 16, "overweight": 26, "obese": 36 },
-        "30-39": { "low": 12, "healthy": 18, "overweight": 28, "obese": 38 }
-    }
-    },
-    "subscapular": {
-    "description": "Subscapular skinfold measures fat beneath the shoulder blade. It is used to track changes in upper back fat and overall body composition.",
-    "male": {
-        "20-29": { "low": 6, "healthy": 12, "overweight": 20, "obese": 30 },
-        "30-39": { "low": 7, "healthy": 14, "overweight": 22, "obese": 32 }
-    },
-    "female": {
-        "20-29": { "low": 10, "healthy": 18, "overweight": 28, "obese": 38 },
-        "30-39": { "low": 12, "healthy": 20, "overweight": 30, "obese": 40 }
-    }
-    },
-    "midaxillary": {
-    "description": "Midaxillary skinfold captures fat along the side of the torso. It helps assess trunk fat distribution and can complement other measurements for body composition analysis.",
-    "male": {
-        "20-29": { "low": 6, "healthy": 12, "overweight": 20, "obese": 30 },
-        "30-39": { "low": 7, "healthy": 14, "overweight": 22, "obese": 32 }
-    },
-    "female": {
-        "20-29": { "low": 10, "healthy": 18, "overweight": 28, "obese": 38 },
-        "30-39": { "low": 12, "healthy": 20, "overweight": 30, "obese": 40 }
-    }
-    },
-    "biceps": {
-    "description": "Biceps skinfold measures subcutaneous fat on the front of the arm. It is useful for monitoring upper arm fat loss and muscle definition progress.",
-    "male": {
-        "20-29": { "low": 5, "healthy": 10, "overweight": 18, "obese": 28 },
-        "30-39": { "low": 6, "healthy": 12, "overweight": 20, "obese": 30 }
-    },
-    "female": {
-        "20-29": { "low": 10, "healthy": 16, "overweight": 26, "obese": 36 },
-        "30-39": { "low": 12, "healthy": 18, "overweight": 28, "obese": 38 }
-    }
-    },
-    "calf": {
-    "description": "Calf skinfold assesses fat on the lower leg, which can indicate overall peripheral fat storage. It is often used in combination with thigh measurements for lower body composition.",
-    "male": {
-        "20-29": { "low": 6, "healthy": 12, "overweight": 20, "obese": 30 },
-        "30-39": { "low": 7, "healthy": 14, "overweight": 22, "obese": 32 }
-    },
-    "female": {
-        "20-29": { "low": 10, "healthy": 18, "overweight": 28, "obese": 38 },
-        "30-39": { "low": 12, "healthy": 20, "overweight": 30, "obese": 40 }
-    }
-    },
-    "suprailiac": {
-    "description": "Suprailiac skinfold measures fat just above the hip bone. This is an important site for evaluating central adiposity and tracking fat loss in the abdominal region.",
-    "male": {
-        "20-29": { "low": 6, "healthy": 12, "overweight": 20, "obese": 30 },
-        "30-39": { "low": 7, "healthy": 14, "overweight": 22, "obese": 32 }
-    },
-    "female": {
-        "20-29": { "low": 10, "healthy": 18, "overweight": 28, "obese": 38 },
-        "30-39": { "low": 12, "healthy": 20, "overweight": 30, "obese": 40 }
-    }
-    },
-  "sit_and_reach_cm": {
-    "description": "Measures hamstring and lower back flexibility. A higher score indicates better flexibility, which can reduce risk of injuries and improve performance in sports requiring bending and reaching.",
-    "male": {
-      "20-29": { "low": 0, "healthy": 15, "overweight": 25, "obese": 35 },
-      "30-39": { "low": 0, "healthy": 14, "overweight": 24, "obese": 34 },
-      "40-49": { "low": 0, "healthy": 13, "overweight": 23, "obese": 33 },
-      "50-59": { "low": 0, "healthy": 12, "overweight": 22, "obese": 32 }
-    },
-    "female": {
-      "20-29": { "low": 0, "healthy": 18, "overweight": 28, "obese": 38 },
-      "30-39": { "low": 0, "healthy": 17, "overweight": 27, "obese": 37 },
-      "40-49": { "low": 0, "healthy": 16, "overweight": 26, "obese": 36 },
-      "50-59": { "low": 0, "healthy": 15, "overweight": 25, "obese": 35 }
-    }
-  },
-  "hand_dynamometer_kg": {
-    "description": "Assesses grip strength, which is correlated with overall muscular strength and functional capacity. Important for daily tasks and upper body strength evaluation.",
-    "male": {
-      "20-29": { "low": 20, "healthy": 40, "overweight": 55, "obese": 70 },
-      "30-39": { "low": 19, "healthy": 38, "overweight": 53, "obese": 68 }
-    },
-    "female": {
-      "20-29": { "low": 15, "healthy": 30, "overweight": 45, "obese": 60 },
-      "30-39": { "low": 14, "healthy": 28, "overweight": 43, "obese": 58 }
-    }
-  },
-  "plank_hold_seconds": {
-    "description": "Evaluates core endurance and stability. A longer hold time indicates stronger core muscles, which are essential for posture, balance, and injury prevention.",
-    "male": { "20-29": { "poor": 0, "average": 60, "good": 120, "excellent": 180 } },
-    "female": { "20-29": { "poor": 0, "average": 45, "good": 90, "excellent": 150 } }
-  },
-  "wall_sit_seconds": {
-    "description": "The wall sit exercise assesses lower body muscular endurance, particularly targeting the quadriceps, glutes, and calves. Sustaining the position for longer durations indicates greater muscular endurance and stability, which are essential for posture, functional movements, and injury prevention in daily activities and sports.",
-    "male": { "20-29": { "poor": 0, "average": 45, "good": 90, "excellent": 150 } },
-    "female": { "20-29": { "poor": 0, "average": 35, "good": 70, "excellent": 120 } }
-  },
-  "balance_test_seconds": {
-    "description": "This test evaluates an individual's static balance and neuromuscular control. Better balance is critical for athletic performance, fall prevention, and overall functional mobility. Longer times indicate improved proprioception and postural stability.",
-    "male": { "20-29": { "poor": 0, "average": 20, "good": 40, "excellent": 60 } },
-    "female": { "20-29": { "poor": 0, "average": 15, "good": 30, "excellent": 50 } }
-  },
-  "push_ups_test": {
-    "description": "The push-up test measures upper body muscular endurance, primarily targeting the chest, shoulders, and triceps. Higher repetition counts reflect greater muscular stamina and functional upper body strength, which are essential for daily activities and athletic performance.",
-    "male": { "20-29": { "poor": 0, "average": 15, "good": 30, "excellent": 50 } },
-    "female": { "20-29": { "poor": 0, "average": 10, "good": 20, "excellent": 35 } }
-  },
-  "sit_ups_test": {
-    "description": "This test evaluates abdominal and core muscular endurance. A higher number of sit-ups performed indicates stronger core muscles, contributing to better posture, spinal support, and overall functional performance in daily tasks and sports.",
-    "male": { "20-29": { "poor": 0, "average": 20, "good": 35, "excellent": 50 } },
-    "female": { "20-29": { "poor": 0, "average": 15, "good": 30, "excellent": 45 } }
-  },
-  "pull_ups_test": {
-    "description": "Pull-ups assess upper body pulling strength and endurance, particularly targeting the back, biceps, and forearms. Higher repetitions demonstrate superior upper body strength and functional capacity for lifting and pulling activities.",
-    "male": { "20-29": { "poor": 0, "average": 5, "good": 10, "excellent": 15 } },
-    "female": { "20-29": { "poor": 0, "average": 1, "good": 5, "excellent": 10 } }
-  },
-  "bench_press_1rm_kg": {
-    "description": "The one-repetition maximum (1RM) bench press measures maximal upper body strength, focusing on the chest, shoulders, and triceps. Higher 1RM values indicate greater muscular power, which can be useful for athletic performance, strength training programming, and functional upper body tasks.",
-    "male": { "20-29": { "poor": 40, "average": 70, "good": 100, "excellent": 130 } },
-    "female": { "20-29": { "poor": 20, "average": 40, "good": 60, "excellent": 80 } }
-  },
-  "leg_press_1rm_kg": {
-    "description": "The leg press 1RM evaluates maximal lower body strength, primarily targeting the quadriceps, glutes, and hamstrings. Higher values reflect superior leg power and strength, essential for athletic activities, functional movements, and lower body conditioning.",
-    "male": { "20-29": { "poor": 80, "average": 150, "good": 220, "excellent": 300 } },
-    "female": { "20-29": { "poor": 50, "average": 100, "good": 160, "excellent": 220 } }
+  "female": {
+    "20-29": { "low": 55, "healthy": 65, "overweight": 75, "high": 85 },
+    "30-39": { "low": 57, "healthy": 67, "overweight": 77, "high": 87 },
+    "40-49": { "low": 59, "healthy": 69, "overweight": 79, "high": 89 },
+    "50-59": { "low": 61, "healthy": 71, "overweight": 81, "high": 91 },
+    "60-69": { "low": 63, "healthy": 73, "overweight": 83, "high": 93 },
+    "70-80": { "low": 65, "healthy": 75, "overweight": 85, "high": 95 }
   }
+},
+"max_hr": {
+  "description": "Maximum heart rate (Max HR) is the highest number of beats per minute your heart can achieve during intense exercise. It is a key indicator for setting training zones, evaluating cardiovascular capacity, and safely guiding high-intensity workouts. Monitoring Max HR allows trainers to optimize performance while minimizing the risk of overexertion or cardiac stress.",
+  "male": {
+    "20-29": { "low": 180, "healthy": 190, "high": 200 },
+    "30-39": { "low": 175, "healthy": 185, "high": 195 },
+    "40-49": { "low": 168, "healthy": 178, "high": 188 },
+    "50-59": { "low": 161, "healthy": 171, "high": 181 },
+    "60-69": { "low": 154, "healthy": 164, "high": 174 },
+    "70-80": { "low": 147, "healthy": 157, "high": 167 }
+  },
+  "female": {
+    "20-29": { "low": 175, "healthy": 185, "high": 195 },
+    "30-39": { "low": 170, "healthy": 180, "high": 190 },
+    "40-49": { "low": 163, "healthy": 173, "high": 183 },
+    "50-59": { "low": 156, "healthy": 166, "high": 176 },
+    "60-69": { "low": 149, "healthy": 159, "high": 169 },
+    "70-80": { "low": 142, "healthy": 152, "high": 162 }
+  }
+},
+"vo2max": {
+  "description": "VO2 max measures maximal oxygen uptake and aerobic capacity. Higher values are indicative of superior cardiovascular endurance and overall fitness.",
+  "male": {
+    "20-29": { "poor": 30, "average": 40, "good": 50, "excellent": 60 },
+    "30-39": { "poor": 28, "average": 38, "good": 48, "excellent": 58 },
+    "40-49": { "poor": 26, "average": 36, "good": 46, "excellent": 56 },
+    "50-59": { "poor": 24, "average": 34, "good": 44, "excellent": 54 },
+    "60-69": { "poor": 22, "average": 32, "good": 42, "excellent": 52 },
+    "70-80": { "poor": 20, "average": 30, "good": 40, "excellent": 50 }
+  },
+  "female": {
+    "20-29": { "poor": 25, "average": 35, "good": 45, "excellent": 55 },
+    "30-39": { "poor": 23, "average": 33, "good": 43, "excellent": 53 },
+    "40-49": { "poor": 21, "average": 31, "good": 41, "excellent": 51 },
+    "50-59": { "poor": 19, "average": 29, "good": 39, "excellent": 49 },
+    "60-69": { "poor": 17, "average": 27, "good": 37, "excellent": 47 },
+    "70-80": { "poor": 15, "average": 25, "good": 35, "excellent": 45 }
+  }
+},
+"hrv_ms": {
+  "description": "Heart Rate Variability (HRV) measures the variation in time between consecutive heartbeats. Higher HRV generally indicates better autonomic nervous system function, cardiovascular resilience, and recovery capacity. It is a useful metric for tracking fitness, stress levels, and overall cardiovascular health.",
+  "male": {
+    "20-29": { "low": 20, "healthy": 50, "high": 100 },
+    "30-39": { "low": 18, "healthy": 45, "high": 90 },
+    "40-49": { "low": 16, "healthy": 40, "high": 80 },
+    "50-59": { "low": 14, "healthy": 35, "high": 70 },
+    "60-69": { "low": 12, "healthy": 30, "high": 60 },
+    "70-80": { "low": 10, "healthy": 25, "high": 50 }
+  },
+  "female": {
+    "20-29": { "low": 15, "healthy": 45, "high": 90 },
+    "30-39": { "low": 14, "healthy": 42, "high": 85 },
+    "40-49": { "low": 13, "healthy": 38, "high": 75 },
+    "50-59": { "low": 12, "healthy": 33, "high": 65 },
+    "60-69": { "low": 11, "healthy": 28, "high": 55 },
+    "70-80": { "low": 10, "healthy": 24, "high": 48 }
+  }
+},
+"systolic_bp": {
+  "description": "Systolic blood pressure represents the pressure in the arteries when the heart contracts and pumps blood. Maintaining a healthy systolic blood pressure is critical for reducing the risk of heart disease, stroke, and kidney damage. Consistent monitoring helps guide lifestyle and training interventions for optimal cardiovascular health.",
+  "male": {
+    "20-29": { "low": 90, "healthy": 120, "high": 140 },
+    "30-39": { "low": 95, "healthy": 125, "high": 145 },
+    "40-49": { "low": 95, "healthy": 128, "high": 148 },
+    "50-59": { "low": 95, "healthy": 130, "high": 150 },
+    "60-69": { "low": 95, "healthy": 132, "high": 152 },
+    "70-80": { "low": 95, "healthy": 135, "high": 155 }
+  },
+  "female": {
+    "20-29": { "low": 90, "healthy": 115, "high": 135 },
+    "30-39": { "low": 95, "healthy": 120, "high": 140 },
+    "40-49": { "low": 95, "healthy": 125, "high": 145 },
+    "50-59": { "low": 95, "healthy": 128, "high": 148 },
+    "60-69": { "low": 95, "healthy": 130, "high": 150 },
+    "70-80": { "low": 95, "healthy": 132, "high": 152 }
+  }
+},
+"diastolic_bp": {
+  "description": "Diastolic blood pressure is the pressure in the arteries when the heart is resting between beats. Healthy diastolic values are important to maintain proper blood flow, reduce cardiac strain, and minimize the risk of hypertension-related complications. Monitoring diastolic pressure complements systolic readings for a complete cardiovascular assessment.",
+  "male": {
+    "20-29": { "low": 60, "healthy": 80, "high": 90 },
+    "30-39": { "low": 65, "healthy": 85, "high": 95 },
+    "40-49": { "low": 65, "healthy": 85, "high": 95 },
+    "50-59": { "low": 65, "healthy": 85, "high": 95 },
+    "60-69": { "low": 65, "healthy": 83, "high": 93 },
+    "70-80": { "low": 65, "healthy": 80, "high": 90 }
+  },
+  "female": {
+    "20-29": { "low": 60, "healthy": 75, "high": 85 },
+    "30-39": { "low": 65, "healthy": 80, "high": 90 },
+    "40-49": { "low": 65, "healthy": 83, "high": 93 },
+    "50-59": { "low": 65, "healthy": 85, "high": 95 },
+    "60-69": { "low": 65, "healthy": 83, "high": 93 },
+    "70-80": { "low": 65, "healthy": 80, "high": 90 }
+  }
+},
+"fat_mass": {
+  "description": "Fat mass represents the total weight of all body fat in kilograms or as a percentage of body weight. Maintaining an optimal fat mass is crucial for metabolic health, cardiovascular risk reduction, and physical performance. Excess fat mass can increase the risk of chronic conditions such as diabetes, hypertension, and heart disease, while too little fat can impair hormonal balance and energy reserves.",
+  "male": {
+    "20-29": { "low": 8, "healthy": 15, "overweight": 25, "high": 30 },
+    "30-39": { "low": 10, "healthy": 18, "overweight": 28, "high": 33 },
+    "40-49": { "low": 12, "healthy": 20, "overweight": 30, "high": 35 },
+    "50-59": { "low": 13, "healthy": 22, "overweight": 32, "high": 36 },
+    "60-69": { "low": 14, "healthy": 23, "overweight": 33, "high": 37 },
+    "70-80": { "low": 15, "healthy": 24, "overweight": 34, "high": 38 }
+  },
+  "female": {
+    "20-29": { "low": 18, "healthy": 25, "overweight": 35, "high": 40 },
+    "30-39": { "low": 20, "healthy": 28, "overweight": 38, "high": 43 },
+    "40-49": { "low": 22, "healthy": 30, "overweight": 40, "high": 45 },
+    "50-59": { "low": 23, "healthy": 32, "overweight": 42, "high": 47 },
+    "60-69": { "low": 24, "healthy": 33, "overweight": 43, "high": 48 },
+    "70-80": { "low": 25, "healthy": 34, "overweight": 44, "high": 49 }
+  }
+},
+"lean_body_mass": {
+  "description": "Lean body mass is the total weight of the body minus fat, including muscles, bones, water, and organs. Higher lean mass supports strength, endurance, and overall metabolic health. Tracking lean body mass helps trainers optimize strength and conditioning programs while preserving functional capacity.",
+  "male": {
+    "20-29": { "low": 50, "healthy": 65, "high": 80 },
+    "30-39": { "low": 48, "healthy": 63, "high": 78 },
+    "40-49": { "low": 46, "healthy": 61, "high": 76 },
+    "50-59": { "low": 44, "healthy": 59, "high": 74 },
+    "60-69": { "low": 42, "healthy": 57, "high": 72 },
+    "70-80": { "low": 40, "healthy": 55, "high": 70 }
+  },
+  "female": {
+    "20-29": { "low": 35, "healthy": 50, "high": 65 },
+    "30-39": { "low": 33, "healthy": 48, "high": 63 },
+    "40-49": { "low": 31, "healthy": 46, "high": 61 },
+    "50-59": { "low": 29, "healthy": 44, "high": 59 },
+    "60-69": { "low": 27, "healthy": 42, "high": 57 },
+    "70-80": { "low": 25, "healthy": 40, "high": 55 }
+  }
+},
+"fev_1": {
+  "description": "Forced Expiratory Volume in 1 second (FEV1) measures lung function by determining the volume of air a person can forcibly exhale in one second. It is a key indicator of respiratory health and pulmonary capacity. Higher FEV1 values correlate with stronger lung function and better aerobic performance.",
+  "male": {
+    "20-29": { "low": 3.0, "healthy": 4.0, "high": 5.0 },
+    "30-39": { "low": 2.8, "healthy": 3.8, "high": 4.8 },
+    "40-49": { "low": 2.6, "healthy": 3.6, "high": 4.6 },
+    "50-59": { "low": 2.4, "healthy": 3.4, "high": 4.4 },
+    "60-69": { "low": 2.2, "healthy": 3.2, "high": 4.2 },
+    "70-80": { "low": 2.0, "healthy": 3.0, "high": 4.0 }
+  },
+  "female": {
+    "20-29": { "low": 2.0, "healthy": 3.0, "high": 4.0 },
+    "30-39": { "low": 1.8, "healthy": 2.8, "high": 3.8 },
+    "40-49": { "low": 1.6, "healthy": 2.6, "high": 3.6 },
+    "50-59": { "low": 1.4, "healthy": 2.4, "high": 3.4 },
+    "60-69": { "low": 1.2, "healthy": 2.2, "high": 3.2 },
+    "70-80": { "low": 1.0, "healthy": 2.0, "high": 3.0 }
+  }
+},
+"fvc_ratio": {
+  "description": "The FVC ratio (FEV1/FVC) assesses the proportion of air exhaled in the first second relative to the total forced vital capacity. It is used to identify obstructive or restrictive lung conditions. A healthy FVC ratio indicates efficient lung function, which is vital for endurance and overall cardiovascular health.",
+  "male": {
+    "20-29": { "low": 0.7, "healthy": 0.8, "high": 0.9 },
+    "30-39": { "low": 0.68, "healthy": 0.78, "high": 0.88 },
+    "40-49": { "low": 0.66, "healthy": 0.76, "high": 0.86 },
+    "50-59": { "low": 0.64, "healthy": 0.74, "high": 0.84 },
+    "60-69": { "low": 0.62, "healthy": 0.72, "high": 0.82 },
+    "70-80": { "low": 0.60, "healthy": 0.70, "high": 0.80 }
+  },
+  "female": {
+    "20-29": { "low": 0.7, "healthy": 0.8, "high": 0.9 },
+    "30-39": { "low": 0.68, "healthy": 0.78, "high": 0.88 },
+    "40-49": { "low": 0.66, "healthy": 0.76, "high": 0.86 },
+    "50-59": { "low": 0.64, "healthy": 0.74, "high": 0.84 },
+    "60-69": { "low": 0.62, "healthy": 0.72, "high": 0.82 },
+    "70-80": { "low": 0.60, "healthy": 0.70, "high": 0.80 }
+  }
+},
+"o2_saturation": {
+  "description": "Oxygen saturation (SpO2) measures the percentage of hemoglobin in the blood that is saturated with oxygen. Maintaining healthy oxygen levels is critical for cardiovascular performance, cellular metabolism, and overall energy levels. Values below the healthy range can indicate respiratory or circulatory issues requiring attention.",
+  "male": {
+    "20-29": { "low": 92, "healthy": 96, "high": 100 },
+    "30-39": { "low": 92, "healthy": 95, "high": 100 },
+    "40-49": { "low": 92, "healthy": 95, "high": 100 },
+    "50-59": { "low": 91, "healthy": 95, "high": 100 },
+    "60-69": { "low": 91, "healthy": 94, "high": 100 },
+    "70-80": { "low": 90, "healthy": 94, "high": 100 }
+  },
+  "female": {
+    "20-29": { "low": 92, "healthy": 96, "high": 100 },
+    "30-39": { "low": 92, "healthy": 95, "high": 100 },
+    "40-49": { "low": 92, "healthy": 95, "high": 100 },
+    "50-59": { "low": 91, "healthy": 95, "high": 100 },
+    "60-69": { "low": 91, "healthy": 94, "high": 100 },
+    "70-80": { "low": 90, "healthy": 94, "high": 100 }
+  }
+},
+"weight_kg": {
+  "description": "Body weight in kilograms is a basic metric for tracking overall health and fitness. It helps trainers assess progress, guide nutrition, and evaluate the effectiveness of training programs.",
+  "male": {
+    "20-29": { "low": 55, "healthy": 70, "high": 85, "obese": 100 },
+    "30-39": { "low": 60, "healthy": 75, "high": 90, "obese": 105 },
+    "40-49": { "low": 60, "healthy": 77, "high": 92, "obese": 107 },
+    "50-59": { "low": 60, "healthy": 78, "high": 93, "obese": 108 },
+    "60-69": { "low": 58, "healthy": 76, "high": 91, "obese": 106 },
+    "70-80": { "low": 55, "healthy": 73, "high": 88, "obese": 103 }
+  },
+  "female": {
+    "20-29": { "low": 45, "healthy": 60, "high": 75, "obese": 90 },
+    "30-39": { "low": 50, "healthy": 65, "high": 80, "obese": 95 },
+    "40-49": { "low": 50, "healthy": 67, "high": 82, "obese": 97 },
+    "50-59": { "low": 50, "healthy": 68, "high": 83, "obese": 98 },
+    "60-69": { "low": 48, "healthy": 66, "high": 81, "obese": 96 },
+    "70-80": { "low": 45, "healthy": 63, "high": 78, "obese": 93 }
+  }
+},
+"height_cm": {
+  "description": "Height in centimeters is a fundamental anthropometric measure. While it doesn't change in adulthood, it is used alongside weight to calculate BMI and other body composition metrics.",
+  "male": {
+    "20-39": { "below average": 160, "average": 175, "above average": 190 },
+    "40-49": { "below average": 160, "average": 175, "above average": 190 },
+    "50-59": { "below average": 159, "average": 174, "above average": 189 },
+    "60-69": { "below average": 158, "average": 173, "above average": 188 },
+    "70-80": { "below average": 157, "average": 172, "above average": 187 }
+  },
+  "female": {
+    "20-39": { "below average": 150, "average": 162, "above average": 175 },
+    "40-49": { "below average": 150, "average": 162, "above average": 175 },
+    "50-59": { "below average": 149, "average": 161, "above average": 174 },
+    "60-69": { "below average": 148, "average": 160, "above average": 173 },
+    "70-80": { "below average": 147, "average": 159, "above average": 172 }
+  }
+},
+"bmi": {
+  "description": "Body Mass Index (BMI) is calculated from weight and height to categorize individuals into underweight, healthy weight, overweight, or obese. It is a quick screening tool, though it does not directly measure body fat.",
+  "male": {
+    "20-29": { "underweight": 18.5, "healthy": 24.9, "overweight": 29.9, "obese": 35 },
+    "30-39": { "underweight": 18.5, "healthy": 24.9, "overweight": 29.9, "obese": 35 },
+    "40-49": { "underweight": 18.5, "healthy": 24.9, "overweight": 29.9, "obese": 35 },
+    "50-59": { "underweight": 18.5, "healthy": 24.9, "overweight": 29.9, "obese": 35 },
+    "60-69": { "underweight": 18.5, "healthy": 24.9, "overweight": 29.9, "obese": 35 },
+    "70-80": { "underweight": 18.5, "healthy": 24.9, "overweight": 29.9, "obese": 35 }
+  },
+  "female": {
+    "20-29": { "underweight": 18.5, "healthy": 24.9, "overweight": 29.9, "obese": 35 },
+    "30-39": { "underweight": 18.5, "healthy": 24.9, "overweight": 29.9, "obese": 35 },
+    "40-49": { "underweight": 18.5, "healthy": 24.9, "overweight": 29.9, "obese": 35 },
+    "50-59": { "underweight": 18.5, "healthy": 24.9, "overweight": 29.9, "obese": 35 },
+    "60-69": { "underweight": 18.5, "healthy": 24.9, "overweight": 29.9, "obese": 35 },
+    "70-80": { "underweight": 18.5, "healthy": 24.9, "overweight": 29.9, "obese": 35 }
+  }
+},
+"waist_cm": {
+  "description": "Waist circumference is a measure of abdominal fat, an important predictor of cardiovascular risk and metabolic health. Lower waist measurements generally indicate better health outcomes.",
+  "male": {
+    "20-29": { "low": 70, "healthy": 85, "high": 100, "obese": 110 },
+    "30-39": { "low": 72, "healthy": 87, "high": 102, "obese": 112 },
+    "40-49": { "low": 74, "healthy": 89, "high": 104, "obese": 114 },
+    "50-59": { "low": 76, "healthy": 91, "high": 106, "obese": 116 },
+    "60-69": { "low": 77, "healthy": 92, "high": 107, "obese": 117 },
+    "70-80": { "low": 78, "healthy": 93, "high": 108, "obese": 118 }
+  },
+  "female": {
+    "20-29": { "low": 60, "healthy": 75, "high": 90, "obese": 100 },
+    "30-39": { "low": 62, "healthy": 77, "high": 92, "obese": 102 },
+    "40-49": { "low": 64, "healthy": 79, "high": 94, "obese": 104 },
+    "50-59": { "low": 66, "healthy": 81, "high": 96, "obese": 106 },
+    "60-69": { "low": 68, "healthy": 83, "high": 98, "obese": 108 },
+    "70-80": { "low": 69, "healthy": 84, "high": 99, "obese": 109 }
+  }
+},
+"hip_cm": {
+  "description": "Hip circumference is used together with waist measurement to calculate waist-to-hip ratio, a marker for fat distribution and risk of metabolic disease.",
+  "male": {
+    "20-29": { "low": 85, "healthy": 95, "high": 105, "obese": 115 },
+    "30-39": { "low": 87, "healthy": 97, "high": 107, "obese": 117 },
+    "40-49": { "low": 88, "healthy": 98, "high": 108, "obese": 118 },
+    "50-59": { "low": 89, "healthy": 99, "high": 109, "obese": 119 },
+    "60-69": { "low": 90, "healthy": 100, "high": 110, "obese": 120 },
+    "70-80": { "low": 90, "healthy": 100, "high": 110, "obese": 120 }
+  },
+  "female": {
+    "20-29": { "low": 90, "healthy": 100, "high": 110, "obese": 120 },
+    "30-39": { "low": 92, "healthy": 102, "high": 112, "obese": 122 },
+    "40-49": { "low": 94, "healthy": 104, "high": 114, "obese": 124 },
+    "50-59": { "low": 96, "healthy": 106, "high": 116, "obese": 126 },
+    "60-69": { "low": 97, "healthy": 107, "high": 117, "obese": 127 },
+    "70-80": { "low": 98, "healthy": 108, "high": 118, "obese": 128 }
+  }
+},
+"waist_to_height_ratio": {
+  "description": "The waist-to-height ratio is calculated as waist circumference divided by height. It is a strong predictor of cardiovascular risk and helps assess central obesity more accurately than BMI alone.",
+  "male": {
+    "20-29": { "low": 0.40, "healthy": 0.50, "high": 0.60, "obese": 0.65 },
+    "30-39": { "low": 0.42, "healthy": 0.52, "high": 0.62, "obese": 0.67 },
+    "40-49": { "low": 0.43, "healthy": 0.53, "high": 0.63, "obese": 0.68 },
+    "50-59": { "low": 0.44, "healthy": 0.54, "high": 0.64, "obese": 0.69 },
+    "60-69": { "low": 0.45, "healthy": 0.55, "high": 0.65, "obese": 0.70 },
+    "70-80": { "low": 0.46, "healthy": 0.56, "high": 0.66, "obese": 0.71 }
+  },
+  "female": {
+    "20-29": { "low": 0.40, "healthy": 0.50, "high": 0.60, "obese": 0.65 },
+    "30-39": { "low": 0.42, "healthy": 0.52, "high": 0.62, "obese": 0.67 },
+    "40-49": { "low": 0.43, "healthy": 0.53, "high": 0.63, "obese": 0.68 },
+    "50-59": { "low": 0.44, "healthy": 0.54, "high": 0.64, "obese": 0.69 },
+    "60-69": { "low": 0.45, "healthy": 0.55, "high": 0.65, "obese": 0.70 },
+    "70-80": { "low": 0.46, "healthy": 0.56, "high": 0.66, "obese": 0.71 }
+  }
+},
+"body_fat_percentage": {
+  "description": "Body fat percentage measures the proportion of fat mass in the body. It is a direct indicator of body composition, helping trainers assess fitness, monitor progress, and reduce health risks associated with excess fat.",
+  "male": {
+    "20-29": { "low": 8, "healthy": 15, "overweight": 25, "obese": 30 },
+    "30-39": { "low": 10, "healthy": 18, "overweight": 28, "obese": 33 },
+    "40-49": { "low": 12, "healthy": 20, "overweight": 30, "obese": 35 },
+    "50-59": { "low": 13, "healthy": 22, "overweight": 32, "obese": 36 },
+    "60-69": { "low": 14, "healthy": 23, "overweight": 33, "obese": 37 },
+    "70-80": { "low": 15, "healthy": 24, "overweight": 34, "obese": 38 }
+  },
+  "female": {
+    "20-29": { "low": 18, "healthy": 25, "overweight": 35, "obese": 40 },
+    "30-39": { "low": 20, "healthy": 28, "overweight": 38, "obese": 43 },
+    "40-49": { "low": 22, "healthy": 30, "overweight": 40, "obese": 45 },
+    "50-59": { "low": 23, "healthy": 32, "overweight": 42, "obese": 47 },
+    "60-69": { "low": 24, "healthy": 33, "overweight": 43, "obese": 48 },
+    "70-80": { "low": 25, "healthy": 34, "overweight": 44, "obese": 49 }
+  }
+},
+"chest": {
+  "description": "Chest skinfold measurement estimates subcutaneous fat in the chest area. This is useful for tracking overall body fat distribution and changes in upper body composition.",
+  "male": {
+    "20-29": { "low": 5, "healthy": 12, "overweight": 20, "obese": 30 },
+    "30-39": { "low": 6, "healthy": 13, "overweight": 22, "obese": 32 },
+    "40-49": { "low": 7, "healthy": 14, "overweight": 24, "obese": 34 },
+    "50-59": { "low": 8, "healthy": 15, "overweight": 26, "obese": 36 },
+    "60-69": { "low": 9, "healthy": 16, "overweight": 28, "obese": 38 },
+    "70-80": { "low": 10, "healthy": 17, "overweight": 30, "obese": 40 }
+  },
+  "female": {
+    "20-29": { "low": 10, "healthy": 18, "overweight": 28, "obese": 38 },
+    "30-39": { "low": 12, "healthy": 20, "overweight": 30, "obese": 40 },
+    "40-49": { "low": 14, "healthy": 22, "overweight": 32, "obese": 42 },
+    "50-59": { "low": 16, "healthy": 24, "overweight": 34, "obese": 44 },
+    "60-69": { "low": 18, "healthy": 26, "overweight": 36, "obese": 46 },
+    "70-80": { "low": 20, "healthy": 28, "overweight": 38, "obese": 48 }
+  }
+},
+"abdomen": {
+  "description": "Abdominal skinfold reflects fat accumulation in the central trunk region, an important indicator for metabolic health and cardiovascular risk.",
+  "male": {
+    "20-29": { "low": 8, "healthy": 15, "overweight": 25, "obese": 35 },
+    "30-39": { "low": 10, "healthy": 17, "overweight": 27, "obese": 37 },
+    "40-49": { "low": 12, "healthy": 19, "overweight": 29, "obese": 39 },
+    "50-59": { "low": 14, "healthy": 21, "overweight": 31, "obese": 41 },
+    "60-69": { "low": 16, "healthy": 23, "overweight": 33, "obese": 43 },
+    "70-80": { "low": 18, "healthy": 25, "overweight": 35, "obese": 45 }
+  },
+  "female": {
+    "20-29": { "low": 12, "healthy": 20, "overweight": 30, "obese": 40 },
+    "30-39": { "low": 14, "healthy": 22, "overweight": 32, "obese": 42 },
+    "40-49": { "low": 16, "healthy": 24, "overweight": 34, "obese": 44 },
+    "50-59": { "low": 18, "healthy": 26, "overweight": 36, "obese": 46 },
+    "60-69": { "low": 20, "healthy": 28, "overweight": 38, "obese": 48 },
+    "70-80": { "low": 22, "healthy": 30, "overweight": 40, "obese": 50 }
+  }
+},
+"thigh": {
+  "description": "Thigh skinfold measures fat in the upper leg. It helps trainers monitor lower body fat distribution and assess muscular development in conjunction with leg strength tests.",
+  "male": {
+    "20-29": { "low": 8, "healthy": 14, "overweight": 22, "obese": 32 },
+    "30-39": { "low": 9, "healthy": 15, "overweight": 24, "obese": 34 },
+    "40-49": { "low": 10, "healthy": 16, "overweight": 26, "obese": 36 },
+    "50-59": { "low": 11, "healthy": 17, "overweight": 28, "obese": 38 },
+    "60-69": { "low": 12, "healthy": 18, "overweight": 30, "obese": 40 },
+    "70-80": { "low": 13, "healthy": 19, "overweight": 32, "obese": 42 }
+  },
+  "female": {
+    "20-29": { "low": 12, "healthy": 20, "overweight": 30, "obese": 40 },
+    "30-39": { "low": 14, "healthy": 22, "overweight": 32, "obese": 42 },
+    "40-49": { "low": 16, "healthy": 24, "overweight": 34, "obese": 44 },
+    "50-59": { "low": 18, "healthy": 26, "overweight": 36, "obese": 46 },
+    "60-69": { "low": 20, "healthy": 28, "overweight": 38, "obese": 48 },
+    "70-80": { "low": 22, "healthy": 30, "overweight": 40, "obese": 50 }
+  }
+},
+"triceps": {
+  "description": "Triceps skinfold indicates fat stored on the back of the arm. This site is commonly used to estimate overall body fat percentage and monitor fat loss progress.",
+  "male": {
+    "20-29": { "low": 5, "healthy": 10, "overweight": 18, "obese": 28 },
+    "30-39": { "low": 6, "healthy": 12, "overweight": 20, "obese": 30 },
+    "40-49": { "low": 7, "healthy": 13, "overweight": 22, "obese": 32 },
+    "50-59": { "low": 8, "healthy": 14, "overweight": 24, "obese": 34 },
+    "60-69": { "low": 9, "healthy": 15, "overweight": 26, "obese": 36 },
+    "70-80": { "low": 10, "healthy": 16, "overweight": 28, "obese": 38 }
+  },
+  "female": {
+    "20-29": { "low": 10, "healthy": 16, "overweight": 26, "obese": 36 },
+    "30-39": { "low": 12, "healthy": 18, "overweight": 28, "obese": 38 },
+    "40-49": { "low": 14, "healthy": 20, "overweight": 30, "obese": 40 },
+    "50-59": { "low": 16, "healthy": 22, "overweight": 32, "obese": 42 },
+    "60-69": { "low": 18, "healthy": 24, "overweight": 34, "obese": 44 },
+    "70-80": { "low": 20, "healthy": 26, "overweight": 36, "obese": 46 }
+  }
+},
+"subscapular": {
+  "description": "Subscapular skinfold measures fat beneath the shoulder blade. It is used to track changes in upper back fat and overall body composition.",
+  "male": {
+    "20-29": { "low": 6, "healthy": 12, "overweight": 20, "obese": 30 },
+    "30-39": { "low": 7, "healthy": 14, "overweight": 22, "obese": 32 },
+    "40-49": { "low": 8, "healthy": 15, "overweight": 24, "obese": 34 },
+    "50-59": { "low": 9, "healthy": 16, "overweight": 26, "obese": 36 },
+    "60-69": { "low": 10, "healthy": 17, "overweight": 28, "obese": 38 },
+    "70-80": { "low": 11, "healthy": 18, "overweight": 30, "obese": 40 }
+  },
+  "female": {
+    "20-29": { "low": 10, "healthy": 18, "overweight": 28, "obese": 38 },
+    "30-39": { "low": 12, "healthy": 20, "overweight": 30, "obese": 40 },
+    "40-49": { "low": 14, "healthy": 22, "overweight": 32, "obese": 42 },
+    "50-59": { "low": 16, "healthy": 24, "overweight": 34, "obese": 44 },
+    "60-69": { "low": 18, "healthy": 26, "overweight": 36, "obese": 46 },
+    "70-80": { "low": 20, "healthy": 28, "overweight": 38, "obese": 48 }
+  }
+},
+"midaxillary": {
+  "description": "Midaxillary skinfold captures fat along the side of the torso. It helps assess trunk fat distribution and can complement other measurements for body composition analysis.",
+  "male": {
+    "20-29": { "low": 6, "healthy": 12, "overweight": 20, "obese": 30 },
+    "30-39": { "low": 7, "healthy": 14, "overweight": 22, "obese": 32 },
+    "40-49": { "low": 8, "healthy": 15, "overweight": 24, "obese": 34 },
+    "50-59": { "low": 9, "healthy": 16, "overweight": 26, "obese": 36 },
+    "60-69": { "low": 10, "healthy": 17, "overweight": 28, "obese": 38 },
+    "70-80": { "low": 11, "healthy": 18, "overweight": 30, "obese": 40 }
+  },
+  "female": {
+    "20-29": { "low": 10, "healthy": 18, "overweight": 28, "obese": 38 },
+    "30-39": { "low": 12, "healthy": 20, "overweight": 30, "obese": 40 },
+    "40-49": { "low": 14, "healthy": 22, "overweight": 32, "obese": 42 },
+    "50-59": { "low": 16, "healthy": 24, "overweight": 34, "obese": 44 },
+    "60-69": { "low": 18, "healthy": 26, "overweight": 36, "obese": 46 },
+    "70-80": { "low": 20, "healthy": 28, "overweight": 38, "obese": 48 }
+  }
+},
+"biceps": {
+  "description": "Biceps skinfold measures subcutaneous fat on the front of the arm. It is useful for monitoring upper arm fat loss and muscle definition progress.",
+  "male": {
+    "20-29": { "low": 5, "healthy": 10, "overweight": 18, "obese": 28 },
+    "30-39": { "low": 6, "healthy": 12, "overweight": 20, "obese": 30 },
+    "40-49": { "low": 7, "healthy": 13, "overweight": 22, "obese": 32 },
+    "50-59": { "low": 8, "healthy": 14, "overweight": 24, "obese": 34 },
+    "60-69": { "low": 9, "healthy": 15, "overweight": 26, "obese": 36 },
+    "70-80": { "low": 10, "healthy": 16, "overweight": 28, "obese": 38 }
+  },
+  "female": {
+    "20-29": { "low": 10, "healthy": 16, "overweight": 26, "obese": 36 },
+    "30-39": { "low": 12, "healthy": 18, "overweight": 28, "obese": 38 },
+    "40-49": { "low": 14, "healthy": 20, "overweight": 30, "obese": 40 },
+    "50-59": { "low": 16, "healthy": 22, "overweight": 32, "obese": 42 },
+    "60-69": { "low": 18, "healthy": 24, "overweight": 34, "obese": 44 },
+    "70-80": { "low": 20, "healthy": 26, "overweight": 36, "obese": 46 }
+  }
+},
+"calf": {
+  "description": "Calf skinfold assesses fat on the lower leg, which can indicate overall peripheral fat storage. It is often used in combination with thigh measurements for lower body composition.",
+  "male": {
+    "20-29": { "low": 6, "healthy": 12, "overweight": 20, "obese": 30 },
+    "30-39": { "low": 7, "healthy": 14, "overweight": 22, "obese": 32 },
+    "40-49": { "low": 8, "healthy": 15, "overweight": 24, "obese": 34 },
+    "50-59": { "low": 9, "healthy": 16, "overweight": 26, "obese": 36 },
+    "60-69": { "low": 10, "healthy": 17, "overweight": 28, "obese": 38 },
+    "70-80": { "low": 11, "healthy": 18, "overweight": 30, "obese": 40 }
+  },
+  "female": {
+    "20-29": { "low": 10, "healthy": 18, "overweight": 28, "obese": 38 },
+    "30-39": { "low": 12, "healthy": 20, "overweight": 30, "obese": 40 },
+    "40-49": { "low": 14, "healthy": 22, "overweight": 32, "obese": 42 },
+    "50-59": { "low": 16, "healthy": 24, "overweight": 34, "obese": 44 },
+    "60-69": { "low": 18, "healthy": 26, "overweight": 36, "obese": 46 },
+    "70-80": { "low": 20, "healthy": 28, "overweight": 38, "obese": 48 }
+  }
+},
+"suprailiac": {
+  "description": "Suprailiac skinfold measures fat just above the hip bone. This is an important site for evaluating central adiposity and tracking fat loss in the abdominal region.",
+  "male": {
+    "20-29": { "low": 6, "healthy": 12, "overweight": 20, "obese": 30 },
+    "30-39": { "low": 7, "healthy": 14, "overweight": 22, "obese": 32 },
+    "40-49": { "low": 8, "healthy": 16, "overweight": 24, "obese": 34 },
+    "50-59": { "low": 10, "healthy": 18, "overweight": 26, "obese": 36 },
+    "60-69": { "low": 12, "healthy": 20, "overweight": 28, "obese": 38 },
+    "70-80": { "low": 14, "healthy": 22, "overweight": 30, "obese": 40 }
+  },
+  "female": {
+    "20-29": { "low": 10, "healthy": 18, "overweight": 28, "obese": 38 },
+    "30-39": { "low": 12, "healthy": 20, "overweight": 30, "obese": 40 },
+    "40-49": { "low": 14, "healthy": 22, "overweight": 32, "obese": 42 },
+    "50-59": { "low": 16, "healthy": 24, "overweight": 34, "obese": 44 },
+    "60-69": { "low": 18, "healthy": 26, "overweight": 36, "obese": 46 },
+    "70-80": { "low": 20, "healthy": 28, "overweight": 38, "obese": 48 }
+  }
+},
+"sit_and_reach_cm": {
+  "description": "Measures hamstring and lower back flexibility. A higher score indicates better flexibility, which can reduce risk of injuries and improve performance in sports requiring bending and reaching.",
+  "male": {
+    "20-29": { "low": 0, "healthy": 15, "overweight": 25, "obese": 35 },
+    "30-39": { "low": 0, "healthy": 14, "overweight": 24, "obese": 34 },
+    "40-49": { "low": 0, "healthy": 13, "overweight": 23, "obese": 33 },
+    "50-59": { "low": 0, "healthy": 12, "overweight": 22, "obese": 32 },
+    "60-69": { "low": 0, "healthy": 11, "overweight": 21, "obese": 31 },
+    "70-80": { "low": 0, "healthy": 10, "overweight": 20, "obese": 30 }
+  },
+  "female": {
+    "20-29": { "low": 0, "healthy": 18, "overweight": 28, "obese": 38 },
+    "30-39": { "low": 0, "healthy": 17, "overweight": 27, "obese": 37 },
+    "40-49": { "low": 0, "healthy": 16, "overweight": 26, "obese": 36 },
+    "50-59": { "low": 0, "healthy": 15, "overweight": 25, "obese": 35 },
+    "60-69": { "low": 0, "healthy": 14, "overweight": 24, "obese": 34 },
+    "70-80": { "low": 0, "healthy": 13, "overweight": 23, "obese": 33 }
+  }
+},
+"hand_dynamometer_kg": {
+  "description": "Assesses grip strength, which is correlated with overall muscular strength and functional capacity. Important for daily tasks and upper body strength evaluation.",
+  "male": {
+    "20-29": { "low": 20, "healthy": 40, "overweight": 55, "obese": 70 },
+    "30-39": { "low": 19, "healthy": 38, "overweight": 53, "obese": 68 },
+    "40-49": { "low": 18, "healthy": 37, "overweight": 52, "obese": 67 },
+    "50-59": { "low": 17, "healthy": 35, "overweight": 50, "obese": 65 },
+    "60-69": { "low": 15, "healthy": 32, "overweight": 47, "obese": 62 },
+    "70-80": { "low": 13, "healthy": 28, "overweight": 43, "obese": 58 }
+  },
+  "female": {
+    "20-29": { "low": 15, "healthy": 30, "overweight": 45, "obese": 60 },
+    "30-39": { "low": 14, "healthy": 28, "overweight": 43, "obese": 58 },
+    "40-49": { "low": 13, "healthy": 27, "overweight": 42, "obese": 57 },
+    "50-59": { "low": 12, "healthy": 25, "overweight": 40, "obese": 55 },
+    "60-69": { "low": 11, "healthy": 23, "overweight": 38, "obese": 53 },
+    "70-80": { "low": 10, "healthy": 20, "overweight": 35, "obese": 50 }
+  }
+},
+"plank_hold_seconds": {
+  "description": "Evaluates core endurance and stability. A longer hold time indicates stronger core muscles, which are essential for posture, balance, and injury prevention.",
+  "male": {
+    "20-29": { "poor": 0, "average": 60, "good": 120, "excellent": 180 },
+    "30-39": { "poor": 0, "average": 55, "good": 110, "excellent": 165 },
+    "40-49": { "poor": 0, "average": 50, "good": 100, "excellent": 150 },
+    "50-59": { "poor": 0, "average": 45, "good": 90, "excellent": 135 },
+    "60-69": { "poor": 0, "average": 40, "good": 80, "excellent": 120 },
+    "70-80": { "poor": 0, "average": 35, "good": 70, "excellent": 105 }
+  },
+  "female": {
+    "20-29": { "poor": 0, "average": 45, "good": 90, "excellent": 150 },
+    "30-39": { "poor": 0, "average": 40, "good": 80, "excellent": 135 },
+    "40-49": { "poor": 0, "average": 35, "good": 70, "excellent": 120 },
+    "50-59": { "poor": 0, "average": 30, "good": 60, "excellent": 105 },
+    "60-69": { "poor": 0, "average": 25, "good": 50, "excellent": 90 },
+    "70-80": { "poor": 0, "average": 20, "good": 40, "excellent": 75 }
+  }
+},
+"wall_sit_seconds": {
+  "description": "The wall sit exercise assesses lower body muscular endurance, particularly targeting the quadriceps, glutes, and calves. Sustaining the position for longer durations indicates greater muscular endurance and stability, which are essential for posture, functional movements, and injury prevention in daily activities and sports.",
+  "male": {
+    "20-29": { "poor": 0, "average": 45, "good": 90, "excellent": 150 },
+    "30-39": { "poor": 0, "average": 40, "good": 80, "excellent": 135 },
+    "40-49": { "poor": 0, "average": 35, "good": 70, "excellent": 120 },
+    "50-59": { "poor": 0, "average": 30, "good": 60, "excellent": 105 },
+    "60-69": { "poor": 0, "average": 25, "good": 50, "excellent": 90 },
+    "70-80": { "poor": 0, "average": 20, "good": 40, "excellent": 75 }
+  },
+  "female": {
+    "20-29": { "poor": 0, "average": 35, "good": 70, "excellent": 120 },
+    "30-39": { "poor": 0, "average": 30, "good": 60, "excellent": 105 },
+    "40-49": { "poor": 0, "average": 25, "good": 50, "excellent": 90 },
+    "50-59": { "poor": 0, "average": 20, "good": 40, "excellent": 75 },
+    "60-69": { "poor": 0, "average": 15, "good": 30, "excellent": 60 },
+    "70-80": { "poor": 0, "average": 12, "good": 25, "excellent": 50 }
+  }
+}, 
+"balance_test_seconds": {
+  "description": "This test evaluates an individual's static balance and neuromuscular control. Better balance is critical for athletic performance, fall prevention, and overall functional mobility. Longer times indicate improved proprioception and postural stability.",
+  "male": {
+    "20-29": { "poor": 0, "average": 20, "good": 40, "excellent": 60 },
+    "30-39": { "poor": 0, "average": 18, "good": 36, "excellent": 55 },
+    "40-49": { "poor": 0, "average": 16, "good": 32, "excellent": 50 },
+    "50-59": { "poor": 0, "average": 14, "good": 28, "excellent": 45 },
+    "60-69": { "poor": 0, "average": 12, "good": 24, "excellent": 40 },
+    "70-80": { "poor": 0, "average": 10, "good": 20, "excellent": 35 }
+  },
+  "female": {
+    "20-29": { "poor": 0, "average": 15, "good": 30, "excellent": 50 },
+    "30-39": { "poor": 0, "average": 13, "good": 26, "excellent": 45 },
+    "40-49": { "poor": 0, "average": 11, "good": 22, "excellent": 40 },
+    "50-59": { "poor": 0, "average": 9, "good": 18, "excellent": 35 },
+    "60-69": { "poor": 0, "average": 7, "good": 14, "excellent": 30 },
+    "70-80": { "poor": 0, "average": 5, "good": 10, "excellent": 25 }
+  }
+}, 
+"push_ups_test": {
+  "description": "The push-up test measures upper body muscular endurance, primarily targeting the chest, shoulders, and triceps. Higher repetition counts reflect greater muscular stamina and functional upper body strength, which are essential for daily activities and athletic performance.",
+  "male": {
+    "20-29": { "poor": 0, "average": 15, "good": 30, "excellent": 50 },
+    "30-39": { "poor": 0, "average": 13, "good": 25, "excellent": 45 },
+    "40-49": { "poor": 0, "average": 11, "good": 20, "excellent": 40 },
+    "50-59": { "poor": 0, "average": 9, "good": 15, "excellent": 35 },
+    "60-69": { "poor": 0, "average": 7, "good": 12, "excellent": 30 },
+    "70-80": { "poor": 0, "average": 5, "good": 10, "excellent": 25 }
+  },
+  "female": {
+    "20-29": { "poor": 0, "average": 10, "good": 20, "excellent": 35 },
+    "30-39": { "poor": 0, "average": 8, "good": 16, "excellent": 30 },
+    "40-49": { "poor": 0, "average": 6, "good": 12, "excellent": 25 },
+    "50-59": { "poor": 0, "average": 5, "good": 10, "excellent": 20 },
+    "60-69": { "poor": 0, "average": 4, "good": 8, "excellent": 15 },
+    "70-80": { "poor": 0, "average": 3, "good": 6, "excellent": 12 }
+  }
+},
+"sit_ups_test": {
+  "description": "This test evaluates abdominal and core muscular endurance. A higher number of sit-ups performed indicates stronger core muscles, contributing to better posture, spinal support, and overall functional performance in daily tasks and sports.",
+  "male": {
+    "20-29": { "poor": 0, "average": 20, "good": 35, "excellent": 50 },
+    "30-39": { "poor": 0, "average": 18, "good": 32, "excellent": 45 },
+    "40-49": { "poor": 0, "average": 16, "good": 28, "excellent": 40 },
+    "50-59": { "poor": 0, "average": 14, "good": 24, "excellent": 35 },
+    "60-69": { "poor": 0, "average": 12, "good": 20, "excellent": 30 },
+    "70-80": { "poor": 0, "average": 10, "good": 16, "excellent": 25 }
+  },
+  "female": {
+    "20-29": { "poor": 0, "average": 15, "good": 30, "excellent": 45 },
+    "30-39": { "poor": 0, "average": 13, "good": 26, "excellent": 40 },
+    "40-49": { "poor": 0, "average": 11, "good": 22, "excellent": 35 },
+    "50-59": { "poor": 0, "average": 9, "good": 18, "excellent": 30 },
+    "60-69": { "poor": 0, "average": 7, "good": 14, "excellent": 25 },
+    "70-80": { "poor": 0, "average": 5, "good": 10, "excellent": 20 }
+  }
+},
+"pull_ups_test": {
+  "description": "Pull-ups assess upper body pulling strength and endurance, particularly targeting the back, biceps, and forearms. Higher repetitions demonstrate superior upper body strength and functional capacity for lifting and pulling activities.",
+  "male": {
+    "20-29": { "poor": 0, "average": 5, "good": 10, "excellent": 15 },
+    "30-39": { "poor": 0, "average": 4, "good": 8, "excellent": 13 },
+    "40-49": { "poor": 0, "average": 3, "good": 6, "excellent": 11 },
+    "50-59": { "poor": 0, "average": 2, "good": 5, "excellent": 9 },
+    "60-69": { "poor": 0, "average": 1, "good": 3, "excellent": 7 },
+    "70-80": { "poor": 0, "average": 1, "good": 2, "excellent": 5 }
+  },
+  "female": {
+    "20-29": { "poor": 0, "average": 1, "good": 5, "excellent": 10 },
+    "30-39": { "poor": 0, "average": 1, "good": 4, "excellent": 8 },
+    "40-49": { "poor": 0, "average": 0, "good": 3, "excellent": 6 },
+    "50-59": { "poor": 0, "average": 0, "good": 2, "excellent": 5 },
+    "60-69": { "poor": 0, "average": 0, "good": 1, "excellent": 3 },
+    "70-80": { "poor": 0, "average": 0, "good": 1, "excellent": 2 }
+  }
+},
+"bench_press_1rm_kg": {
+  "description": "The one-repetition maximum (1RM) bench press measures maximal upper body strength, focusing on the chest, shoulders, and triceps. Higher 1RM values indicate greater muscular power, which can be useful for athletic performance, strength training programming, and functional upper body tasks.",
+  "male": {
+    "20-29": { "poor": 40, "average": 70, "good": 100, "excellent": 130 },
+    "30-39": { "poor": 38, "average": 65, "good": 95, "excellent": 125 },
+    "40-49": { "poor": 35, "average": 60, "good": 90, "excellent": 120 },
+    "50-59": { "poor": 32, "average": 55, "good": 85, "excellent": 110 },
+    "60-69": { "poor": 28, "average": 50, "good": 75, "excellent": 100 },
+    "70-80": { "poor": 25, "average": 45, "good": 65, "excellent": 90 }
+  },
+  "female": {
+    "20-29": { "poor": 20, "average": 40, "good": 60, "excellent": 80 },
+    "30-39": { "poor": 18, "average": 38, "good": 55, "excellent": 75 },
+    "40-49": { "poor": 16, "average": 35, "good": 50, "excellent": 70 },
+    "50-59": { "poor": 14, "average": 32, "good": 45, "excellent": 65 },
+    "60-69": { "poor": 12, "average": 28, "good": 40, "excellent": 60 },
+    "70-80": { "poor": 10, "average": 25, "good": 35, "excellent": 55 }
+  }
+},
+"leg_press_1rm_kg": {
+  "description": "The leg press 1RM evaluates maximal lower body strength, primarily targeting the quadriceps, glutes, and hamstrings. Higher values reflect superior leg power and strength, essential for athletic activities, functional movements, and lower body conditioning.",
+  "male": {
+    "20-29": { "poor": 80, "average": 150, "good": 220, "excellent": 300 },
+    "30-39": { "poor": 75, "average": 145, "good": 210, "excellent": 285 },
+    "40-49": { "poor": 70, "average": 135, "good": 200, "excellent": 270 },
+    "50-59": { "poor": 65, "average": 125, "good": 185, "excellent": 250 },
+    "60-69": { "poor": 60, "average": 115, "good": 170, "excellent": 230 },
+    "70-80": { "poor": 55, "average": 105, "good": 155, "excellent": 210 }
+  },
+  "female": {
+    "20-29": { "poor": 50, "average": 100, "good": 160, "excellent": 220 },
+    "30-39": { "poor": 48, "average": 95, "good": 150, "excellent": 210 },
+    "40-49": { "poor": 45, "average": 90, "good": 140, "excellent": 195 },
+    "50-59": { "poor": 42, "average": 85, "good": 130, "excellent": 180 },
+    "60-69": { "poor": 40, "average": 80, "good": 120, "excellent": 165 },
+    "70-80": { "poor": 38, "average": 75, "good": 110, "excellent": 150 }
+  }
+}
 }

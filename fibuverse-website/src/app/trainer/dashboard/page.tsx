@@ -4,7 +4,8 @@ import { useEffect, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { getTrainerAlerts, getTrainerDashboardMetrics } from "@/api/trainer";
 import { RunCompositeResponse, runCompositeAgentFormData } from "@/api/developer";
-import { Bar } from "react-chartjs-2";
+import { Bell, ChevronLeft, ChevronRight, Calendar, Users, MessageSquare, AlertTriangle, Mail, FileText, ExternalLink } from 'lucide-react';
+
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -103,6 +104,8 @@ export default function TrainerDashboard() {
 
   // Add state for the dropdown
   const [selectedCategory, setSelectedCategory] = useState("Fitness");
+  const [showAlerts, setShowAlerts] = useState(true);
+  const [expandedPapers, setExpandedPapers] = useState<Set<number>>(new Set());
 
   // 1. Trainer setup + alerts + metrics
   useEffect(() => {
@@ -292,230 +295,444 @@ export default function TrainerDashboard() {
       datasets: datasets,
     };
   };
-  const { labels: clientLabels, datasets: clientDatasets } = prepareChartData();
+  const togglePaper = (idx: number) => {
+    setExpandedPapers(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(idx)) {
+        newSet.delete(idx);
+      } else {
+        newSet.add(idx);
+      }
+      return newSet;
+    });
+  };
 
   return (
-  <div className="flex-1 p-4 md:p-8 overflow-auto">
-    <div className="flex flex-col lg:flex-row gap-6 max-w-full">
-      {/* Main dashboard area */}
-      <div className="flex-1 flex flex-col gap-6 min-w-0"> {/* min-w-0 prevents flex overflow */}
-        {/* Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
-          <h1 className="text-2xl md:text-3xl font-bold">Dashboard</h1>
-          <div className="text-sm text-gray-300">
-            Welcome, <strong className="text-white">{trainer.username}</strong>
+<div className="flex-1 p-2 md:p-4 overflow-auto">
+  <div className="flex flex-col lg:flex-row gap-4 max-w-full">
+    {/* Main dashboard area */}
+    <div className="flex-1 flex flex-col gap-4 min-w-0">
+      {/* Header */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-9 bg-gradient-to-br from-yellow-500 to-orange-600 rounded-lg flex items-center justify-center shadow-lg">
+              <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+              </svg>
+            </div>
+            <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight">Dashboard</h1>
+          </div>
+          
+          <div className="hidden sm:flex items-center gap-3 group">
+            <div className="h-0.5 w-24 bg-gradient-to-r from-transparent to-yellow-500/50 group-hover:to-yellow-500 transition-all duration-300"></div>
+            <span className="text-sm font-semibold text-gray-400 tracking-wider uppercase group-hover:text-yellow-400 transition-colors duration-300">
+              FibuVerse
+            </span>
+            <div className="h-0.5 w-24 bg-gradient-to-l from-transparent to-yellow-500/50 group-hover:to-yellow-500 transition-all duration-300"></div>
+          </div>
+          
+          <div className="text-sm text-gray-300 font-medium">
+            Welcome, <strong className="text-white font-bold">{trainer.username}</strong>
+          </div>
+        </div>
+        {/* Metrics */}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+          <div className="bg-gray-800/50 backdrop-blur-sm rounded-xl p-4 border border-gray-700 hover:border-blue-500/50 transition-all">
+            <div className="flex items-start justify-between">
+              <div>
+                <p className="text-xs text-gray-400 mb-1">Total Clients</p>
+                <p className="text-2xl font-bold text-blue-400">
+                  {metrics ? metrics.total_clients : "..."}
+                </p>
+                <p className="text-[10px] text-gray-500 mt-1">Active members</p>
+              </div>
+              <div className="p-2 bg-blue-500/10 rounded-lg">
+                <Users className="w-5 h-5 text-blue-400" />
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-gray-800/50 backdrop-blur-sm rounded-xl p-4 border border-gray-700 hover:border-green-500/50 transition-all">
+            <div className="flex items-start justify-between">
+              <div>
+                <p className="text-xs text-gray-400 mb-1">Today&apos;s Sessions</p>
+                <p className="text-2xl font-bold text-green-400">
+                  {metrics ? metrics.total_workouts_today : "..."}
+                </p>
+                <p className="text-[10px] text-gray-500 mt-1">Completed workouts</p>
+              </div>
+              <div className="p-2 bg-green-500/10 rounded-lg">
+                <Calendar className="w-5 h-5 text-green-400" />
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-gray-800/50 backdrop-blur-sm rounded-xl p-4 border border-gray-700 hover:border-orange-500/50 transition-all">
+            <div className="flex items-start justify-between">
+              <div>
+                <p className="text-xs text-gray-400 mb-1">New Messages</p>
+                <p className="text-2xl font-bold text-orange-400">0</p>
+                <p className="text-[10px] text-gray-500 mt-1">Unread conversations</p>
+              </div>
+              <div className="p-2 bg-orange-500/10 rounded-lg">
+                <MessageSquare className="w-5 h-5 text-orange-400" />
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-gray-800/50 backdrop-blur-sm rounded-xl p-4 border border-gray-700 hover:border-purple-500/50 transition-all">
+            <div className="flex items-start justify-between">
+              <div>
+                <p className="text-xs text-gray-400 mb-1">Pending Client Requests</p>
+                <p className="text-2xl font-bold text-purple-400">0</p>
+                <p className="text-[10px] text-gray-500 mt-1">Need attention</p>
+              </div>
+              <div className="p-2 bg-purple-500/10 rounded-lg">
+                <AlertTriangle className="w-5 h-5 text-purple-400" />
+              </div>
+            </div>
           </div>
         </div>
 
-        {/* Metrics */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          <div className="bg-gray-800 p-4 rounded-lg shadow flex flex-col items-center">
-            <h2 className="font-semibold text-base mb-2">Total Clients</h2>
-            <p className="text-3xl font-bold text-blue-500">
-              {metrics ? metrics.total_clients : "Loading..."}
-            </p>
+        {/* At-Risk Clients - Priority Section */}
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-4">
+          <div className="lg:col-span-3 bg-gradient-to-r from-red-900/20 to-orange-900/20 backdrop-blur-sm rounded-xl p-4 border border-red-500/30">
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center gap-2">
+                <AlertTriangle className="w-5 h-5 text-red-400" />
+                <h2 className="text-sm font-semibold text-red-400">Clients Needing Attention</h2>
+                <span className="text-[9px] px-2 py-0.5 rounded-full bg-yellow-500/20 text-yellow-400 ml-2">
+                  Coming Soon
+                </span>
+              </div>
+              <button className="text-xs text-gray-400 hover:text-white flex items-center gap-1" disabled>
+                View All <ChevronRight className="w-3 h-3" />
+              </button>
+            </div>
+            
+            <div className="bg-gray-800/30 rounded-lg p-8 border-2 border-dashed border-gray-700 text-center">
+              <AlertTriangle className="w-12 h-12 text-gray-600 mx-auto mb-3" />
+              <p className="text-sm font-medium text-gray-400 mb-1">At-Risk Client Detection</p>
+              <p className="text-xs text-gray-500 max-w-md mx-auto">
+                This feature will automatically identify clients who need attention based on activity patterns, missed sessions, and engagement metrics.
+              </p>
+              <div className="mt-4 inline-flex items-center gap-2 text-[10px] text-gray-600">
+                <span className="w-2 h-2 bg-yellow-500 rounded-full animate-pulse"></span>
+                Work in Progress
+              </div>
+            </div>
           </div>
 
-          <div className="bg-gray-800 p-4 rounded-lg shadow flex flex-col items-center">
-            <h2 className="font-semibold text-base mb-2">Today&apos;s Client Sessions</h2>
-            <p className="text-3xl font-bold text-blue-500">
-              {metrics ? metrics.total_workouts_today : "Loading..."}
-            </p>
-          </div>
-
-          <div className="bg-gray-800 p-4 rounded-lg shadow flex flex-col items-center">
-            <h2 className="font-semibold text-base mb-2">Nutrition</h2>
-            <p className="text-sm">Track and suggest nutrition plans.</p>
+          <div className="lg:col-span-1 bg-gray-800/50 backdrop-blur-sm rounded-xl p-4 border border-gray-700">
+            <div className="flex items-center gap-2 mb-3">
+              <h2 className="text-sm font-semibold">Quick Actions</h2>
+              <span className="text-[9px] px-2 py-0.5 rounded-full bg-yellow-500/20 text-yellow-400">
+                Coming Soon
+              </span>
+            </div>
+            
+            <div className="grid grid-cols-2 lg:grid-cols-1 gap-2">
+              <button className="p-3 bg-gray-800/50 hover:bg-gray-700/50 border border-gray-700 rounded-lg transition-colors text-left">
+                <div className="flex items-center gap-2 mb-1">
+                  <Mail className="w-4 h-4 text-blue-400" />
+                  <p className="text-xs font-medium">Bulk Message</p>
+                </div>
+                <p className="text-[9px] text-gray-400">Send a message to multiple clients</p>
+              </button>
+              <button className="p-3 bg-gray-800/50 hover:bg-gray-700/50 border border-gray-700 rounded-lg transition-colors text-left">
+                <div className="flex items-center gap-2 mb-1">
+                  <Users className="w-4 h-4 text-green-400" />
+                  <p className="text-xs font-medium">Add Client</p>
+                </div>
+                <p className="text-[9px] text-gray-400">New onboarding</p>
+              </button>
+              <button className="p-3 bg-gray-800/50 hover:bg-gray-700/50 border border-gray-700 rounded-lg transition-colors text-left">
+                <div className="flex items-center gap-2 mb-1">
+                  <Calendar className="w-4 h-4 text-purple-400" />
+                  <p className="text-xs font-medium">Check-In Request</p>
+                </div>
+                <p className="text-[9px] text-gray-400">Request progress updates from clients</p>
+              </button>
+              <button className="p-3 bg-gray-800/50 hover:bg-gray-700/50 border border-gray-700 rounded-lg transition-colors text-left">
+                <div className="flex items-center gap-2 mb-1">
+                  <FileText className="w-4 h-4 text-orange-400" />
+                  <p className="text-xs font-medium">Generate Report</p>
+                </div>
+                <p className="text-[9px] text-gray-400">Create client progress reports</p>
+              </button>
+            </div>
           </div>
         </div>
 
         {/* Graph + Articles side by side */}
-        <div className="flex flex-col xl:flex-row gap-6 min-w-0">
-          <div className="flex-1 bg-gray-800 p-4 md:p-6 rounded-lg shadow min-w-0">
-            <h2 className="text-lg md:text-xl font-semibold mb-4">Client Activity</h2>
-            <div className="flex space-x-2 md:space-x-4 mb-4 overflow-x-auto">
-              <button
-                onClick={() => setActiveTab("workouts")}
-                className={`px-3 md:px-4 py-2 rounded text-sm md:text-base whitespace-nowrap ${
-                  activeTab === "workouts" ? "bg-blue-600 text-white" : "bg-gray-700 text-gray-300"
-                }`}
-              >
-                Workouts
-              </button>
-              <button
-                onClick={() => setActiveTab("calories")}
-                className={`px-3 md:px-4 py-2 rounded text-sm md:text-base whitespace-nowrap ${
-                  activeTab === "calories" ? "bg-orange-600 text-white" : "bg-gray-700 text-gray-300"
-                }`}
-              >
-                Calories
-              </button>
-            </div>
-            <div className="w-full h-[300px] md:h-[400px] lg:h-[500px] bg-gray-900 p-2 md:p-4 rounded shadow">
-              <Bar
-                data={{
-                  labels: clientLabels.length ? clientLabels : ["No Data"],
-                  datasets: clientDatasets.length
-                    ? clientDatasets
-                    : [
-                        {
-                          label: "No Data",
-                          data: [0],
-                          backgroundColor: "rgba(200,200,200,0.3)",
-                        },
-                      ],
+        <div className="flex flex-col lg:flex-row gap-3 min-w-0">
+
+        {/* Research Papers */}
+        <div className="bg-gray-800/50 backdrop-blur-sm rounded-xl p-4 border border-gray-700">
+          {/* Header & Filter */}
+          <div className="flex items-center justify-between mb-3">
+            <h2 className="text-sm font-semibold flex items-center gap-2">
+              <FileText className="w-4 h-4 text-purple-400" />
+              FibuScholar&apos;s Latest Finds
+            </h2>
+            <div className="flex items-center gap-2">
+              <label className="text-xs text-gray-400">Topic:</label>
+              <select
+                value={selectedCategory}
+                onChange={(e) => {
+                  const value = e.target.value;
+                  setSelectedCategory(value);
+                  setExpandedPapers(new Set());
+                  runResearchWorkflow(value);
                 }}
-                options={{
-                  maintainAspectRatio: false,
-                  responsive: true,
-                  plugins: { legend: { position: "top" } },
-                  scales: {
-                    x: { title: { display: true, text: "Date" } },
-                    y: {
-                      title: {
-                        display: true,
-                        text: activeTab === "workouts" ? "Workouts" : "Calories",
-                      },
-                      beginAtZero: true,
-                    },
-                  },
-                }}
-              />
+                className="bg-gray-700/50 text-white px-3 py-1 rounded-lg border border-gray-600 text-xs hover:bg-gray-700 transition-colors"
+              >
+                <option value="Fitness">Fitness</option>
+                <option value="Nutrition">Nutrition</option>
+                <option value="Cardio">Cardio</option>
+              </select>
             </div>
           </div>
 
-          {/* Research Papers */}
-          <div className="flex-1 bg-gray-800 p-4 md:p-6 rounded-lg shadow flex flex-col min-w-0">
-            <div className="flex flex-col gap-4 mb-4">
-              <h2 className="text-lg font-semibold">FibuScholar&apos;s Latest Finds</h2>
-              <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2">
-                <label className="text-sm font-semibold whitespace-nowrap">Topic:</label>
-                <select
-                  value={selectedCategory}
-                  onChange={(e) => {
-                    const value = e.target.value;
-                    setSelectedCategory(value);
-                    runResearchWorkflow(value);
-                  }}
-                  className="w-full sm:w-auto bg-gray-700 text-white px-4 py-2 rounded border border-gray-600 text-sm md:text-base"
-                >
-                  <option value="Fitness">Fitness</option>
-                  <option value="Nutrition">Nutrition</option>
-                  <option value="Cardio">Cardio</option>
-                </select>
+          {/* Papers List */}
+          <div className="grid md:grid-cols-3 gap-3">
+            {running ? (
+              <div className="col-span-3 bg-gray-900/50 rounded-lg p-8 text-center">
+                <div className="w-8 h-8 border-2 border-purple-400 border-t-transparent rounded-full animate-spin mx-auto mb-2"></div>
+                <p className="text-gray-400 text-xs">Searching for latest research papers...</p>
               </div>
-            </div>
-
-            <div className="space-y-4 overflow-auto min-h-[300px] md:min-h-[400px] lg:min-h-[500px]">
-              {running ? (
-                <p className="text-gray-400">Searching web for papers…</p>
-              ) : papers.length === 0 ? (
-                <p className="text-gray-400">No papers found.</p>
-              ) : (
-                papers.slice(0, 3).map((paper, idx) => (
-                  <div key={idx} className="bg-gray-900 p-4 rounded-lg">
-                    <h3 className="text-white font-bold text-sm break-words">{paper.title}</h3>
-                    <p className="text-gray-400 text-xs">
+            ) : papers.length === 0 ? (
+              <div className="col-span-3 bg-gray-900/50 rounded-lg p-8 text-center">
+                <FileText className="w-8 h-8 text-gray-600 mx-auto mb-2" />
+                <p className="text-gray-400 text-xs">No papers found for this topic.</p>
+              </div>
+            ) : (
+              papers.slice(0, 3).map((paper, idx) => {
+                const isExpanded = expandedPapers.has(idx);
+                const hasAbstract = paper.abstract && paper.abstract !== "No abstract available.";
+                
+                return (
+                  <div key={idx} className="bg-gray-900/50 rounded-lg p-3 hover:bg-gray-900/70 transition-colors group">
+                    <div className="flex items-start justify-between mb-2">
+                      <span className="text-[9px] px-2 py-0.5 bg-purple-500/20 text-purple-400 rounded-full">
+                        {paper.date}
+                      </span>
+                      <ExternalLink className="w-3 h-3 text-gray-500 group-hover:text-purple-400 transition-colors" />
+                    </div>
+                    
+                    <h3 className="text-xs font-medium mb-2 line-clamp-2 group-hover:text-purple-400 transition-colors">
+                      {paper.title}
+                    </h3>
+                    
+                    <p className="text-[9px] text-gray-500 mb-2">
                       {Array.isArray(paper.authors)
                         ? paper.authors.slice(0, 3).join(", ")
                         : String(paper.authors)}
-                      {Array.isArray(paper.authors) && paper.authors.length > 3 ? " et al." : ""} • {paper.date}
+                      {Array.isArray(paper.authors) && paper.authors.length > 3 ? " et al." : ""}
                     </p>
-                    <p className="text-gray-300 text-xs mt-2 line-clamp-3">
-                      {paper.abstract || "No abstract available."}
-                    </p>
-                    <div className="flex gap-3 mt-2 text-blue-400 text-xs">
+                    
+                    {hasAbstract && (
+                      <div className="mb-2">
+                        <p className={`text-gray-300 text-[10px] ${!isExpanded ? 'line-clamp-2' : ''}`}>
+                          {paper.abstract}
+                        </p>
+                        <button
+                          onClick={() => togglePaper(idx)}
+                          className="text-[9px] text-purple-400 hover:text-purple-300 mt-1 flex items-center gap-0.5"
+                        >
+                          {isExpanded ? 'Show less' : 'Read more'}
+                          <ChevronRight className={`w-2.5 h-2.5 transition-transform ${isExpanded ? 'rotate-90' : ''}`} />
+                        </button>
+                      </div>
+                    )}
+                    
+                    <div className="flex gap-2 text-[9px]">
                       {paper.doi && (
-                        <a href={`https://doi.org/${paper.doi}`} target="_blank" rel="noreferrer">
+                        <a 
+                          href={`https://doi.org/${paper.doi}`} 
+                          target="_blank" 
+                          rel="noreferrer"
+                          className="px-2 py-0.5 bg-purple-500/20 text-purple-400 rounded hover:bg-purple-500/30 transition-colors"
+                        >
                           DOI
                         </a>
                       )}
                       {paper.pdf_link && (
-                        <a href={paper.pdf_link} target="_blank" rel="noreferrer">
+                        <a 
+                          href={paper.pdf_link} 
+                          target="_blank" 
+                          rel="noreferrer"
+                          className="px-2 py-0.5 bg-blue-500/20 text-blue-400 rounded hover:bg-blue-500/30 transition-colors"
+                        >
                           PDF
                         </a>
                       )}
                       {paper.pmid && (
-                        <a href={`https://pubmed.ncbi.nlm.nih.gov/${paper.pmid}/`} target="_blank" rel="noreferrer">
+                        <a 
+                          href={`https://pubmed.ncbi.nlm.nih.gov/${paper.pmid}/`} 
+                          target="_blank" 
+                          rel="noreferrer"
+                          className="px-2 py-0.5 bg-green-500/20 text-green-400 rounded hover:bg-green-500/30 transition-colors"
+                        >
                           PubMed
                         </a>
                       )}
                     </div>
                   </div>
-                ))
-              )}
-            </div>
+                );
+              })
+            )}
           </div>
+        </div>
         </div>
       </div>
 
       {/* Alerts sidebar */}
-      <div className="w-full lg:w-80 xl:w-96 bg-gray-900 p-4 rounded-lg flex flex-col min-w-0">
-        <h2 className="text-lg md:text-xl font-bold mb-4">Alerts</h2>
-        {/* Tabs */}
-        <div className="relative mb-2 flex items-center min-w-0">
+<>
+  {/* Floating Bell Button (shows when collapsed) */}
+  {!showAlerts && (
+    <button
+      onClick={() => setShowAlerts(true)}
+      className="fixed top-10 right-4 z-50 p-3 bg-blue-600 hover:bg-blue-700 rounded-full shadow-lg shadow-blue-500/50 transition-all hover:scale-110 animate-pulse"
+    >
+      <Bell className="w-5 h-5 text-white" />
+      {currentDay?.alerts?.length > 0 && (
+        <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] font-bold rounded-full w-5 h-5 flex items-center justify-center">
+          {currentDay.alerts.length}
+        </span>
+      )}
+    </button>
+  )}
+
+  {/* Alerts Sidebar with transition */}
+  <div
+    className={`flex-shrink-0 transition-all duration-300 ease-in-out ${
+      showAlerts ? 'w-56 xl:w-72 opacity-100' : 'w-0 opacity-0 overflow-hidden'
+    }`}
+  >
+    <div className="bg-gray-800/50 backdrop-blur-sm rounded-xl border border-gray-700 p-3 flex flex-col min-w-0 h-full">
+      <div className="flex items-center justify-between mb-3 pb-2 border-b border-gray-700">
+        <h2 className="text-sm font-semibold flex items-center gap-2">
+          <Bell className="w-4 h-4" />
+          Activity Feed
+        </h2>
+        <div className="flex items-center gap-2">
+          <span className="text-xs text-gray-400">
+            {currentDay?.alerts?.length || 0} alerts
+          </span>
           <button
-            onClick={() => scrollTabs(-100)}
-            className="z-10 bg-gray-700 text-white px-1 py-1 rounded hover:bg-gray-600 mr-1 text-sm flex-shrink-0"
+            onClick={() => setShowAlerts(false)}
+            className="p-1 hover:bg-gray-700 rounded transition-colors"
+            title="Hide alerts"
           >
-            ◀
+            <ChevronRight className="w-4 h-4 text-gray-400" />
           </button>
-
-          <div
-            ref={tabsRef}
-            className="flex gap-1 overflow-x-auto scrollbar-hide whitespace-nowrap h-12 items-center flex-1 min-w-0"
-            style={{ scrollbarWidth: "none" }}
-          >
-            {dayAlerts.slice().reverse().map((day, idx) => (
-              <button
-                key={day.date}
-                onClick={() => setSelectedDayIndex(idx)}
-                className={`flex-shrink-0 px-2 py-1 rounded text-xs md:text-sm whitespace-nowrap ${
-                  idx === selectedDayIndex
-                    ? "bg-blue-600 text-white"
-                    : "bg-gray-800 text-gray-300 hover:bg-gray-700"
-                }`}
-              >
-                {day.date.split(",")[1]?.trim() || day.date}
-              </button>
-            ))}
-          </div>
-
-          <button
-            onClick={() => scrollTabs(100)}
-            className="z-10 bg-gray-700 text-white px-1 py-1 rounded hover:bg-gray-600 ml-1 text-sm flex-shrink-0"
-          >
-            ▶
-          </button>
-        </div>
-
-        <div className="text-gray-300 text-base md:text-lg font-semibold mb-2 px-2 truncate">
-          {currentDay ? currentDay.date : "Select a day"}
-        </div>
-
-        <div className="flex-1 overflow-y-auto space-y-3 min-h-0">
-          {currentDay?.alerts?.length === 0 ? (
-            <div className="p-3 rounded border-l-4 border-gray-500 bg-gray-800 text-gray-300 text-sm">
-              No alerts for {currentDay?.date}
-            </div>
-          ) : (
-            currentDay?.alerts?.map((alert) => (
-              <div
-                key={alert.id ?? Math.random()}
-                className={`p-3 rounded border-l-4 bg-gray-800 ${
-                  alert.id ? "border-blue-500" : "border-gray-500"
-                }`}
-              >
-                <div className="flex items-center justify-between mb-1">
-                  <span className="font-semibold text-white text-sm">{alert.time}</span>
-                  <span className="text-gray-400 text-sm">{renderIcon(alert.icon)}</span>
-                </div>
-                <p className="text-gray-300 text-sm break-words">{alert.alert_message}</p>
-              </div>
-            ))
-          )}
         </div>
       </div>
+
+      {/* Tabs */}
+      <div className="relative mb-2 flex items-center min-w-0">
+        <button
+          onClick={() => scrollTabs(-100)}
+          className="z-10 bg-gray-700 text-white p-1 rounded hover:bg-gray-600 mr-1 flex-shrink-0 transition-colors"
+        >
+          <ChevronLeft className="w-3 h-3" />
+        </button>
+
+        <div
+          ref={tabsRef}
+          className="flex gap-1 overflow-x-auto scrollbar-hide whitespace-nowrap h-9 items-center flex-1 min-w-0"
+          style={{ scrollbarWidth: "none" }}
+        >
+          {dayAlerts.slice().reverse().map((day, idx) => (
+            <button
+              key={day.date}
+              onClick={() => setSelectedDayIndex(idx)}
+              className={`flex-shrink-0 px-2 py-1 rounded-lg text-[10px] font-medium whitespace-nowrap transition-all ${
+                idx === selectedDayIndex
+                  ? "bg-blue-600 text-white shadow-lg shadow-blue-500/20"
+                  : "bg-gray-700/50 text-gray-300 hover:bg-gray-700"
+              }`}
+            >
+              {day.date.split(",")[1]?.trim() || day.date}
+            </button>
+          ))}
+        </div>
+
+        <button
+          onClick={() => scrollTabs(100)}
+          className="z-10 bg-gray-700 text-white p-1 rounded hover:bg-gray-600 ml-1 flex-shrink-0 transition-colors"
+        >
+          <ChevronRight className="w-3 h-3" />
+        </button>
+      </div>
+
+      <div className="text-gray-300 text-xs font-medium mb-2 px-1 truncate">
+        {currentDay ? currentDay.date : "Select a day"}
+      </div>
+
+      <div className="flex-1 overflow-y-auto space-y-2 min-h-0 pr-1">
+        {currentDay?.alerts?.length === 0 ? (
+          <div className="p-3 rounded-lg bg-gray-900/50 border border-gray-700 text-center">
+            <Calendar className="w-5 h-5 text-gray-500 mx-auto mb-2" />
+            <p className="text-[10px] text-gray-400">No alerts for {currentDay?.date}</p>
+          </div>
+        ) : (
+          currentDay?.alerts?.map((alert) => {
+            type AlertColor = 'blue' | 'green' | 'yellow' | 'orange' | 'red' | 'purple';
+
+            const getAlertColor = (icon: string): AlertColor => {
+              const colorMap: Record<string, AlertColor> = {
+                message: 'blue',
+                workout: 'green',
+                pr: 'yellow',
+                streak: 'red',
+                metric: 'green',
+                program: 'orange',
+                anniversary: 'purple'
+              };
+              return colorMap[icon] || 'blue';
+            };
+
+            const colorClasses: Record<AlertColor, string> = {
+              blue: 'bg-blue-500/10 border-blue-500/20 text-blue-400',
+              green: 'bg-green-500/10 border-green-500/20 text-green-400',
+              yellow: 'bg-yellow-500/10 border-yellow-500/20 text-yellow-400',
+              orange: 'bg-orange-500/10 border-orange-500/20 text-orange-400',
+              red: 'bg-red-500/10 border-red-500/20 text-red-400',
+              purple: 'bg-purple-500/10 border-purple-500/20 text-purple-400'
+            };
+
+            const color = getAlertColor(alert.icon);
+
+            return (
+              <div
+                key={alert.id ?? Math.random()}
+                className={`p-3 rounded-lg border cursor-pointer hover:scale-[1.02] transition-all ${
+                  alert.id ? colorClasses[color] : 'bg-gray-900/50 border-gray-700 text-gray-400'
+                }`}
+              >
+                <div className="flex gap-2">
+                  <div className="flex-shrink-0">
+                    <div className="w-4 h-4">
+                      {renderIcon(alert.icon)}
+                    </div>
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-start justify-between gap-2 mb-1">
+                      <span className="text-[10px] font-medium">{alert.time}</span>
+                    </div>
+                    <p className="text-[11px] leading-snug break-words">{alert.alert_message}</p>
+                  </div>
+                </div>
+              </div>
+            );
+          })
+        )}
+      </div>
+    </div>
+  </div>
+</>
     </div>
   </div>
 );

@@ -2,7 +2,8 @@
 
 import Link from "next/link";
 import {
-  Bars3Icon,
+  ChevronLeftIcon,
+  ChevronRightIcon,
   HomeIcon,
   UserGroupIcon,
   CalendarIcon,
@@ -12,6 +13,7 @@ import {
   HeartIcon,
   FireIcon,
 } from "@heroicons/react/24/outline";
+import { usePathname } from 'next/navigation';
 
 type TrainerSidebarProps = {
   collapsed: boolean;
@@ -30,62 +32,89 @@ const items = [
   { name: "Help", icon: QuestionMarkCircleIcon, href: "/trainer/help" },
 ];
 
+
 export default function TrainerSidebar({ collapsed, onToggle }: TrainerSidebarProps) {
-  return (
-    <aside
-      className={`h-screen bg-gray-900 text-white shadow flex flex-col transition-[width] duration-300 ease-in-out ${
-        collapsed ? "w-16" : "w-64"
-      }`}
-    >
-      {/* Top: logo + toggle */}
-      <div className="flex items-center justify-between p-3 border-b border-gray-800 relative">
-        {/* Logo + title */}
-        <div className="flex items-center gap-3 z-10">
-          <div className="h-8 w-8 rounded-full bg-yellow-400 flex items-center justify-center font-bold text-gray-900">
-            F
-          </div>
-          {!collapsed && <span className="font-semibold text-lg">FibuVerse</span>}
+  const pathname = usePathname();
+
+return (
+  <aside
+    className={`h-screen bg-gray-900 text-white shadow-lg flex flex-col transition-all duration-300 ease-in-out ${
+      collapsed ? "w-14" : "w-52"
+    }`}
+  >
+  {/* Top: logo + toggle */}
+    <div className="flex items-center px-3 py-2 border-b border-gray-800">
+      {/* Logo + title */}
+      <div className="flex items-center gap-2 overflow-hidden flex-1">
+        <div className="h-6 w-6 rounded-lg bg-gradient-to-br from-yellow-400 to-yellow-500 flex items-center justify-center font-bold text-gray-900 text-xs flex-shrink-0 shadow-md">
+          F
         </div>
-
-        {/* Toggle button */}
-        <button
-          onClick={onToggle}
-          className="p-3 rounded hover:bg-gray-800 active:bg-gray-700 flex items-center justify-center z-10"
-          aria-label="Toggle sidebar"
-        >
-          <Bars3Icon className="w-5 h-5 text-gray-300" />
-        </button>
-      </div>
-
-      {/* Navigation */}
-      <nav className="mt-4 flex-1 overflow-y-auto">
-        {items.map((it) => {
-          const Icon = it.icon;
-          return (
-            <Link
-              key={it.name}
-              href={it.href}
-              className={`flex items-center gap-4 px-3 py-3 hover:bg-gray-800 transition-colors ${
-                collapsed ? "justify-center" : ""
-              }`}
-            >
-              <Icon className="w-5 h-5 text-gray-300" />
-              {!collapsed && <span className="text-sm text-gray-100 font-bold">{it.name}</span>}
-            </Link>
-          );
-        })}
-        {/* Spacer */}
-        <div className="flex-1" />
-      </nav>
-
-      {/* Footer */}
-      <div className="p-3 border-t border-gray-800">
-        {!collapsed ? (
-          <div className="text-xs text-gray-400">© {new Date().getFullYear()} FibuVerse</div>
-        ) : (
-          <div className="h-6" />
+        {!collapsed && (
+          <span className="font-bold text-xs whitespace-nowrap">
+            FibuVerse
+          </span>
         )}
       </div>
-    </aside>
-  );
+
+          {/* Toggle button */}
+          <button
+            onClick={onToggle}
+            className="p-1.5 rounded-lg hover:bg-gray-800 active:scale-95 flex items-center justify-center transition-all duration-200 flex-shrink-0 group"
+            aria-label="Toggle sidebar"
+          >
+            {collapsed ? (
+              <ChevronRightIcon className="w-4 h-4 text-gray-400 group-hover:text-yellow-400 transition-colors" />
+            ) : (
+              <ChevronLeftIcon className="w-4 h-4 text-gray-400 group-hover:text-yellow-400 transition-colors" />
+            )}
+          </button>
+      </div>
+
+    {/* Navigation */}
+    <nav className="mt-2 flex-1 overflow-y-auto px-2">
+      {items.map((it) => {
+        const Icon = it.icon;
+        const isActive = pathname === it.href;
+        
+        return (
+          <Link
+            key={it.name}
+            href={it.href}
+            title={collapsed ? it.name : undefined}
+            className={`flex items-center gap-2 px-2 py-2 rounded-md mb-1 transition-all ${
+              collapsed ? "justify-center" : ""
+            } ${
+              isActive
+                ? "bg-yellow-400/10 text-yellow-400 border-l-2 border-yellow-400"
+                : "text-gray-300 hover:bg-gray-800"
+            }`}
+          >
+            <Icon 
+              className={`w-4 h-4 flex-shrink-0 ${
+                isActive ? "text-yellow-400" : "text-blue-400"
+              }`}
+            />
+            {!collapsed && (
+              <span className="text-xs font-semibold whitespace-nowrap">
+                {it.name}
+              </span>
+            )}
+          </Link>
+        );
+      })}
+    </nav>
+
+    {/* Footer */}
+    <div className="p-3 border-t border-gray-800 text-center">
+      {!collapsed ? (
+        <div className="text-[10px] text-gray-400">
+          © {new Date().getFullYear()} FibuVerse
+        </div>
+      ) : (
+        <div className="h-4" />
+      )}
+    </div>
+  </aside>
+);
+
 }

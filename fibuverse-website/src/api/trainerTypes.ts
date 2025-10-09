@@ -365,3 +365,55 @@ export interface WorkoutListItem {
   num_exercises?: number;
   limitation?: string;
 }
+
+export interface CardioSession {
+  id: number;
+  cardio_name: string;
+  cardio_date: string; // ISO date
+  cardio_start_time?: string | null;
+  cardio_end_time?: string | null;
+  cardio_type?: string | null;
+  duration?: number | null;
+  distance?: number | null;
+  avg_pace?: number | null;
+  avg_heart_rate?: number | null;
+  avg_speed?: number | null;
+  max_heart_rate?: number | null;
+  max_pace?: number | null;
+  max_speed?: number | null;
+  avg_altitude?: number | null;
+  elevation_gain?: number | null;
+  calories_burned?: number | null;
+  notes?: string | null;
+  created_at: string;
+}
+
+export interface WeightWorkout {
+  id: number;
+  workout_name: string;
+  workout_date?: string | null;
+  duration?: number | null;
+  num_exercises?: number | null;
+  notes?: string | null;
+  created_at: string;
+}
+
+export interface BodyMeasurement {
+  created_at: string; // ISO date string
+  weight_kg: number;
+  height_cm: number;
+  bmi: number;
+  waist_cm: number;
+  hip_cm: number;
+  waist_to_height_ratio: number;
+  body_fat_percentage: number;
+}
+
+export interface ClientMetricsData {
+  body_measurements?: BodyMeasurement[];  // <-- array
+  health_metrics?: HealthMetric[];        // <-- array
+  body_fat_skinfolds?: Skinfold[];       // <-- array
+  fitness_tests?: FitnessTest[];         // <-- array
+  cardio_sessions?: CardioSession[];
+  weight_workouts?: WeightWorkout[];
+}
