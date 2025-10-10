@@ -3,6 +3,7 @@ import type { NextConfig } from "next";
 /** @type {import('next').NextConfig} */
 const nextConfig: NextConfig = {
   images: {
+    unoptimized: true, // ← Add this to disable optimization globally
     remotePatterns: [
       {
         protocol: 'https',

@@ -62,50 +62,66 @@ export default function PhotoTimelinePage({ clientId }: PhotoTimelinePageProps) 
     }
     };
 
-const handleUpload = async (e: React.FormEvent) => {
-  e.preventDefault();
-  if (!uploadData.image) return;
+  const handleUpload = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!uploadData.image) return;
 
-  try {
-    setIsUploading(true);
-    const formData = new FormData();
-    formData.append('image', uploadData.image);
-    formData.append('date_taken', uploadData.date_taken);
-    if (uploadData.weight) formData.append('weight', uploadData.weight);
-    if (uploadData.body_fat_percentage) formData.append('body_fat_percentage', uploadData.body_fat_percentage);
-    if (uploadData.notes) formData.append('notes', uploadData.notes);
-    if (uploadData.body_part) formData.append('body_part', uploadData.body_part);
-    formData.append('is_private', 'false');
+    try {
+      setIsUploading(true);
+      const formData = new FormData();
+      formData.append('image', uploadData.image);
+      formData.append('date_taken', uploadData.date_taken);
+      if (uploadData.weight) formData.append('weight', uploadData.weight);
+      if (uploadData.body_fat_percentage) formData.append('body_fat_percentage', uploadData.body_fat_percentage);
+      if (uploadData.notes) formData.append('notes', uploadData.notes);
+      if (uploadData.body_part) formData.append('body_part', uploadData.body_part);
+      formData.append('is_private', 'false');
 
-    await sendProgressPhoto(clientId, formData);
-    
-    // Reset form and reload photos
-    setUploadData({
-      image: null,
-      date_taken: new Date().toISOString().split('T')[0],
-      weight: '',
-      body_fat_percentage: '',
-      notes: '',
-      body_part: '',
-      is_private: false,
-    });
-    setShowUploadForm(false);
-    await loadPhotos(); // ✅ Now accessible
-  } catch (error) {
-    console.error("Failed to upload photo:", error);
-    alert("Failed to upload photo. Please try again.");
-  } finally {
-    setIsUploading(false);
-  }
-};
+      await sendProgressPhoto(clientId, formData);
+      
+      // Reset form and reload photos
+      setUploadData({
+        image: null,
+        date_taken: new Date().toISOString().split('T')[0],
+        weight: '',
+        body_fat_percentage: '',
+        notes: '',
+        body_part: '',
+        is_private: false,
+      });
+      setShowUploadForm(false);
+      await loadPhotos(); // ✅ Now accessible
+    } catch (error) {
+      console.error("Failed to upload photo:", error);
+      alert("Failed to upload photo. Please try again.");
+    } finally {
+      setIsUploading(false);
+    }
+  };
 
   const calculateTotalWeightLoss = () => {
     const photosWithWeight = photos.filter(p => p.weight);
     if (photosWithWeight.length < 2) return 0;
+    
+    // Sort oldest to newest
     const sorted = [...photosWithWeight].sort((a, b) => 
       new Date(a.date_taken).getTime() - new Date(b.date_taken).getTime()
     );
+    
+    // Oldest weight - Newest weight (positive = weight loss)
     return (sorted[0].weight! - sorted[sorted.length - 1].weight!).toFixed(1);
+  };
+  const getWeightChange = (currentIndex: number) => {
+    if (currentIndex >= photos.length - 1) return null;
+    
+    const currentPhoto = photos[currentIndex]; // Newer
+    const previousPhoto = photos[currentIndex + 1]; // Older
+    
+    if (currentPhoto.weight != null && previousPhoto.weight != null) {
+      return currentPhoto.weight - previousPhoto.weight;
+    }
+    
+    return null;
   };
 
   return (
@@ -158,11 +174,11 @@ const handleUpload = async (e: React.FormEvent) => {
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div className="sm:col-span-2">
                     <label className="block text-xs font-medium text-gray-300 mb-1">
-                      Photo *
+                      Photo — JPG format is preferred; PNG files are also accepted. Other file types are not supported.
                     </label>
                     <input
                       type="file"
-                      accept="image/*"
+                      accept="image/jpeg,image/jpg,image/png,image/gif,image/webp,image/heic,image/heif"
                       onChange={handleFileSelect}
                       required
                       className="w-full text-sm text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:text-sm file:font-semibold file:bg-purple-500 file:text-white hover:file:bg-purple-600"
@@ -332,12 +348,22 @@ const handleUpload = async (e: React.FormEvent) => {
                                 <p className="text-purple-400 text-xs transition-all duration-300 group-hover:text-white">{photo.weight}kg</p>
                             )}
                             </div>
-                          {/* Weight change badge */}
-                            {index > 0 && photos[index - 1].weight != null && photo.weight != null && (
-                            <div className="absolute top-2 right-2 bg-green-500 text-white text-[10px] px-1.5 py-0.5 rounded font-semibold transition-all duration-300 group-hover:scale-125 group-hover:rotate-3 shadow-lg">
-                                -{(photos[index - 1].weight! - photo.weight!).toFixed(1)}
-                            </div>
-                            )}
+                            {/* Weight change badge */}
+                            {index < photos.length - 1 && photo.weight != null && photos[index + 1].weight != null && (() => {
+                              const diff = photos[index + 1].weight! - photo.weight!; // older - newer
+                              const isLoss = diff > 0;
+                              const sign = isLoss ? "−" : "+";
+                              const absDiff = Math.abs(diff).toFixed(1);
+
+                              return (
+                                <div
+                                  className={`absolute top-2 right-2 text-white text-[10px] px-1.5 py-0.5 rounded font-semibold shadow-lg transition-all duration-300 group-hover:scale-125 group-hover:rotate-3
+                                  ${isLoss ? "bg-blue-500" : "bg-green-500"}`}
+                                >
+                                  {sign}{absDiff}
+                                </div>
+                              );
+                            })()}
 
                           {/* Private badge */}
                           {/* {photo.is_private && (

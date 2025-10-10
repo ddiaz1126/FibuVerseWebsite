@@ -344,8 +344,7 @@ export default function AccountSection() {
               <label className="cursor-pointer bg-gray-700 hover:bg-gray-600 px-2 py-1 rounded-lg transition-all text-[10px] font-medium">
                 <input
                   type="file"
-                  accept="image/*"
-                  onChange={handleImageChange}
+                  accept="image/jpeg,image/jpg,image/png,image/gif,image/webp,image/heic,image/heif"                  onChange={handleImageChange}
                   className="hidden"
                 />
                 Change Photo
