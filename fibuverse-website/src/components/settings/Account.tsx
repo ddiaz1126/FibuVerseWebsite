@@ -127,7 +127,8 @@ export default function AccountSection() {
       localStorage.removeItem("access_token");
       localStorage.removeItem("refresh_token");
       localStorage.removeItem("trainer_user");
-      router.push("/trainerlogin");
+       window.location.href = "/trainerlogin";
+      // router.push("/trainerlogin");
     }
   };
 
