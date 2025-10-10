@@ -38,7 +38,7 @@ async function refreshAccessToken(): Promise<string | null> {
     }
 
     if (typeof data.access === "string") {
-      localStorage.setItem("accessToken", data.access);
+      localStorage.setItem("access_token", data.access);
       console.log("[auth] Obtained new access token");
       return data.access;
     }
@@ -60,7 +60,7 @@ export async function postWithAutoRefresh<T = unknown>(
   payload: T,
   options: RequestInit = {}
 ): Promise<T> {
-  const token = localStorage.getItem("accessToken") ?? null;
+  const token = localStorage.getItem("access_token") ?? null;
 
   const baseHeaders: Record<string, string> = {
     "Content-Type": "application/json",
@@ -120,7 +120,7 @@ export async function fetchWithAutoRefresh<T = unknown>(
   endpoint: string,
   options: RequestInit = {}
 ): Promise<T> {
-  const token = localStorage.getItem("accessToken") ?? null;
+  const token = localStorage.getItem("access_token") ?? null;
 
   // Get user's timezone and append to endpoint
   const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
@@ -181,7 +181,7 @@ export async function postFormDataWithAutoRefresh<T = unknown>(
   endpoint: string,
   formData: FormData
 ): Promise<T> {
-  let token = localStorage.getItem("accessToken") ?? null;
+  let token = localStorage.getItem("access_token") ?? null;
 
   const doFetch = async (authToken: string | null) => {
     const headers: Record<string, string> = {
@@ -279,13 +279,13 @@ interface LogoutResponse {
   error?: string;
 }
 
-export async function logoutTrainer(refreshToken: string, accessToken?: string) {
+export async function logoutTrainer(refreshToken: string, access_token?: string) {
   try {
     const res = await fetch(`${API_URL}/api/logout/`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
+        ...(access_token ? { Authorization: `Bearer ${access_token}` } : {}),
       },
       body: JSON.stringify({ refresh: refreshToken }),
     });
