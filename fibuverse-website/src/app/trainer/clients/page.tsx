@@ -26,6 +26,7 @@ import Image from "next/image";
 import { Button } from "@/components/ui/button"
 import { Users, ChevronLeft, ChevronRight } from 'lucide-react';
 
+
 interface HealthMetric {
   created_at: string; // ISO date string
   resting_hr?: number;
@@ -408,9 +409,19 @@ export default function ClientsPage() {
                 >
                   <div className="flex items-center gap-2.5">
                     <div className="relative">
-                      <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white font-bold text-xs">
-                        {client.first_name?.[0]?.toUpperCase()}{client.last_name?.[0]?.toUpperCase()}
-                      </div>
+                      {client.profile_image ? (
+                        <Image
+                          src={client.profile_image}
+                          alt={`${client.first_name} ${client.last_name}`}
+                          width={32}
+                          height={32}
+                          className="rounded-full object-cover border-2 border-gray-600"
+                        />
+                      ) : (
+                        <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white font-bold text-xs">
+                          {client.first_name?.[0]?.toUpperCase()}{client.last_name?.[0]?.toUpperCase()}
+                        </div>
+                      )}
                       <div className="absolute bottom-0 right-0 w-2 h-2 bg-green-400 rounded-full border border-gray-800"></div>
                     </div>
                     <div className="flex-1 min-w-0">
@@ -442,7 +453,10 @@ export default function ClientsPage() {
                 Client Details
               </h2>
               {selectedClient && (
-                <button className="p-1 hover:bg-gray-700 rounded transition-colors">
+                <button 
+                  onClick={() => router.push(`/trainer/clients/update-client/${selectedClient.id}`)}
+                  className="p-1 hover:bg-gray-700 rounded transition-colors"
+                >
                   <svg className="w-3.5 h-3.5 text-gray-400 hover:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                   </svg>
@@ -454,16 +468,22 @@ export default function ClientsPage() {
               <div className="flex flex-col gap-2">
                 {/* Avatar + Name */}
                 <div className="flex items-center gap-2">
-                  <div className="relative">
-                    <Image
-                      src={selectedClient.profile_image || "/placeholder-profile.png"}
-                      alt={`${selectedClient.first_name} ${selectedClient.last_name}`}
-                      width={36}
-                      height={36}
-                      className="rounded-full object-cover border-2 border-gray-600"
-                    />
-                    <div className="absolute bottom-0 right-0 w-2 h-2 bg-green-400 rounded-full border border-gray-800"></div>
-                  </div>
+                      <div className="relative">
+                        {selectedClient.profile_image ? (
+                          <Image
+                            src={selectedClient.profile_image}
+                            alt={`${selectedClient.first_name} ${selectedClient.last_name}`}
+                            width={36}
+                            height={36}
+                            className="rounded-full object-cover border-2 border-gray-600"
+                          />
+                        ) : (
+                          <div className="w-9 h-9 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white font-bold text-sm border-2 border-gray-600">
+                            {selectedClient.first_name?.[0]?.toUpperCase()}{selectedClient.last_name?.[0]?.toUpperCase()}
+                          </div>
+                        )}
+                        <div className="absolute bottom-0 right-0 w-2 h-2 bg-green-400 rounded-full border border-gray-800"></div>
+                      </div>
                     <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 group mb-0.5">
                       <div className="h-0.5 w-4 bg-gradient-to-r from-transparent to-yellow-500/50 group-hover:to-yellow-500 transition-all duration-300"></div>

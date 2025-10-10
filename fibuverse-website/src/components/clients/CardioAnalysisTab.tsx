@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Bar, Line, Pie } from "react-chartjs-2";
+import { Bar, Line } from "react-chartjs-2";
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -83,7 +83,7 @@ export default function CardioAnalysisTab({
     | "sessions_per_week"
     | "distance_per_week"
     | "avg_pace_per_week"
-    | "cardio_types"
+    // | "cardio_types"
   >("sessions_per_week");
 
   const [activeSessionMetric, setActiveSessionMetric] = useState<
@@ -125,8 +125,8 @@ export default function CardioAnalysisTab({
               ),
               datasets: [
                 {
-                  label: "Avg Distance (km)",
-                  data: cardioMeta.distance_per_week.map((m) => m.total_distance ?? 0),
+                  label: "Avg Distance (miles)",
+                  data: cardioMeta.distance_per_week.map((m) => (m.total_distance ?? 0) / 1609.34),
                   borderColor: "rgba(75, 192, 192, 1)",
                   backgroundColor: "rgba(75, 192, 192, 0.2)",
                 },
@@ -144,8 +144,8 @@ export default function CardioAnalysisTab({
               ),
               datasets: [
                 {
-                  label: "Avg Pace (min/km)",
-                  data: cardioMeta.avg_pace_per_week.map((m) => m.avg_pace),
+                  label: "Avg Pace (min/mile)",
+                  data: cardioMeta.avg_pace_per_week.map((m) => (m.avg_pace ?? 0) * 1.60934),
                   borderColor: "rgba(255, 99, 132, 1)",
                   backgroundColor: "rgba(255, 99, 132, 0.2)",
                 },
@@ -154,25 +154,25 @@ export default function CardioAnalysisTab({
           />
         );
 
-      case "cardio_types":
-        return (
-          <Pie
-            data={{
-              labels: Object.keys(cardioMeta.cardio_types),
-              datasets: [
-                {
-                  label: "Terrain Distribution",
-                  data: Object.values(cardioMeta.cardio_types),
-                  backgroundColor: [
-                    "rgba(255, 206, 86, 0.6)",
-                    "rgba(54, 162, 235, 0.6)",
-                    "rgba(75, 192, 192, 0.6)",
-                  ],
-                },
-              ],
-            }}
-          />
-        );
+      // case "cardio_types":
+      //   return (
+      //     <Pie
+      //       data={{
+      //         labels: Object.keys(cardioMeta.cardio_types),
+      //         datasets: [
+      //           {
+      //             label: "Terrain Distribution",
+      //             data: Object.values(cardioMeta.cardio_types),
+      //             backgroundColor: [
+      //               "rgba(255, 206, 86, 0.6)",
+      //               "rgba(54, 162, 235, 0.6)",
+      //               "rgba(75, 192, 192, 0.6)",
+      //             ],
+      //           },
+      //         ],
+      //       }}
+      //     />
+      //   );
 
     }
   };
@@ -190,9 +190,9 @@ export default function CardioAnalysisTab({
               ),
               datasets: [
                 {
-                  label: "Distance (km)",
+                  label: "Avg Speed (mph)",
                   data: cardioSessionInsights.avg_speed_over_time.map(
-                    (d) => d.avg_speed ?? 0
+                    (d) => (d.avg_speed ?? 0) * 0.621371
                   ),
                   borderColor: "rgba(54, 162, 235, 1)",
                   backgroundColor: "rgba(54, 162, 235, 0.2)",
@@ -211,9 +211,9 @@ export default function CardioAnalysisTab({
               ),
               datasets: [
                 {
-                  label: "Pace (min/km)",
+                  label: "Pace (min/mile)",
                   data: cardioSessionInsights.avg_pace_over_time.map(
-                    (d) => d.avg_pace ?? 0
+                    (d) => (d.avg_pace ?? 0) * 1.60934
                   ),
                   borderColor: "rgba(255, 99, 132, 1)",
                   backgroundColor: "rgba(255, 99, 132, 0.2)",
@@ -287,19 +287,21 @@ export default function CardioAnalysisTab({
           <div className="bg-gray-900/50 p-3 rounded-lg border border-gray-700">
             <p className="text-[9px] text-gray-400 mb-1">Avg Distance</p>
             <p className="text-xl font-bold text-orange-400">
-              {Math.round(
-                  cardioMeta.distance_per_week.reduce((s, d) => s + (d.total_distance ?? 0), 0) /
-                  cardioMeta.distance_per_week.length
-              )} <span className="text-xs">km</span>
+              {(
+                cardioMeta.distance_per_week.reduce((s, d) => s + (d.total_distance ?? 0), 0) /
+                cardioMeta.distance_per_week.length /
+                1609.34
+              ).toFixed(2)} <span className="text-xs">mi</span>
             </p>
           </div>
           <div className="bg-gray-900/50 p-3 rounded-lg border border-gray-700">
             <p className="text-[9px] text-gray-400 mb-1">Avg Pace</p>
             <p className="text-xl font-bold text-green-400">
               {(
-                cardioMeta.avg_pace_per_week.reduce((s, d) => s + (d.avg_pace ?? 0), 0) /
-                cardioMeta.avg_pace_per_week.length
-              ).toFixed(2)} <span className="text-xs">min/km</span>
+                (cardioMeta.avg_pace_per_week.reduce((s, d) => s + (d.avg_pace ?? 0), 0) /
+                  cardioMeta.avg_pace_per_week.length) *
+                1.60934
+              ).toFixed(2)} <span className="text-xs">min/mi</span>
             </p>
           </div>
         </div>
@@ -320,7 +322,7 @@ export default function CardioAnalysisTab({
               "sessions_per_week",
               "distance_per_week",
               "avg_pace_per_week",
-              "cardio_types",
+              // "cardio_types",
             ].map((metric) => (
               <button
                 key={metric}
@@ -330,7 +332,7 @@ export default function CardioAnalysisTab({
                       | "sessions_per_week"
                       | "distance_per_week"
                       | "avg_pace_per_week"
-                      | "cardio_types"
+                      // | "cardio_types"
                   )
                 }
                 className={`px-2 py-1 text-[10px] font-medium rounded-lg transition-all duration-200 ${
