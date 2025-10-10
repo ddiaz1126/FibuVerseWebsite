@@ -153,7 +153,9 @@ function MetricsContent() {
           bmi: bodyMeasurements.bmi ? Number(bodyMeasurements.bmi) : undefined,
           waist_cm: bodyMeasurements.waist_cm ? Number(bodyMeasurements.waist_cm) : undefined,
           hip_cm: bodyMeasurements.hip_cm ? Number(bodyMeasurements.hip_cm) : undefined,
-          waist_to_height_ratio: bodyMeasurements.waist_to_height_ratio ? Number(bodyMeasurements.waist_to_height_ratio) : undefined,
+          waist_to_height_ratio: bodyMeasurements.waist_to_height_ratio 
+              ? parseFloat(bodyMeasurements.waist_to_height_ratio) 
+              : undefined,
           body_fat_percentage: bodyMeasurements.body_fat_percentage ? Number(bodyMeasurements.body_fat_percentage) : undefined,
         });
       }
@@ -712,7 +714,7 @@ return (
           <input
             type="number"
             step="any"
-            value={value === 0 ? "" : (value ?? "")}
+            // value={value === 0 ? "" : (value ?? "")}
             onChange={(e) => {
               const inputValue = e.target.value;
               const parsedValue = inputValue === "" ? null : Number(inputValue);
