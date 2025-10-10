@@ -1,12 +1,15 @@
-// add-client.tsx
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
-import { createClient } from "@/api/trainer";
+import { useState, useEffect } from "react";
+import { useRouter, useParams } from "next/navigation";
+import { updateClient, getClientProfile } from "@/api/trainer";
+import { CreateClientPayload } from "@/api/trainerTypes"
+import Image from "next/image";
 
-export default function AddClientPage() {
+export default function UpdateClientPage() {
   const router = useRouter();
+    const params = useParams();
+    const clientId = Number(params.id);  
 
   // -------------------- Form State --------------------
   const [formData, setFormData] = useState({
@@ -21,64 +24,103 @@ export default function AddClientPage() {
     country: "",
     height: "",
     body_weight: "",
-    fitness_goal: "", // New field
+    fitness_goal: "",
   });
 
-  const [profileImage, setProfileImage] = useState<File | null>(null); // Separate state for image
-
+  const [profileImage, setProfileImage] = useState<File | null>(null);
+  const [currentImageUrl, setCurrentImageUrl] = useState<string | null>(null);
   const [error, setError] = useState("");
+  const [loading, setLoading] = useState(true);
 
-  // New handler for image upload
-  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      setProfileImage(file);
+  // -------------------- Load Client Data --------------------
+  useEffect(() => {
+    const loadClient = async () => {
+      try {
+        const client = await getClientProfile(clientId);
+        setFormData({
+          first_name: client.first_name || "",
+          last_name: client.last_name || "",
+          email: client.email || "",
+          phone_number: client.phone_number || "",
+          gender: client.gender || "",
+          date_of_birth: client.date_of_birth || "",
+          city: client.city || "",
+          home_state: client.home_state || "",
+          country: client.country || "",
+          height: client.height?.toString() || "",
+          body_weight: client.body_weight?.toString() || "",
+          fitness_goal: client.fitness_goal || "",
+        });
+        setCurrentImageUrl(client.profile_image || null);
+        setLoading(false);
+      } catch (err) {
+        console.error("Error loading client:", err);
+        setError("Failed to load client data");
+        setLoading(false);
+      }
+    };
+
+    if (clientId) {
+      loadClient();
     }
-  };
+  }, [clientId]);
 
   // -------------------- Handle Input Changes --------------------
   const handleChange = (field: string, value: string) => {
     setFormData({ ...formData, [field]: value });
   };
 
-    // -------------------- Submit --------------------
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-
-    // --- validate required fields ---
-    const { first_name, last_name, email } = formData;
-    if (!first_name || !last_name || !email) {
-      setError("First name, last name, and email are required.");
-      return;
+  // New handler for image upload
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setProfileImage(file);
+      // Preview the new image
+      setCurrentImageUrl(URL.createObjectURL(file));
     }
+  };
+
+  // -------------------- Submit --------------------
+    const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
 
     setError("");
 
     try {
-      // Combine formData with profile_image
-      const payload = {
-        ...formData,
-        ...(profileImage && { profile_image: profileImage }), // Only include if image exists
-      };
+        // Build payload with proper typing
+        const payload: Partial<CreateClientPayload> = { ...formData };
+        
+        // Only include image if a new one was selected
+        if (profileImage) {
+        payload.profile_image = profileImage;
+        }
 
-      await createClient(payload);
+        await updateClient(clientId, payload);
 
-      alert(`Client ${formData.first_name} added successfully!`);
-      router.push("/trainer/clients");
+        alert(`Client ${formData.first_name} updated successfully!`);
+        router.push("/trainer/clients");
     } catch (err: unknown) {
-      if (err instanceof Error) {
+        if (err instanceof Error) {
         setError(err.message);
         console.error(err);
-      } else {
-        setError("Error submitting client.");
+        } else {
+        setError("Error updating client.");
         console.error(err);
-      }
+        }
     }
-  };
+    };
 
-return (
+  if (loading) {
+    return (
+      <div className="max-w-2xl mx-auto mt-6 p-6 bg-gray-800/50 backdrop-blur-sm text-white rounded-xl shadow-lg border border-gray-700">
+        <p className="text-center">Loading client data...</p>
+      </div>
+    );
+  }
+
+  return (
     <div className="max-w-2xl mx-auto mt-6 p-6 bg-gray-800/50 backdrop-blur-sm text-white rounded-xl shadow-lg border border-gray-700">
-      <h1 className="text-xl mb-5 font-bold text-center">Add New Client</h1>
+      <h1 className="text-xl mb-5 font-bold text-center">Update Client</h1>
 
       {error && (
         <div className="mb-4 p-3 bg-red-500/10 border border-red-500/50 rounded-lg text-red-400 text-sm text-center">
@@ -99,7 +141,7 @@ return (
           <div className="grid md:grid-cols-2 gap-3">
             <div>
               <label className="block mb-1.5 text-gray-300 text-xs font-medium">
-                First Name <span className="text-red-400">*</span>
+                First Name
               </label>
               <input
                 type="text"
@@ -107,13 +149,12 @@ return (
                 onChange={(e) => handleChange("first_name", e.target.value)}
                 className="w-full p-2.5 rounded-lg bg-gray-900/50 border border-gray-700 text-white text-sm focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all"
                 placeholder="John"
-                required
               />
             </div>
 
             <div>
               <label className="block mb-1.5 text-gray-300 text-xs font-medium">
-                Last Name <span className="text-red-400">*</span>
+                Last Name
               </label>
               <input
                 type="text"
@@ -121,7 +162,6 @@ return (
                 onChange={(e) => handleChange("last_name", e.target.value)}
                 className="w-full p-2.5 rounded-lg bg-gray-900/50 border border-gray-700 text-white text-sm focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all"
                 placeholder="Doe"
-                required
               />
             </div>
           </div>
@@ -129,7 +169,7 @@ return (
           <div className="grid md:grid-cols-2 gap-3 mt-3">
             <div>
               <label className="block mb-1.5 text-gray-300 text-xs font-medium">
-                Email <span className="text-red-400">*</span>
+                Email
               </label>
               <input
                 type="email"
@@ -137,8 +177,9 @@ return (
                 onChange={(e) => handleChange("email", e.target.value)}
                 className="w-full p-2.5 rounded-lg bg-gray-900/50 border border-gray-700 text-white text-sm focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all"
                 placeholder="john.doe@example.com"
-                required
+                disabled
               />
+              <p className="mt-1 text-xs text-gray-500">Email cannot be changed</p>
             </div>
 
             <div>
@@ -182,6 +223,20 @@ return (
           {/* Profile Image */}
           <div className="mt-3">
             <label className="block mb-1.5 text-gray-300 text-xs font-medium">Profile Image</label>
+            {currentImageUrl && (
+              <div className="mb-2 flex items-center gap-3">
+                <div className="relative w-16 h-16">
+                  <Image
+                    src={currentImageUrl}
+                    alt="Current profile"
+                    fill
+                    sizes="64px"
+                    className="rounded-full object-cover border-2 border-gray-600"
+                  />
+                </div>
+                <span className="text-xs text-gray-400">Current image</span>
+              </div>
+            )}
             <input
               type="file"
               accept="image/*"
@@ -193,7 +248,7 @@ return (
                 <svg className="w-4 h-4 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
-                Selected: {profileImage.name}
+                New image selected: {profileImage.name}
               </p>
             )}
           </div>
@@ -308,13 +363,12 @@ return (
           </button>
           <button
             type="submit"
-            className="flex-1 py-3 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white rounded-lg font-semibold text-sm shadow-lg shadow-emerald-500/20 transition-all transform hover:scale-[1.02] active:scale-[0.98]"
+            className="flex-1 py-3 bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white rounded-lg font-semibold text-sm shadow-lg shadow-blue-500/20 transition-all transform hover:scale-[1.02] active:scale-[0.98]"
           >
-            Add Client
+            Update Client
           </button>
         </div>
-        
       </form>
     </div>
-    );
+  );
 }

@@ -2,10 +2,10 @@
 
 import { useEffect, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
-import { getTrainerAlerts, getTrainerDashboardMetrics } from "@/api/trainer";
+import { getTrainerAlerts, getTrainerDashboardMetrics, getTrainerProfile } from "@/api/trainer";
 import { RunCompositeResponse, runCompositeAgentFormData } from "@/api/developer";
 import { Bell, ChevronLeft, ChevronRight, Calendar, Users, MessageSquare, AlertTriangle, Mail, FileText, ExternalLink } from 'lucide-react';
-
+import { TrainerProfile } from "@/api/trainerTypes"
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -15,6 +15,7 @@ import {
   Tooltip,
   Legend,
 } from "chart.js";
+import Image from 'next/image';
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend);
 
@@ -76,6 +77,7 @@ function buildLast7DaysPlaceholders(): DayAlerts[] {
 export default function TrainerDashboard() {
   const router = useRouter();
   const [trainer, setTrainer] = useState<Trainer | null>(null);
+  const [trainerProfile, setTrainerProfile] = useState<TrainerProfile | null>(null);
   const [metrics, setMetrics] = useState<TrainerMetrics | null>(null); 
 
   // initialize with placeholders so UI always has 7 days available
@@ -115,6 +117,16 @@ export default function TrainerDashboard() {
       return;
     }
     setTrainer(JSON.parse(stored));
+
+    // fetch trainer profile
+    getTrainerProfile()
+      .then((data: TrainerProfile) => {
+        console.log("Trainer profile:", data);
+        setTrainerProfile(data); // Add this state
+      })
+      .catch((err) => {
+        console.error("Failed to fetch trainer profile:", err);
+      });
 
     // fetch alerts
     getTrainerAlerts()
@@ -261,28 +273,43 @@ export default function TrainerDashboard() {
     {/* Main dashboard area */}
     <div className="flex-1 flex flex-col gap-4 min-w-0">
       {/* Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-9 bg-gradient-to-br from-yellow-500 to-orange-600 rounded-lg flex items-center justify-center shadow-lg">
-              <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-              </svg>
-            </div>
-            <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight">Dashboard</h1>
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-9 bg-gradient-to-br from-yellow-500 to-orange-600 rounded-lg flex items-center justify-center shadow-lg">
+            <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+            </svg>
           </div>
-          
-          <div className="hidden sm:flex items-center gap-3 group">
-            <div className="h-0.5 w-24 bg-gradient-to-r from-transparent to-yellow-500/50 group-hover:to-yellow-500 transition-all duration-300"></div>
-            <span className="text-sm font-semibold text-gray-400 tracking-wider uppercase group-hover:text-yellow-400 transition-colors duration-300">
-              FibuVerse
-            </span>
-            <div className="h-0.5 w-24 bg-gradient-to-l from-transparent to-yellow-500/50 group-hover:to-yellow-500 transition-all duration-300"></div>
-          </div>
-          
-          <div className="text-sm text-gray-300 font-medium">
-            Welcome, <strong className="text-white font-bold">{trainer.username}</strong>
-          </div>
+          <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight">Dashboard</h1>
         </div>
+        
+        <div className="hidden sm:flex items-center gap-3 group">
+          <div className="h-0.5 w-24 bg-gradient-to-r from-transparent to-yellow-500/50 group-hover:to-yellow-500 transition-all duration-300"></div>
+          <span className="text-sm font-semibold text-gray-400 tracking-wider uppercase group-hover:text-yellow-400 transition-colors duration-300">
+            FibuVerse
+          </span>
+          <div className="h-0.5 w-24 bg-gradient-to-l from-transparent to-yellow-500/50 group-hover:to-yellow-500 transition-all duration-300"></div>
+        </div>
+        
+          <div className="flex items-center gap-3">
+            <div className="text-sm text-gray-300 font-medium">
+              Welcome, <strong className="text-white font-bold">{trainer.username}</strong>
+            </div>
+            <div className="relative group cursor-pointer">
+              <div className="absolute -inset-2 bg-gradient-to-r from-yellow-500 to-orange-600 rounded-full blur-md opacity-0 group-hover:opacity-100 transition-opacity duration-500 animate-pulse"></div>
+              <div className="relative w-10 h-10 overflow-hidden transition-all duration-500 group-hover:rounded-2xl rounded-full border-2 border-white shadow-lg group-hover:scale-125 group-hover:rotate-12">
+                <Image 
+                  src={trainerProfile?.profile_picture || `https://ui-avatars.com/api/?name=${encodeURIComponent(trainer.username)}&background=F59E0B&color=fff`}
+                  alt={trainer.username}
+                  fill
+                  className="object-cover transition-transform duration-500 group-hover:scale-110"
+                  sizes="40px"
+                />
+              </div>
+              <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-green-500 rounded-full border-2 border-gray-900 group-hover:scale-150 transition-transform"></div>
+            </div>
+          </div>
+      </div>
         {/* Metrics */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
           <div className="bg-gray-800/50 backdrop-blur-sm rounded-xl p-4 border border-gray-700 hover:border-blue-500/50 transition-all">

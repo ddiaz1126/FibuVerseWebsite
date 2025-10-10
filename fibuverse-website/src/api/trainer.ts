@@ -1,5 +1,5 @@
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
-import { WorkoutPayload, Program, WorkoutListItem, Workout } from "@/api/trainerTypes";
+import { WorkoutPayload, Program, WorkoutListItem, Workout, TrainerProfile, ClientProfile, CreateClientPayload, ProgressPhotoResponse} from "@/api/trainerTypes";
 
 // ------------------ Refresh Token API Wrapper Functions
 interface RefreshResponse {
@@ -816,24 +816,43 @@ export async function sendFitnessTestsData(payload: SendFitnessTestPayload) {
     throw err;
   }
 }
-interface CreateClientPayload {
-  first_name: string;
-  last_name: string;
-  email: string;
-  phone_number: string;
-  gender: string;
-  date_of_birth: string; // ISO date string or yyyy-mm-dd
-  city: string;
-  home_state: string;
-  country: string;
-  height: string;      // could use number if parsed
-  body_weight: string; // could use number if parsed
+
+// Get Client
+export async function getClientProfile(client_id: number): Promise<ClientProfile> {
+  try {
+    const data = await fetchWithAutoRefresh(`/trainers/get-profile/${client_id}/`) as ClientProfile;
+    console.log("Fetched client profile:", data);
+    return data;
+  } catch (err: unknown) {
+    if (err instanceof Error) {
+      console.error("[getClientProfile] error:", err.message);
+      throw err;
+    } else {
+      console.error("[getClientProfile] unknown error:", err);
+      throw new Error("Unknown error occurred while fetching client profile");
+    }
+  }
 }
 
-// Crete Client
+// Create Client
 export async function createClient(payload: CreateClientPayload) {
   try {
-    const data = await postWithAutoRefresh("/trainers/add-client/", payload);
+    // Convert payload to FormData
+    const formData = new FormData();
+    
+    // Append all text fields
+    Object.entries(payload).forEach(([key, value]) => {
+      if (value !== undefined && value !== null && key !== 'profile_image') {
+        formData.append(key, String(value));
+      }
+    });
+    
+    // Append the image file if present
+    if (payload.profile_image) {
+      formData.append('profile_image', payload.profile_image);
+    }
+    
+    const data = await postFormDataWithAutoRefresh("/trainers/add-client/", formData);
     console.log("Client created successfully:", data);
     return data;
   } catch (err: unknown) {
@@ -845,6 +864,37 @@ export async function createClient(payload: CreateClientPayload) {
     throw err;
   }
 }
+
+export async function updateClient(clientId: number, payload: Partial<CreateClientPayload>) {
+  try {
+    // Convert payload to FormData
+    const formData = new FormData();
+    
+    // Append all text fields
+    Object.entries(payload).forEach(([key, value]) => {
+      if (value !== undefined && value !== null && key !== 'profile_image') {
+        formData.append(key, String(value));
+      }
+    });
+    
+    // Append the image file if present
+    if (payload.profile_image) {
+      formData.append('profile_image', payload.profile_image);
+    }
+    
+    const data = await postFormDataWithAutoRefresh(`/trainers/update-profile/${clientId}/`, formData);
+    console.log("Client updated successfully:", data);
+    return data;
+  } catch (err: unknown) {
+    if (err instanceof Error) {
+      console.error("[updateClient] error:", err.message);
+    } else {
+      console.error("[updateClient] unexpected error:", err);
+    }
+    throw err;
+  }
+}
+
 export interface Exercise {
   id: number;
   name: string;
@@ -1122,6 +1172,82 @@ export async function getProgram(programId: number): Promise<Program> {
       console.error("[GetProgram] error:", err.message);
     } else {
       console.error("[GetProgram] unexpected error:", err);
+    }
+    throw err;
+  }
+}
+
+export async function getTrainerProfile(): Promise<TrainerProfile> {
+  try {
+    const data = await fetchWithAutoRefresh("/trainers/get-trainers-info/");
+    return data as TrainerProfile;
+  } catch (err: unknown) {
+    if (err instanceof Error) {
+      console.error("[getTrainerProfile] error:", err);
+      throw err;
+    } else {
+      console.error("[getTrainerProfile] unknown error:", err);
+      throw new Error("Unknown error fetching trainer profile");
+    }
+  }
+}
+// Update Trainer Profile
+export async function updateTrainerProfile(formData: FormData): Promise<TrainerProfile> {
+  try {
+    const data = await postFormDataWithAutoRefresh("/trainers/update_profile/", formData);
+    console.log("Send Trainer Profile Data:", data);
+    return data as TrainerProfile;
+  } catch (err: unknown) {
+    if (err instanceof Error) {
+      console.error("[UpdateTrainerProfile] error:", err.message);
+    } else {
+      console.error("[UpdateTrainerProfile] unexpected error:", err);
+    }
+    throw err;
+  }
+}
+
+export async function sendProgressPhoto(clientId: number, formData: FormData): Promise<ProgressPhotoResponse> {
+  try {
+    const data = await postFormDataWithAutoRefresh(`/clients/add-progress-photo/${clientId}/`, formData);
+    console.log("Sending Progress Data:", data);
+    return data as ProgressPhotoResponse;
+  } catch (err: unknown) {
+    if (err instanceof Error) {
+      console.error("[SendProgressPhoto] error:", err.message);
+    } else {
+      console.error("[SendProgressPhoto] unexpected error:", err);
+    }
+    throw err;
+  }
+}
+
+// Add this interface for the GET response type
+export interface ProgressPhotosListResponse {
+  count: number;
+  photos: {
+    id: number;
+    image_url: string | null;
+    date_taken: string;
+    weight?: number | null;
+    body_fat_percentage?: number | null;
+    notes?: string | null;
+    body_part?: string | null;
+    is_private: boolean;
+    created_at: string;
+  }[];
+}
+
+export async function fetchProgressPhotos(clientId: number): Promise<ProgressPhotosListResponse> {
+  try {
+    const data = await fetchWithAutoRefresh(`/clients/get-progress-photo/${clientId}/`);
+    console.log("Fetched Progress Photos:", data);
+    return data as ProgressPhotosListResponse;
+  } catch (err: unknown) {
+    if (err instanceof Error) {
+      console.error("[FetchProgressPhotos] error:", err.message);
+    } else {
+      console.error("[FetchProgressPhotos] unexpected error:", err);
     }
     throw err;
   }

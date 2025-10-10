@@ -24,6 +24,40 @@ export interface Client {
   cardio_sessions?: CardioSession[];
   weight_workouts?: WeightWorkout[];
 }
+
+export interface ClientProfile {
+  id: number;
+  first_name: string;
+  last_name: string;
+  email: string;
+  phone_number?: string;
+  gender?: string;
+  date_of_birth?: string;
+  city?: string;
+  home_state?: string;
+  country?: string;
+  height?: number;        // Backend returns number, not string
+  body_weight?: number;   // Backend returns number, not string
+  fitness_goal?: string;
+  profile_image?: string; // URL string, not File object
+}
+
+export interface CreateClientPayload {
+  first_name: string;
+  last_name: string;
+  email: string;
+  phone_number: string;
+  gender: string;
+  date_of_birth: string; // ISO date string or yyyy-mm-dd
+  city: string;
+  home_state: string;
+  country: string;
+  height: string;
+  body_weight: string;
+  fitness_goal?: string; // New field
+  profile_image?: File; // New field for image upload
+}
+
 export interface HealthMetric {
   created_at: string; // ISO date string
   resting_hr?: number;
@@ -416,4 +450,40 @@ export interface ClientMetricsData {
   fitness_tests?: FitnessTest[];         // <-- array
   cardio_sessions?: CardioSession[];
   weight_workouts?: WeightWorkout[];
+}
+
+export interface TrainerProfile {
+  id: number;
+  user: number;
+  name: string;
+  email: string;
+  city?: string;
+  state?: string;
+  specialization: string;
+  bio?: string;
+  experience_years: number;
+  certifications?: string;
+  hourly_rate?: string;
+  profile_picture?: string;
+  instagram_url?: string;
+  youtube_url?: string;
+  podcast_url?: string;
+  website_url?: string;
+  created_at: string;
+  updated_at: string;
+}
+
+// Add this interface for the response type
+export interface ProgressPhotoResponse {
+  message: string;
+  photo: {
+    id: number;
+    image_url: string;
+    date_taken: string;
+    weight?: number;
+    body_fat_percentage?: number;
+    notes?: string;
+    body_part?: string;
+    is_private: boolean;
+  };
 }

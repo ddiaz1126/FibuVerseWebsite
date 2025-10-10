@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Bar, Line } from "react-chartjs-2";
 import { useRouter } from "next/navigation"; // <-- import router
 import { Button } from "@/components/ui/button"
+import PhotoTimelinePage from "@/components/clients/PhotoTimeline"
 
 import {
   Chart as ChartJS,
@@ -352,6 +353,7 @@ export default function ClientMetricsTab({
   // -------------------- Render Sections --------------------
   return (
 <div className="p-4 space-y-4">
+      <PhotoTimelinePage clientId={clientId} />
       <div className="flex justify-end mb-3">
         <Button
           onClick={() =>
