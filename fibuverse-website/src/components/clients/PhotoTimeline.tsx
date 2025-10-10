@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { Camera, X, Plus, ChevronDown, ChevronUp, Upload } from "lucide-react";
 import { sendProgressPhoto, fetchProgressPhotos } from "@/api/trainer"; // Update with correct path
 import Image from "next/image";
@@ -26,6 +26,7 @@ export default function PhotoTimelinePage({ clientId }: PhotoTimelinePageProps) 
   const [isLoading, setIsLoading] = useState(true);
   const [isUploading, setIsUploading] = useState(false);
   const [showUploadForm, setShowUploadForm] = useState(false);
+  const photosCache = useRef<Record<string, ProgressPhoto[]>>({});
 
   // Form state
   const [uploadData, setUploadData] = useState({
@@ -38,18 +39,31 @@ export default function PhotoTimelinePage({ clientId }: PhotoTimelinePageProps) 
     is_private: false
   });
 
-  // Fetch photos on mount
-    const loadPhotos = useCallback(async () => {
-    try {
-        setIsLoading(true);
-        const response = await fetchProgressPhotos(clientId);
-        setPhotos(response.photos);
-    } catch (error) {
-        console.error("Failed to load progress photos:", error);
-    } finally {
-        setIsLoading(false);
+  const loadPhotos = useCallback(async (force = false) => {
+    // Skip cache if forcing a refresh
+    if (!force && photosCache.current[clientId]) {
+      setPhotos(photosCache.current[clientId]);
+      setIsCollapsed(photosCache.current[clientId].length === 0);
+      return;
     }
-    }, [clientId]);
+
+    try {
+      setIsLoading(true);
+      const response = await fetchProgressPhotos(clientId);
+      setPhotos(response.photos);
+
+      // Update cache
+      photosCache.current[clientId] = response.photos;
+
+      // Expand if client has photos
+      if (response.photos.length > 0) setIsCollapsed(false);
+    } catch (error) {
+      console.error("Failed to load progress photos:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [clientId]);
+
 
     // Fetch photos on mount
     useEffect(() => {
@@ -90,7 +104,7 @@ export default function PhotoTimelinePage({ clientId }: PhotoTimelinePageProps) 
         is_private: false,
       });
       setShowUploadForm(false);
-      await loadPhotos(); // ✅ Now accessible
+      await loadPhotos(true); // ✅ force fresh fetch after upload
     } catch (error) {
       console.error("Failed to upload photo:", error);
       alert("Failed to upload photo. Please try again.");
@@ -99,30 +113,18 @@ export default function PhotoTimelinePage({ clientId }: PhotoTimelinePageProps) 
     }
   };
 
-  const calculateTotalWeightLoss = () => {
-    const photosWithWeight = photos.filter(p => p.weight);
-    if (photosWithWeight.length < 2) return 0;
-    
-    // Sort oldest to newest
-    const sorted = [...photosWithWeight].sort((a, b) => 
-      new Date(a.date_taken).getTime() - new Date(b.date_taken).getTime()
-    );
-    
-    // Oldest weight - Newest weight (positive = weight loss)
-    return (sorted[0].weight! - sorted[sorted.length - 1].weight!).toFixed(1);
-  };
-  const getWeightChange = (currentIndex: number) => {
-    if (currentIndex >= photos.length - 1) return null;
-    
-    const currentPhoto = photos[currentIndex]; // Newer
-    const previousPhoto = photos[currentIndex + 1]; // Older
-    
-    if (currentPhoto.weight != null && previousPhoto.weight != null) {
-      return currentPhoto.weight - previousPhoto.weight;
-    }
-    
-    return null;
-  };
+    const calculateTotalWeightLoss = (): string => {
+      const photosWithWeight = photos.filter(p => p.weight != null);
+      if (photosWithWeight.length < 2) return "0";
+
+      const sorted = [...photosWithWeight].sort(
+        (a, b) => new Date(a.date_taken).getTime() - new Date(b.date_taken).getTime()
+      );
+
+      const change = sorted[sorted.length - 1].weight! - sorted[0].weight!;
+      return change.toFixed(1);
+    };
+
 
   return (
     <div className="max-w-7xl mx-auto">
@@ -135,9 +137,19 @@ export default function PhotoTimelinePage({ clientId }: PhotoTimelinePageProps) 
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
             </svg>
             Progress Photos
-            <span className="text-xs text-gray-400 font-normal">
-              ({photos.length} photos{photos.length > 1 && ` · ${calculateTotalWeightLoss()}kg lost`})
-            </span>
+          <span className="text-xs text-gray-400 font-normal">
+            ({photos.length} photos
+              {photos.length > 1 && (() => {
+                const change = parseFloat(calculateTotalWeightLoss());
+                if (change === 0) return " · 0 kg change";
+                const abs = Math.abs(change).toFixed(1);
+                return change < 0
+                  ? ` · ${abs} kg lost`
+                  : ` · +${abs} kg gained`;
+              })()}
+            )
+          </span>
+
           </h2>
           
           <div className="flex items-center gap-2">
