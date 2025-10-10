@@ -8,7 +8,7 @@ import { TrainerProfile } from "@/api/trainerTypes";
 
 
 export default function AccountSection() {
-  const router = useRouter();
+  // const router = useRouter();
   const [profileData, setProfileData] = useState<TrainerProfile | null>(null);
   const [originalData, setOriginalData] = useState<TrainerProfile | null>(null); 
   const [isEditing, setIsEditing] = useState(false);
