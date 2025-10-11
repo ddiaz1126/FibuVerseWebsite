@@ -42,8 +42,8 @@ export function SubAgentNetworkGraph({ agent }: { agent: SubAgent }) {
   const getOutputColor = () => 'bg-green-500/80';
 
   return (
-    <div className="bg-gray-800 rounded-xl border border-gray-700 overflow-hidden p-6">
-      <div className="relative w-full bg-gradient-to-br from-gray-900/50 to-gray-800/50 rounded-2xl border border-gray-700/50 p-8 backdrop-blur-sm overflow-x-auto min-h-[400px]">
+<div className="bg-gray-800 rounded-xl border border-gray-700 overflow-hidden p-3">
+      <div className="relative w-full bg-gradient-to-br from-gray-900/50 to-gray-800/50 rounded-xl border border-gray-700/50 p-4 backdrop-blur-sm overflow-x-auto min-h-[280px]">
         {/* Background Effects */}
         <div className="absolute inset-0 opacity-10">
           <div
@@ -58,14 +58,14 @@ export function SubAgentNetworkGraph({ agent }: { agent: SubAgent }) {
           />
         </div>
 
-        <div className="relative z-10 flex items-center justify-between h-full min-h-[350px]">
+        <div className="relative z-10 flex items-center justify-between h-full min-h-[200px]">
           {/* Input Nodes */}
-          <div className="flex flex-col items-center gap-4">
-            <div className="text-xs text-gray-400 font-semibold mb-2">
+          <div className="flex flex-col items-center gap-2">
+            <div className="text-[10px] text-gray-400 font-semibold mb-1">
               Inputs
             </div>
             
-            <div className="flex flex-col gap-3">
+            <div className="flex flex-col gap-2">
               {inputKeys.map((key) => {
                 const input = agent.inputs[key];
                 const isHovered = hoveredInput === key;
@@ -78,23 +78,23 @@ export function SubAgentNetworkGraph({ agent }: { agent: SubAgent }) {
                     onMouseLeave={() => setHoveredInput(null)}
                   >
                     {/* Input Node */}
-                    <div className={`px-4 py-2 rounded-full ${getInputColor(key)}
-                      border-2 border-white/20 flex items-center justify-center text-sm font-medium
-                      transition-all duration-300 group-hover:scale-105 shadow-lg
-                      ${isHovered ? 'scale-105 border-white/60' : ''} min-w-[120px]`}
+                    <div className={`px-3 py-1.5 rounded-full ${getInputColor(key)}
+                      border border-white/20 flex items-center justify-center text-xs font-medium
+                      transition-all duration-300 group-hover:scale-105 shadow-md
+                      ${isHovered ? 'scale-105 border-white/60' : ''} min-w-[90px]`}
                     >
                       {key}
                       {input.required && <span className="ml-1 text-red-300">*</span>}
                     </div>
 
                     {/* Tooltip */}
-                    <div className="absolute left-full ml-4 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none z-20">
-                      <div className="bg-black/90 text-white text-xs px-3 py-2 rounded-lg shadow-xl">
+                    <div className="absolute left-full ml-3 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none z-20">
+                      <div className="bg-black/90 text-white text-[10px] px-2 py-1.5 rounded-lg shadow-xl">
                         <div className="font-semibold whitespace-nowrap">{key}</div>
-                        <div className="text-gray-400 mt-1 whitespace-nowrap">Type: {input.type}</div>
-                        {input.required && <div className="text-orange-400 mt-1 whitespace-nowrap">Required</div>}
+                        <div className="text-gray-400 mt-0.5 whitespace-nowrap">Type: {input.type}</div>
+                        {input.required && <div className="text-orange-400 mt-0.5 whitespace-nowrap">Required</div>}
                         {input.description && (
-                          <div className="text-gray-400 mt-1 max-w-[200px] line-clamp-6">
+                          <div className="text-gray-400 mt-0.5 max-w-[180px] line-clamp-4">
                             {input.description}
                           </div>
                         )}
@@ -104,7 +104,7 @@ export function SubAgentNetworkGraph({ agent }: { agent: SubAgent }) {
                     {/* Pulse rings for hovered node */}
                     {isHovered && (
                       <>
-                        <div className="absolute inset-0 rounded-full border-2 border-yellow-400/50 animate-ping" />
+                        <div className="absolute inset-0 rounded-full border border-yellow-400/50 animate-ping" />
                         <div className="absolute -inset-1 rounded-full border border-yellow-400/30 animate-ping" style={{ animationDelay: '0.5s' }} />
                       </>
                     )}
@@ -113,57 +113,57 @@ export function SubAgentNetworkGraph({ agent }: { agent: SubAgent }) {
               })}
             </div>
 
-            <div className="text-sm text-gray-500 mt-2">
-              <span className="text-orange-400 text-base font-semibold">*</span> Required
+            <div className="text-[10px] text-gray-500 mt-1">
+              <span className="text-orange-400 text-xs font-semibold">*</span> Required
             </div>
 
           </div>
 
           {/* Arrow */}
-          <div className="flex-shrink-0 px-8 relative">
-            <div className="text-4xl font-bold text-blue-400 drop-shadow-[0_0_10px_rgba(59,130,246,0.6)] animate-flow">
+          <div className="flex-shrink-0 px-4 relative">
+            <div className="text-2xl font-bold text-blue-400 drop-shadow-[0_0_10px_rgba(59,130,246,0.6)] animate-flow">
               ⟶
             </div>
           </div>
 
           {/* Agent Node */}
           <div className="flex flex-col items-center">
-            <div className="text-xs text-gray-400 font-semibold mb-2">
+            <div className="text-[10px] text-gray-400 font-semibold mb-1">
               Agent
             </div>
             
             <div className="group relative cursor-pointer">
-              <div className="w-20 h-20 rounded-full bg-purple-600 border-2 border-white/20 flex items-center justify-center text-3xl shadow-lg hover:scale-110 transition-all duration-300">
+              <div className="w-14 h-14 rounded-full bg-purple-600 border border-white/20 flex items-center justify-center text-2xl shadow-md hover:scale-110 transition-all duration-300">
                 🤖
               </div>
 
               {/* Agent Tooltip */}
-              <div className="absolute left-1/2 -translate-x-1/2 -bottom-20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none z-20">
-                <div className="bg-black/90 text-white text-xs px-3 py-2 rounded-lg shadow-xl">
+              <div className="absolute left-1/2 -translate-x-1/2 -bottom-16 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none z-20">
+                <div className="bg-black/90 text-white text-[10px] px-2 py-1.5 rounded-lg shadow-xl">
                   <div className="font-semibold whitespace-nowrap">{agent.name}</div>
-                  <div className="text-gray-400 mt-1 max-w-[250px] line-clamp-6">{agent.description}</div>
-                  <div className="text-gray-500 mt-1 text-[10px] whitespace-nowrap">{agent.filename}</div>
+                  <div className="text-gray-400 mt-0.5 max-w-[200px] line-clamp-4">{agent.description}</div>
+                  <div className="text-gray-500 mt-0.5 text-[9px] whitespace-nowrap">{agent.filename}</div>
                 </div>
               </div>
             </div>
 
-            <div className="mt-3 text-xs text-gray-300 font-medium">{agent.name}</div>
+            <div className="mt-2 text-[10px] text-gray-300 font-medium">{agent.name}</div>
           </div>
 
           {/* Arrow */}
-          <div className="flex-shrink-0 px-8 relative">
-            <div className="text-4xl font-bold text-blue-400 drop-shadow-[0_0_10px_rgba(59,130,246,0.6)] animate-flow">
+          <div className="flex-shrink-0 px-4 relative">
+            <div className="text-2xl font-bold text-blue-400 drop-shadow-[0_0_10px_rgba(59,130,246,0.6)] animate-flow">
               ⟶
             </div>
           </div>
 
           {/* Output Nodes */}
-          <div className="flex flex-col items-center gap-4">
-            <div className="text-xs text-gray-400 font-semibold mb-2">
+          <div className="flex flex-col items-center gap-2">
+            <div className="text-[10px] text-gray-400 font-semibold mb-1">
               Outputs
             </div>
             
-            <div className="flex flex-col gap-3">
+            <div className="flex flex-col gap-2">
               {outputKeys.map((key) => {
                 const output = agent.outputs[key];
                 const isHovered = hoveredOutput === key;
@@ -176,21 +176,21 @@ export function SubAgentNetworkGraph({ agent }: { agent: SubAgent }) {
                     onMouseLeave={() => setHoveredOutput(null)}
                   >
                     {/* Output Node */}
-                    <div className={`px-4 py-2 rounded-full ${getOutputColor()}
-                      border-2 border-white/20 flex items-center justify-center text-sm font-medium
-                      transition-all duration-300 group-hover:scale-105 shadow-lg
-                      ${isHovered ? 'scale-105 border-white/60' : ''} min-w-[120px]`}
+                    <div className={`px-3 py-1.5 rounded-full ${getOutputColor()}
+                      border border-white/20 flex items-center justify-center text-xs font-medium
+                      transition-all duration-300 group-hover:scale-105 shadow-md
+                      ${isHovered ? 'scale-105 border-white/60' : ''} min-w-[90px]`}
                     >
                       {key}
                     </div>
 
                     {/* Tooltip */}
-                    <div className="absolute right-full mr-4 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none z-20">
-                      <div className="bg-black/90 text-white text-xs px-3 py-2 rounded-lg shadow-xl">
+                    <div className="absolute right-full mr-3 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none z-20">
+                      <div className="bg-black/90 text-white text-[10px] px-2 py-1.5 rounded-lg shadow-xl">
                         <div className="font-semibold whitespace-nowrap">{key}</div>
-                        <div className="text-gray-400 mt-1 whitespace-nowrap">Type: {output.type}</div>
+                        <div className="text-gray-400 mt-0.5 whitespace-nowrap">Type: {output.type}</div>
                         {output.description && (
-                          <div className="text-gray-400 mt-1 max-w-[200px] line-clamp-6">
+                          <div className="text-gray-400 mt-0.5 max-w-[180px] line-clamp-4">
                             {output.description}
                           </div>
                         )}
@@ -200,7 +200,7 @@ export function SubAgentNetworkGraph({ agent }: { agent: SubAgent }) {
                     {/* Pulse rings for hovered node */}
                     {isHovered && (
                       <>
-                        <div className="absolute inset-0 rounded-full border-2 border-yellow-400/50 animate-ping" />
+                        <div className="absolute inset-0 rounded-full border border-yellow-400/50 animate-ping" />
                         <div className="absolute -inset-1 rounded-full border border-yellow-400/30 animate-ping" style={{ animationDelay: '0.5s' }} />
                       </>
                     )}
@@ -212,8 +212,8 @@ export function SubAgentNetworkGraph({ agent }: { agent: SubAgent }) {
         </div>
 
         {/* Connection indicators */}
-        <div className="absolute bottom-4 left-4 flex items-center gap-2 text-xs text-gray-400 z-10">
-          <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse" />
+        <div className="absolute bottom-2 left-2 flex items-center gap-1.5 text-[10px] text-gray-400 z-10">
+          <div className="w-1.5 h-1.5 bg-green-400 rounded-full animate-pulse" />
           <span>
             {inputKeys.length} Input{inputKeys.length !== 1 ? 's' : ''} • {' '}
             {outputKeys.length} Output{outputKeys.length !== 1 ? 's' : ''}

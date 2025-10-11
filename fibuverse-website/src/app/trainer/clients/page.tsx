@@ -171,6 +171,7 @@ export default function ClientsPage() {
   const [cardioSessionInsights, setCardioSessionInsights] = useState<CardioSessionInsights | null>(null);
   const [nutritionMeta, setNutritionMeta] = useState<NutritionMetadata | null>(null);
   const [metricsData, setMetricsData] = useState<ClientMetricsData | null>(null);
+  const [mobileDropdownOpen, setMobileDropdownOpen] = useState(false);
 
   const [activeTab, setActiveTab] = useState<"Client Metrics" | "Weights Analysis" | "Cardio Analysis" | "Nutrition Analysis" | "History" | "Programs">("Client Metrics");
   const [loading, setLoading] = useState(true);
@@ -355,9 +356,9 @@ export default function ClientsPage() {
   ];
 
   return (
-    <div className="flex min-h-screen bg-gray-900 text-white">
+    <div className="flex flex-col md:flex-row min-h-screen bg-gray-900 text-white">
       {/* Left sidebar */}
-      <div className="flex-none w-1/4 md:w-1/5 lg:w-1/6 bg-gray-800/50 backdrop-blur-sm border-r border-gray-700 p-3 flex flex-col rounded-xl m-2">
+      <div className="flex-none w-1/4 md:w-1/5 lg:w-1/6 bg-gray-800/50 backdrop-blur-sm border-r border-gray-700 p-3 flex-col rounded-xl m-2 hidden md:flex">
         {/* Add Client Button */}
         <Button
           onClick={() => router.push("/trainer/clients/add-client")}
@@ -438,6 +439,151 @@ export default function ClientsPage() {
                 </button>
               ))}
             </div>
+          )}
+        </div>
+      </div>
+
+      {/* Mobile View - Add Client Button & Dropdown */}
+      <div className="md:hidden p-3 bg-gray-800/50 backdrop-blur-sm border-b border-gray-700 rounded-xl m-2 space-y-2 relative z-50 overflow-visible">
+        {/* Add Client Button */}
+        <Button
+          onClick={() => router.push("/trainer/clients/add-client")}
+          variant="success"
+          size="sm"
+          icon={<Users className="w-3.5 h-5.5" />}
+          label="Add Client"
+          className="w-full"
+        />
+
+        {/* Client Dropdown */}
+        <div className="relative z-50" id="client-dropdown-container">
+          <button
+            onClick={() => setMobileDropdownOpen(!mobileDropdownOpen)}
+            className="w-full p-3 bg-gray-900/50 border border-gray-700 rounded-lg text-white text-left flex items-center justify-between hover:border-blue-500 transition-colors"
+            id="client-dropdown-button"
+          >
+            <div className="flex items-center gap-2">
+              {selectedClient ? (
+                <>
+                  {selectedClient.profile_image ? (
+                    <Image
+                      src={selectedClient.profile_image}
+                      alt={`${selectedClient.first_name} ${selectedClient.last_name}`}
+                      width={24}
+                      height={24}
+                      className="rounded-full object-cover"
+                    />
+                  ) : (
+                    <div className="w-6 h-6 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white font-bold text-[10px]">
+                      {selectedClient.first_name?.[0]?.toUpperCase()}{selectedClient.last_name?.[0]?.toUpperCase()}
+                    </div>
+                  )}
+                  <span className="text-sm font-semibold">
+                    {selectedClient.first_name} {selectedClient.last_name}
+                  </span>
+                </>
+              ) : (
+                <>
+                  <Users className="w-5 h-5 text-gray-400" />
+                  <span className="text-sm text-gray-400">Select a client</span>
+                </>
+              )}
+            </div>
+            <svg
+              className={`w-5 h-5 text-gray-400 transition-transform ${
+                mobileDropdownOpen ? "rotate-180" : ""
+              }`}
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+            </svg>
+          </button>
+
+          {/* Dropdown Menu */}
+          {mobileDropdownOpen && (
+            <>
+              {/* Backdrop */}
+              <div 
+                className="fixed inset-0 z-40 bg-black/20"
+                onClick={() => setMobileDropdownOpen(false)}
+              ></div>
+              {/* Dropdown */}
+              <div className="absolute top-full left-0 right-0 mt-2 bg-gray-900 border border-gray-700 rounded-lg shadow-2xl max-h-64 overflow-y-auto z-50">
+                {/* Search Input */}
+                <div className="p-2 border-b border-gray-700 sticky top-0 bg-gray-900">
+                  <div className="relative">
+                    <input
+                      type="text"
+                      placeholder="Search clients..."
+                      className="w-full p-2 pl-8 text-xs rounded-lg bg-gray-800 border border-gray-700 placeholder-gray-500 text-white focus:border-blue-500 outline-none"
+                    />
+                    <svg 
+                      className="w-4 h-4 text-gray-500 absolute left-2.5 top-2.5" 
+                      fill="none" 
+                      stroke="currentColor" 
+                      viewBox="0 0 24 24"
+                    >
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                    </svg>
+                  </div>
+                </div>
+
+                {/* Client List */}
+                {loading ? (
+                  <div className="text-center text-gray-400 p-4 text-xs">
+                    <div className="animate-pulse">Loading clients...</div>
+                  </div>
+                ) : clients.length === 0 ? (
+                  <div className="text-center text-gray-500 p-4 text-xs">
+                    <Users className="w-8 h-8 mx-auto mb-2 text-gray-600" />
+                    <p>No clients yet</p>
+                  </div>
+                ) : (
+                  <div className="divide-y divide-gray-700/30">
+                    {clients.map((client) => (
+                      <button
+                        key={client.id}
+                        onClick={() => {
+                          setSelectedClient(client);
+                          setMobileDropdownOpen(false);
+                        }}
+                        className={`w-full text-left px-3 py-2.5 hover:bg-gray-800 transition-colors ${
+                          selectedClient?.id === client.id ? "bg-gray-800" : ""
+                        }`}
+                      >
+                        <div className="flex items-center gap-2.5">
+                          <div className="relative">
+                            {client.profile_image ? (
+                              <Image
+                                src={client.profile_image}
+                                alt={`${client.first_name} ${client.last_name}`}
+                                width={32}
+                                height={32}
+                                className="rounded-full object-cover border-2 border-gray-600"
+                              />
+                            ) : (
+                              <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white font-bold text-xs">
+                                {client.first_name?.[0]?.toUpperCase()}{client.last_name?.[0]?.toUpperCase()}
+                              </div>
+                            )}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-xs font-semibold text-white truncate">
+                              {client.first_name} {client.last_name}
+                            </p>
+                            <p className="text-[10px] text-gray-400 truncate">
+                              {client.email}
+                            </p>
+                          </div>
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </>
           )}
         </div>
       </div>

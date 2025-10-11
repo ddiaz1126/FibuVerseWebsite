@@ -1,32 +1,60 @@
 "use client";
 
-import DeveloperSidebar from "@/components/DeveloperSidebar";
+import DeveloperNavbar from "@/components/DeveloperSidebar";
 import FibuChat from "@/components/FibuChat";
-import { ChatBubbleLeftEllipsisIcon } from "@heroicons/react/24/outline";
-import { useState, useEffect } from "react";
+import { useState } from "react";
+import {
+  HomeIcon,
+  CubeIcon,
+  ArrowsRightLeftIcon,
+  BookOpenIcon,
+  CogIcon,
+  QuestionMarkCircleIcon,
+  ChatBubbleLeftEllipsisIcon,
+} from '@heroicons/react/24/outline';
+import Link from 'next/link';
 
 export default function DeveloperLayout({ children }: { children: React.ReactNode }) {
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [chatOpen, setChatOpen] = useState(false);
   const [chatWidth, setChatWidth] = useState(360);
 
-  useEffect(() => {
-    const handleResize = () => setSidebarCollapsed(window.innerWidth < 768);
-    handleResize();
-    window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
-  }, []);
-
   return (
-    // Full viewport height, flex container
-    <div className="h-screen flex bg-gray-900 text-white">
-      {/* Left sidebar */}
-      <DeveloperSidebar
-        collapsed={sidebarCollapsed}
-        onToggle={() => setSidebarCollapsed(s => !s)}
-      />
+    // Full viewport height, flex column container
+    <div className="h-screen flex flex-col bg-gray-900 text-white">
+      {/* Top navbar */}
+      <DeveloperNavbar onMenuToggle={() => setMobileMenuOpen(m => !m)} />
 
-      {/* Main content flex container */}
+      {/* Mobile menu dropdown (shown when hamburger is clicked) */}
+      {mobileMenuOpen && (
+        <div className="md:hidden bg-gray-800 border-b border-gray-700">
+          <div className="flex flex-col">
+            {[
+              { name: "Dashboard", icon: HomeIcon, href: "/developer/dashboard" },
+              { name: "Agents", icon: CubeIcon, href: "/developer/agents" },
+              { name: "Sandbox", icon: ArrowsRightLeftIcon, href: "/developer/workflow" },
+              { name: "Documentation", icon: BookOpenIcon, href: "/developer/docs" },
+              { name: "Settings", icon: CogIcon, href: "/developer/settings" },
+              { name: "Help", icon: QuestionMarkCircleIcon, href: "/developer/help" },
+            ].map((it) => {
+              const Icon = it.icon;
+              return (
+                <Link
+                  key={it.name}
+                  href={it.href}
+                  className="flex items-center gap-3 px-6 py-3 hover:bg-gray-700 transition-colors"
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  <Icon className="w-5 h-5 text-gray-300" />
+                  <span className="text-sm text-gray-100 font-medium">{it.name}</span>
+                </Link>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* Main content area - flex row for content + chat */}
       <div className="flex-1 flex min-h-0">
         {/* Scrollable content */}
         <main className="flex-1 overflow-auto p-8 min-h-0">

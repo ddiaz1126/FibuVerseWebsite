@@ -2,14 +2,14 @@
 
 import Link from "next/link";
 import { Bars3Icon, CogIcon, QuestionMarkCircleIcon, CubeIcon, ArrowsRightLeftIcon, BookOpenIcon, HomeIcon } from "@heroicons/react/24/outline";
+import { usePathname } from 'next/navigation';
 
-type DeveloperSidebarProps = {
-  collapsed: boolean;
-  onToggle?: () => void;
+type DeveloperNavbarProps = {
+  onMenuToggle?: () => void;
 };
 
 const items = [
-  { name: "Dashboard", icon: HomeIcon, href: "/developer/dashboard" }, // ✅ added dashboard
+  { name: "Dashboard", icon: HomeIcon, href: "/developer/dashboard" },
   { name: "Agents", icon: CubeIcon, href: "/developer/agents" },
   { name: "Sandbox", icon: ArrowsRightLeftIcon, href: "/developer/workflow" },
   { name: "Documentation", icon: BookOpenIcon, href: "/developer/docs" },
@@ -17,59 +17,57 @@ const items = [
   { name: "Help", icon: QuestionMarkCircleIcon, href: "/developer/help" },
 ];
 
-export default function DeveloperSidebar({ collapsed, onToggle }: DeveloperSidebarProps) {
-return (
-  <aside
-    className={`h-screen bg-gray-900 text-white shadow flex flex-col transition-all duration-300 ease-in-out pl-2 ${
-      collapsed ? "w-14" : "w-48"
-    }`}
-  >
-    {/* Top: logo + toggle */}
-    <div className="flex items-center justify-between p-2 border-b border-gray-800 relative">
-      <div className="flex items-center gap-2">
-        <div className="h-6 w-6 rounded-full bg-green-400 flex items-center justify-center font-bold text-gray-900 text-sm">
-          D
+export default function DeveloperNavbar({ onMenuToggle }: DeveloperNavbarProps) {
+  const pathname = usePathname();
+
+  return (
+    <nav className="w-full bg-gray-900 text-white shadow-lg">
+      <div className="flex items-center justify-between px-4 py-2 border-b border-gray-800">
+        {/* Left: Logo */}
+        <div className="flex items-center gap-2">
+          <div className="h-7 w-7 rounded-lg bg-gradient-to-br from-yellow-400 to-yellow-500 flex items-center justify-center font-bold text-gray-900 text-sm shadow-md">
+            F
+          </div>
+          <span className="font-bold text-sm">FibuVerse</span>
         </div>
-        {!collapsed && <span className="font-semibold text-sm">DevPortal</span>}
+
+        {/* Center: Navigation Links (hidden on mobile) */}
+        <div className="hidden md:flex items-center gap-1">
+          {items.map((it) => {
+            const Icon = it.icon;
+            const isActive = pathname === it.href;
+            
+            return (
+              <Link
+                key={it.name}
+                href={it.href}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md transition-all ${
+                  isActive
+                    ? "bg-yellow-400/10 text-yellow-400 border-b-2 border-yellow-400"
+                    : "text-gray-300 hover:bg-gray-800"
+                }`}
+              >
+                <Icon 
+                  className={`w-4 h-4 ${
+                    isActive ? "text-yellow-400" : "text-blue-400"
+                  }`}
+                />
+                <span className="text-xs font-semibold">{it.name}</span>
+              </Link>
+            );
+          })}
+        </div>
+
+        {/* Right: Mobile menu button */}
+        <button
+          onClick={onMenuToggle}
+          className="md:hidden p-1.5 rounded-lg hover:bg-gray-800 active:scale-95 transition-all group"
+          aria-label="Toggle menu"
+        >
+          <Bars3Icon className="w-5 h-5 text-gray-400 group-hover:text-yellow-400 transition-colors" />
+        </button>
+
       </div>
-
-      <button
-        onClick={onToggle}
-        className="p-2 rounded hover:bg-gray-800 active:bg-gray-700 flex items-center justify-center z-10"
-        aria-label="Toggle sidebar"
-      >
-        <Bars3Icon className="w-4 h-4 text-gray-300" />
-      </button>
-    </div>
-
-    {/* Nav */}
-    <nav className="mt-2 flex-1 overflow-y-auto">
-      {items.map((it) => {
-        const Icon = it.icon;
-        return (
-          <Link
-            key={it.name}
-            href={it.href}
-            className={`flex items-center gap-2 px-2 py-2 hover:bg-gray-800 transition-colors ${
-              collapsed ? "justify-center" : ""
-            }`}
-          >
-            <Icon className="w-4 h-4 text-gray-300" />
-            {!collapsed && <span className="text-xs text-gray-100 font-semibold">{it.name}</span>}
-          </Link>
-        );
-      })}
     </nav>
-
-    {/* Footer */}
-    <div className="p-2 border-t border-gray-800 text-center">
-      {!collapsed ? (
-        <div className="text-[10px] text-gray-400">© {new Date().getFullYear()} DevPortal</div>
-      ) : (
-        <div className="h-4" />
-      )}
-    </div>
-  </aside>
-);
-
+  );
 }

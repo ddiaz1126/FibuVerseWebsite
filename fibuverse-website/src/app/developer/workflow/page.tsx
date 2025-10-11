@@ -270,43 +270,73 @@ export default function DeveloperWorkflowView() {
   return (
     <div className="flex h-full">
       {/* Sidebar */}
-    <div className="w-[300px] border-r border-gray-700 bg-gray-800 p-4 flex flex-col gap-2">
-        {/* Search bar */}
-        <input
-          type="text"
-          placeholder="Search workflows..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          className="w-full px-3 py-2 rounded bg-gray-700 text-sm text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 mb-2"
-        />
-
-        {/* Workflow list */}
-        {workflows
-          .filter((workflow) =>
-            workflow.name.toLowerCase().includes(search.toLowerCase())
-          )
-          .map((workflow) => (
-            <button
-              key={workflow.id}
-              className={`w-full text-left px-3 py-2 rounded hover:bg-gray-700 transition ${
-                selectedWorkflow?.id === workflow.id
-                  ? "bg-gray-700 font-semibold"
-                  : ""
-              }`}
-              onClick={() => setSelectedWorkflow(workflow)}
-            >
-              {workflow.name}
-            </button>
-          ))}
-
-        {/* Create new workflow button */}
+<div className="flex-none w-1/3 md:w-1/4 lg:w-1/5 bg-gray-800/50 backdrop-blur-sm border-r border-gray-700 p-3 flex flex-col rounded-xl m-2">        {/* Create New Workflow Button */}
         <button
-          className="bg-green-600 text-white px-3 py-2 rounded hover:bg-green-700 mt-auto"
+          className="mb-3 flex-shrink-0 w-full bg-gradient-to-r from-green-600 to-green-500 hover:from-green-700 hover:to-green-600 px-3 py-2 text-[10px] font-medium rounded-lg transition-all shadow-lg shadow-green-500/20 transform hover:scale-[1.02]"
           onClick={() => router.push("/developer/workflow/create")}
         >
           + New Workflow
         </button>
+
+        {/* Search Input */}
+        <div className="relative mb-3 flex-shrink-0">
+          <input
+            type="text"
+            placeholder="Search workflows..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="w-full p-2 pl-8 text-xs rounded-lg bg-gray-900/50 border border-gray-700 placeholder-gray-400 text-white focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 outline-none transition-all"
+          />
+          <svg 
+            className="w-4 h-4 text-gray-500 absolute left-2.5 top-2.5" 
+            fill="none" 
+            stroke="currentColor" 
+            viewBox="0 0 24 24"
+          >
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+          </svg>
+        </div>
+
+        {/* Workflow list */}
+        <div className="flex-1 overflow-y-auto pr-1 min-h-0">
+          {loading ? (
+            <div className="text-center text-gray-400 mt-4 text-xs">
+              <div className="animate-pulse">Loading workflows...</div>
+            </div>
+          ) : workflows.length === 0 ? (
+            <div className="text-center text-gray-500 mt-4 text-xs">
+              <p>No workflows yet</p>
+            </div>
+          ) : (
+            <div className="divide-y divide-gray-700/30">
+              {workflows
+                .filter((workflow) =>
+                  workflow.name.toLowerCase().includes(search.toLowerCase())
+                )
+                .map((workflow) => (
+                  <button
+                    key={workflow.id}
+                    onClick={() => setSelectedWorkflow(workflow)}
+                    className={`w-full text-left px-3 py-2.5 hover:bg-gray-700/30 transition-all ${
+                      selectedWorkflow?.id === workflow.id
+                        ? "bg-gray-700/50 border-l-2 border-l-blue-500"
+                        : ""
+                    }`}
+                  >
+                    <div className="flex items-center gap-2.5">
+                      <div className="flex-1 min-w-0">
+                        <p className="text-xs font-semibold text-white truncate">
+                          {workflow.name}
+                        </p>
+                      </div>
+                    </div>
+                  </button>
+                ))}
+            </div>
+          )}
+        </div>
       </div>
+
 
       {/* Main */}
       <div className="flex-1 p-6 overflow-auto">
@@ -478,65 +508,81 @@ export default function DeveloperWorkflowView() {
                   <p>No output yet. Run the workflow to see results.</p>
                 )}
               </div>
+              
+              {/* Run Modal */}
+              <div className="flex h-screen bg-gray-900 text-white p-6">
+              <div className="w-full max-w-4xl mx-auto">
+                <div>
+                  <h2 className="text-lg font-semibold mb-3 flex items-center gap-2">
+                    <svg className="w-5 h-5 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    History
+                  </h2>
+                  <ul className="flex flex-col gap-2">
+                    {history.length === 0 && (
+                      <li className="text-gray-400 text-sm text-center py-4 bg-gray-800/50 rounded-lg border border-gray-700">
+                        No runs yet.
+                      </li>
+                    )}
 
-            {/* History */}
-            <div>
-              <h2 className="text-xl font-semibold mb-2">History</h2>
-              <ul className="flex flex-col gap-2">
-                {history.length === 0 && <li className="text-gray-400">No runs yet.</li>}
-
-                {history
-                  .slice(-5) // show last 5 runs
-                  .reverse() // newest first
-                  .map((run) => (
-                    <li
-                      key={run.id}
-                      className="p-3 bg-gray-700 rounded text-gray-200 flex justify-between items-center hover:bg-gray-600 cursor-pointer"
-                      onClick={() => openRunDetails(run)}
-                    >
-                      <div>
-                        <div className="font-medium">{new Date(run.created_at).toLocaleString()}</div>
-                        <div className="text-sm text-gray-400">
-                          {run.workflow_id ? `Workflow ${run.workflow_id}` : ""}
-                        </div>
-                      </div>
-                      <div
-                        className={`px-2 py-1 rounded text-sm ${
-                          run.status === "success"
-                            ? "bg-green-600"
-                            : run.status === "failed"
-                            ? "bg-red-600"
-                            : "bg-yellow-600"
-                        }`}
-                      >
-                        {run.status}
-                      </div>
-                    </li>
-                  ))}
-              </ul>
+                    {history
+                      .slice(-5) // show last 5 runs
+                      .reverse() // newest first
+                      .map((run) => (
+                        <li
+                          key={run.id}
+                          className="p-3 bg-gray-800/50 backdrop-blur-sm border border-gray-700 rounded-lg text-gray-200 flex justify-between items-center hover:bg-gray-700/50 hover:border-gray-600 cursor-pointer transition-all shadow-lg"
+                          onClick={() => openRunDetails(run)}
+                        >
+                          <div>
+                            <div className="font-medium text-sm">{new Date(run.created_at).toLocaleString()}</div>
+                            <div className="text-xs text-gray-400">
+                              {run.workflow_id ? `Workflow ${run.workflow_id}` : ""}
+                            </div>
+                          </div>
+                          <div
+                            className={`px-2 py-1 rounded-lg text-xs font-medium shadow-lg ${
+                              run.status === "success"
+                                ? "bg-green-600 shadow-green-500/20"
+                                : run.status === "failed"
+                                ? "bg-red-600 shadow-red-500/20"
+                                : "bg-yellow-600 shadow-yellow-500/20"
+                            }`}
+                          >
+                            {run.status}
+                          </div>
+                        </li>
+                      ))}
+                  </ul>
+                </div>
+              </div>
             </div>
 
             {/* Run Modal */}
             {showRunModal && selectedRun && (
               <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-                <div className="bg-gray-900 text-white rounded p-6 w-full max-w-3xl max-h-[90vh] overflow-auto">
-                  <div className="flex justify-between items-center mb-4">
+                <div className="bg-gray-800/95 backdrop-blur-sm border border-gray-700 text-white rounded-xl p-4 w-full max-w-3xl max-h-[90vh] overflow-auto shadow-2xl">
+                  <div className="flex justify-between items-center mb-4 pb-3 border-b border-gray-700">
                     <h3 className="text-lg font-semibold">
                       Run #{selectedRun.id} — {new Date(selectedRun.created_at).toLocaleString()}
                     </h3>
                     <div className="flex gap-2 items-center">
                       <div
-                        className={`px-2 py-1 rounded text-sm ${
+                        className={`px-2 py-1 rounded-lg text-xs font-medium shadow-lg ${
                           selectedRun.status === "success"
-                            ? "bg-green-600"
+                            ? "bg-green-600 shadow-green-500/20"
                             : selectedRun.status === "failed"
-                            ? "bg-red-600"
-                            : "bg-yellow-600"
+                            ? "bg-red-600 shadow-red-500/20"
+                            : "bg-yellow-600 shadow-yellow-500/20"
                         }`}
                       >
                         {selectedRun.status}
                       </div>
-                      <button onClick={closeRunDetails} className="bg-gray-700 px-3 py-1 rounded">
+                      <button 
+                        onClick={closeRunDetails} 
+                        className="bg-gray-700 hover:bg-gray-600 px-3 py-1 rounded-lg text-xs transition-colors border border-gray-600"
+                      >
                         Close
                       </button>
                     </div>
@@ -544,24 +590,24 @@ export default function DeveloperWorkflowView() {
 
                   <div className="space-y-4">
                     <div>
-                      <h4 className="font-medium mb-1">Inputs</h4>
-                      <div className="max-h-64 overflow-auto bg-black/30 p-3 rounded">
-                        <pre className="whitespace-pre-wrap break-words">{JSON.stringify(selectedRun.inputs, null, 2)}</pre>
+                      <h4 className="font-semibold mb-2 text-sm text-gray-300">Inputs</h4>
+                      <div className="max-h-64 overflow-auto bg-gray-900/50 border border-gray-700 p-3 rounded-lg">
+                        <pre className="whitespace-pre-wrap break-words text-xs text-gray-200">{JSON.stringify(selectedRun.inputs, null, 2)}</pre>
                       </div>
                     </div>
 
                     <div>
-                      <h4 className="font-medium mb-1">Outputs</h4>
-                      <div className="max-h-64 overflow-auto bg-black/30 p-3 rounded">
-                        <pre className="whitespace-pre-wrap break-words">{JSON.stringify(selectedRun.outputs, null, 2)}</pre>
+                      <h4 className="font-semibold mb-2 text-sm text-gray-300">Outputs</h4>
+                      <div className="max-h-64 overflow-auto bg-gray-900/50 border border-gray-700 p-3 rounded-lg">
+                        <pre className="whitespace-pre-wrap break-words text-xs text-gray-200">{JSON.stringify(selectedRun.outputs, null, 2)}</pre>
                       </div>
                     </div>
 
                     {selectedRun.error_message && (
                       <div>
-                        <h4 className="font-medium mb-1">Error</h4>
-                        <div className="max-h-64 overflow-auto bg-black/30 p-3 rounded">
-                          <pre className="whitespace-pre-wrap break-words">{selectedRun.error_message}</pre>
+                        <h4 className="font-semibold mb-2 text-sm text-gray-300">Error</h4>
+                        <div className="max-h-64 overflow-auto bg-red-900/20 border border-red-700/50 p-3 rounded-lg">
+                          <pre className="whitespace-pre-wrap break-words text-xs text-red-200">{selectedRun.error_message}</pre>
                         </div>
                       </div>
                     )}

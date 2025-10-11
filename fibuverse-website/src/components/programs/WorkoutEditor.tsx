@@ -737,8 +737,8 @@ export default function WorkoutEditor({ onSave }: WorkoutEditorProps) {
 
 
   return (
-    <div className="flex-1 h-full border-r border-gray-800 overflow-y-auto bg-gray-900">
-      <div className="max-w-3xl mx-auto p-6">
+    <div className="flex-1 h-full overflow-y-auto bg-gray-900 p-4">
+      <div className="h-full flex flex-col overflow-hidden bg-gray-800/50 backdrop-blur-sm border border-gray-700 rounded-xl p-4 shadow-lg">
         {/* Header */}
         <div className="mb-4">
           <div className="flex items-center gap-3 group">
