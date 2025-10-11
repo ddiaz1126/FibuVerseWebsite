@@ -104,102 +104,153 @@ export default function DeveloperAgentsView() {
     }
   };
 
-  return (
-    <div className="flex h-full">
-      <AgentSidebar
-        groupedAgents={groupedAgents}
-        sortedMetaCategories={sortedMetaCategories}
-        selectedAgent={selectedAgent}
-        onSelectAgent={setSelectedAgent}
-      />
-      
-      <div className="flex-1 p-6 overflow-auto">
-        {selectedAgent ? (
-          <>
-            <h1 className="text-2xl font-bold mb-6">{selectedAgent.name}</h1>
-            
-            <SubAgentNetworkGraph agent={selectedAgent} />
-            
-            <div className="mt-6 space-y-4">
-              <div className="bg-gray-800 rounded-lg border border-gray-700 p-4">
-                <h2 className="text-lg font-semibold mb-2">Description</h2>
-                <p className="text-gray-300">{selectedAgent.description}</p>
+return (
+<div className="flex gap-3 p-3 text-sm bg-gray-950 min-h-screen">
+    {/* Sidebar */}
+    <AgentSidebar
+      groupedAgents={groupedAgents}
+      sortedMetaCategories={sortedMetaCategories}
+      selectedAgent={selectedAgent}
+      onSelectAgent={setSelectedAgent}
+    />
+
+    {/* Main Content */}
+    <div className="flex-1 bg-gray-800/50 backdrop-blur-sm border border-gray-700 rounded-xl p-4 shadow-lg">
+      {selectedAgent ? (
+        <>
+          {/* Header */}
+          <div className="mb-4 pb-3 border-b border-gray-700">
+            <h1 className="text-base font-bold text-white">{selectedAgent.name}</h1>
+            <p className="text-xs text-gray-400 mt-1">{selectedAgent.description}</p>
+          </div>
+
+          {/* Network Graph */}
+          <SubAgentNetworkGraph agent={selectedAgent} />
+
+          {/* Content Sections */}
+          <div className="mt-4 space-y-3">
+            {/* Test SubAgent Section */}
+            <div className="bg-gray-900/50 border border-gray-700 rounded-lg p-3">
+              <h2 className="text-xs font-semibold mb-3 flex items-center gap-2 text-gray-300">
+                <svg
+                  className="w-3.5 h-3.5 text-blue-400"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M13 10V3L4 14h7v7l9-11h-7z"
+                  />
+                </svg>
+                Test SubAgent
+              </h2>
+
+              {/* Inputs */}
+              <div className="mb-4">
+                <h3 className="text-[10px] font-semibold mb-2 text-gray-400 uppercase tracking-wide">
+                  Inputs
+                </h3>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  {Object.entries(selectedAgent.inputs ?? {}).map(([key, spec]) => (
+                    <div key={key}>
+                      <label className="block text-[10px] text-gray-300 mb-1">
+                        {key}
+                        {spec.required && <span className="text-red-400 ml-1">*</span>}
+                        {spec.description && (
+                          <span className="text-gray-500 text-[10px] ml-2">
+                            ({spec.description})
+                          </span>
+                        )}
+                      </label>
+                      <input
+                        type="text"
+                        placeholder={`Enter ${key} (${spec.type})`}
+                        className="w-full bg-gray-900/50 border border-gray-700 rounded-lg px-2 py-1.5 text-[10px] text-white placeholder-gray-500 focus:outline-none focus:border-blue-500 transition-colors"
+                        value={inputValues[key] || ""}
+                        onChange={(e) =>
+                          setInputValues((prev) => ({ ...prev, [key]: e.target.value }))
+                        }
+                      />
+                    </div>
+                  ))}
+                </div>
+
+                <button
+                  onClick={handleRunAgent}
+                  disabled={isRunning}
+                  className="mt-3 w-full bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-700 hover:to-blue-600 disabled:from-gray-700 disabled:to-gray-700 disabled:cursor-not-allowed text-white py-2 rounded-lg text-[10px] font-medium transition-all shadow-lg shadow-blue-500/20 transform hover:scale-[1.02] disabled:transform-none"
+                >
+                  {isRunning ? "Running..." : "Run Agent"}
+                </button>
               </div>
 
-              {/* Test SubAgent Section - NOW INSIDE selectedAgent block */}
-              <div className="bg-gray-800 rounded-lg border border-gray-700 p-4">
-                <h2 className="text-lg font-semibold mb-4">Test SubAgent</h2>
-                
-                {/* Inputs Section */}
-                <div className="mb-6">
-                  <h3 className="text-base font-medium mb-3">Inputs</h3>
-                  <div className="space-y-3">
-                    {Object.entries(selectedAgent.inputs ?? {}).map(([key, spec]) => (
+              {/* Outputs */}
+              <div>
+                <h3 className="text-[10px] font-semibold mb-2 text-gray-400 uppercase tracking-wide">
+                  Outputs
+                </h3>
+                {agentOutput ? (
+                  <div className="bg-black/30 rounded-lg border border-gray-700 p-3 space-y-2">
+                    {Object.entries(agentOutput).map(([key, value]) => (
                       <div key={key}>
-                        <label className="block text-sm text-gray-300 mb-1">
-                          {key}
-                          {spec.required && <span className="text-red-400 ml-1">*</span>}
-                          {spec.description && (
-                            <span className="text-gray-500 text-xs ml-2">
-                              ({spec.description})
-                            </span>
-                          )}
-                        </label>
-                        <input
-                          type="text"
-                          placeholder={`Enter ${key} (${spec.type})`}
-                          className="w-full bg-gray-900 border border-gray-700 rounded-lg px-3 py-2 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-blue-500"
-                          value={inputValues[key] || ""}
-                          onChange={(e) => {
-                            setInputValues(prev => ({...prev, [key]: e.target.value}))
-                          }}
-                        />
+                        <label className="block text-[10px] text-gray-400 mb-1">{key}</label>
+                        <div className="bg-gray-900/50 rounded px-2 py-1.5 text-[10px] text-gray-300 font-mono overflow-auto max-h-64">
+                          {typeof value === "object"
+                            ? JSON.stringify(value, null, 2)
+                            : String(value ?? "N/A")}
+                        </div>
                       </div>
                     ))}
                   </div>
-                  
-                  <button 
-                    onClick={handleRunAgent}
-                    disabled={isRunning}
-                    className="mt-4 w-full bg-blue-600 hover:bg-blue-700 disabled:bg-gray-700 disabled:cursor-not-allowed text-white py-2.5 rounded-lg text-sm font-medium transition-colors"
-                  >
-                    {isRunning ? "Running..." : "Run Agent"}
-                  </button>
-                </div>
-
-                {/* Outputs Section */}
-                <div>
-                  <h3 className="text-base font-medium mb-3">Outputs</h3>
-                  {agentOutput ? (
-                    <div className="bg-gray-900 rounded-lg border border-gray-700 p-4 space-y-3">
-                      {Object.entries(agentOutput).map(([key, value]) => (
-                        <div key={key}>
-                          <label className="block text-sm text-gray-400 mb-1">
-                            {key}
-                          </label>
-                          <div className="bg-black/30 rounded px-3 py-2 text-sm text-gray-300 font-mono overflow-auto max-h-96">
-                            {typeof value === "object" ? JSON.stringify(value, null, 2) : String(value ?? "N/A")}
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  ) : (
-                    <div className="bg-gray-900 rounded-lg border border-gray-700 border-dashed p-8 text-center">
-                      <p className="text-gray-500 text-sm">
-                        No output yet. Run the agent to see results.
-                      </p>
-                    </div>
-                  )}
-                </div>
+                ) : (
+                  <div className="bg-gray-900/30 rounded-lg border border-gray-700 border-dashed p-6 text-center">
+                    <svg
+                      className="w-6 h-6 mx-auto mb-1 text-gray-600"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                      />
+                    </svg>
+                    <p className="text-gray-500 text-[10px]">
+                      No output yet. Run the agent to see results.
+                    </p>
+                  </div>
+                )}
               </div>
             </div>
-          </>
-        ) : (
-          <div className="flex items-center justify-center h-full">
-            <p className="text-gray-400 text-lg">Select an sub agent to view details</p>
           </div>
-        )}
-      </div>
+        </>
+      ) : (
+        <div className="flex items-center justify-center min-h-[60vh]">
+          <div className="text-center">
+            <svg
+              className="w-12 h-12 mx-auto mb-2 text-gray-600"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z"
+              />
+            </svg>
+            <p className="text-gray-400 text-xs">Select a sub agent to view details</p>
+          </div>
+        </div>
+      )}
     </div>
-  );
+  </div>
+);
+
 }

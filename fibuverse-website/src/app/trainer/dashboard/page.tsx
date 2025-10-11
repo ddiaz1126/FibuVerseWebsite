@@ -283,13 +283,13 @@ export default function TrainerDashboard() {
           <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight">Dashboard</h1>
         </div>
         
-        <div className="hidden sm:flex items-center gap-3 group">
+        {/* <div className="hidden sm:flex items-center gap-3 group">
           <div className="h-0.5 w-24 bg-gradient-to-r from-transparent to-yellow-500/50 group-hover:to-yellow-500 transition-all duration-300"></div>
           <span className="text-sm font-semibold text-gray-400 tracking-wider uppercase group-hover:text-yellow-400 transition-colors duration-300">
             FibuVerse
           </span>
           <div className="h-0.5 w-24 bg-gradient-to-l from-transparent to-yellow-500/50 group-hover:to-yellow-500 transition-all duration-300"></div>
-        </div>
+        </div> */}
         
           <div className="flex items-center gap-3">
             <div className="text-sm text-gray-300 font-medium">
@@ -297,7 +297,7 @@ export default function TrainerDashboard() {
             </div>
             <div className="relative group cursor-pointer">
               <div className="absolute -inset-2 bg-gradient-to-r from-yellow-500 to-orange-600 rounded-full blur-md opacity-0 group-hover:opacity-100 transition-opacity duration-500 animate-pulse"></div>
-              <div className="relative w-10 h-10 overflow-hidden transition-all duration-500 group-hover:rounded-2xl rounded-full border-2 border-white shadow-lg group-hover:scale-125 group-hover:rotate-12">
+              <div className="relative w-16 h-16 overflow-hidden transition-all duration-500 group-hover:rounded-2xl rounded-full border-2 border-white shadow-lg group-hover:scale-125 group-hover:rotate-12">
                 <Image 
                   src={trainerProfile?.profile_picture || `https://ui-avatars.com/api/?name=${encodeURIComponent(trainer.username)}&background=F59E0B&color=fff`}
                   alt={trainer.username}

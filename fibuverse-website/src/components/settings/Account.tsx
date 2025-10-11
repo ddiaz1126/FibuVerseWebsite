@@ -139,10 +139,10 @@ export default function AccountSection() {
         <h2 className="text-md font-semibold mb-3 text-white">Profile Information</h2>
         <div className="flex items-start gap-6">
           {/* Left side - Form fields */}
-          <div className="flex-1 space-y-3">
+<div className="flex-1 space-y-3">
             {/* Basic Info */}
             <div>
-              <label className="block text-gray-300 mb-1 text-[10px] font-medium">
+              <label className="block text-gray-400 mb-1 text-xs font-medium">
                 Full Name
               </label>
               {isEditing ? (
@@ -152,22 +152,22 @@ export default function AccountSection() {
                   onChange={(e) =>
                     setProfileData(profileData ? { ...profileData, name: e.target.value } : null)
                   }
-                  className="w-full p-1.5 rounded-lg bg-gray-900/50 border border-gray-700 focus:outline-none focus:border-blue-500/50 transition-colors text-white text-xs"
+                  className="w-full p-2 rounded-lg bg-gray-900/50 border border-gray-700 focus:outline-none focus:border-blue-500 transition-colors text-white text-sm"
                   placeholder="Enter your name"
                 />
               ) : (
-                <p className="text-white text-xs font-semibold">
+                <p className="text-white text-sm font-semibold">
                   {profileData?.name || "Not set"}
                 </p>
               )}
             </div>
 
             <div>
-              <label className="block text-gray-300 mb-1 text-[10px] font-medium">
+              <label className="block text-gray-400 mb-1 text-xs font-medium">
                 Email
               </label>
-              <p className="text-gray-400 text-xs">{profileData?.email}</p>
-              <p className="text-gray-500 text-[9px] mt-0.5">
+              <p className="text-gray-300 text-sm">{profileData?.email}</p>
+              <p className="text-gray-500 text-xs mt-0.5">
                 Email cannot be changed
               </p>
             </div>
@@ -175,7 +175,7 @@ export default function AccountSection() {
             {/* Location */}
             <div className="grid grid-cols-2 gap-2">
               <div>
-                <label className="block text-gray-300 mb-1 text-[10px] font-medium">
+                <label className="block text-gray-400 mb-1 text-xs font-medium">
                   City
                 </label>
                 {isEditing ? (
@@ -185,17 +185,17 @@ export default function AccountSection() {
                     onChange={(e) =>
                         setProfileData({ ...profileData, city: e.target.value } as TrainerProfile)
                     }
-                    className="w-full p-1.5 rounded-lg bg-gray-900/50 border border-gray-700 focus:outline-none focus:border-blue-500/50 transition-colors text-white text-xs"
+                    className="w-full p-2 rounded-lg bg-gray-900/50 border border-gray-700 focus:outline-none focus:border-blue-500 transition-colors text-white text-sm"
                     placeholder="City"
                   />
                 ) : (
-                  <p className="text-white text-xs">
+                  <p className="text-white text-sm">
                     {profileData?.city || "Not set"}
                   </p>
                 )}
               </div>
               <div>
-                <label className="block text-gray-300 mb-1 text-[10px] font-medium">
+                <label className="block text-gray-400 mb-1 text-xs font-medium">
                   State
                 </label>
                 {isEditing ? (
@@ -205,11 +205,11 @@ export default function AccountSection() {
                     onChange={(e) =>
                         setProfileData({ ...profileData, state: e.target.value } as TrainerProfile)
                     }
-                    className="w-full p-1.5 rounded-lg bg-gray-900/50 border border-gray-700 focus:outline-none focus:border-blue-500/50 transition-colors text-white text-xs"
+                    className="w-full p-2 rounded-lg bg-gray-900/50 border border-gray-700 focus:outline-none focus:border-blue-500 transition-colors text-white text-sm"
                     placeholder="State"
                   />
                 ) : (
-                  <p className="text-white text-xs">
+                  <p className="text-white text-sm">
                     {profileData?.state || "Not set"}
                   </p>
                 )}
@@ -218,7 +218,7 @@ export default function AccountSection() {
 
             {/* Professional Info */}
             <div>
-              <label className="block text-gray-300 mb-1 text-[10px] font-medium">
+              <label className="block text-gray-400 mb-1 text-xs font-medium">
                 Specialization
               </label>
               {isEditing ? (
@@ -228,11 +228,11 @@ export default function AccountSection() {
                   onChange={(e) =>
                     setProfileData({ ...profileData, specialization: e.target.value } as TrainerProfile)
                   }
-                  className="w-full p-1.5 rounded-lg bg-gray-900/50 border border-gray-700 focus:outline-none focus:border-blue-500/50 transition-colors text-white text-xs"
+                  className="w-full p-2 rounded-lg bg-gray-900/50 border border-gray-700 focus:outline-none focus:border-blue-500 transition-colors text-white text-sm"
                   placeholder="e.g., Strength Training, Yoga, etc."
                 />
               ) : (
-                <p className="text-white text-xs">
+                <p className="text-white text-sm">
                   {profileData?.specialization || "Not set"}
                 </p>
               )}
@@ -240,7 +240,7 @@ export default function AccountSection() {
 
             <div className="grid grid-cols-2 gap-2">
               <div>
-                <label className="block text-gray-300 mb-1 text-[10px] font-medium">
+                <label className="block text-gray-400 mb-1 text-xs font-medium">
                   Experience (Years)
                 </label>
                 {isEditing ? (
@@ -253,17 +253,17 @@ export default function AccountSection() {
                         experience_years: parseInt(e.target.value) || 0 
                       } as TrainerProfile)
                     }
-                    className="w-full p-1.5 rounded-lg bg-gray-900/50 border border-gray-700 focus:outline-none focus:border-blue-500/50 transition-colors text-white text-xs"
+                    className="w-full p-2 rounded-lg bg-gray-900/50 border border-gray-700 focus:outline-none focus:border-blue-500 transition-colors text-white text-sm"
                     placeholder="0"
                   />
                 ) : (
-                  <p className="text-white text-xs">
+                  <p className="text-white text-sm">
                     {profileData?.experience_years || 0} years
                   </p>
                 )}
               </div>
               <div>
-                <label className="block text-gray-300 mb-1 text-[10px] font-medium">
+                <label className="block text-gray-400 mb-1 text-xs font-medium">
                   Hourly Rate ($)
                 </label>
                 {isEditing ? (
@@ -274,11 +274,11 @@ export default function AccountSection() {
                     onChange={(e) =>
                         setProfileData({ ...profileData, hourly_rate: e.target.value } as TrainerProfile)
                     }
-                    className="w-full p-1.5 rounded-lg bg-gray-900/50 border border-gray-700 focus:outline-none focus:border-blue-500/50 transition-colors text-white text-xs"
+                    className="w-full p-2 rounded-lg bg-gray-900/50 border border-gray-700 focus:outline-none focus:border-blue-500 transition-colors text-white text-sm"
                     placeholder="0.00"
                   />
                 ) : (
-                  <p className="text-white text-xs">
+                  <p className="text-white text-sm">
                     ${profileData?.hourly_rate || "Not set"}
                   </p>
                 )}
@@ -286,7 +286,7 @@ export default function AccountSection() {
             </div>
 
             <div>
-              <label className="block text-gray-300 mb-1 text-[10px] font-medium">
+              <label className="block text-gray-400 mb-1 text-xs font-medium">
                 Bio
               </label>
               {isEditing ? (
@@ -295,19 +295,19 @@ export default function AccountSection() {
                   onChange={(e) =>
                     setProfileData({ ...profileData, bio: e.target.value } as TrainerProfile)
                   }
-                  className="w-full p-1.5 rounded-lg bg-gray-900/50 border border-gray-700 focus:outline-none focus:border-blue-500/50 transition-colors text-white text-xs resize-none"
+                  className="w-full p-2 rounded-lg bg-gray-900/50 border border-gray-700 focus:outline-none focus:border-blue-500 transition-colors text-white text-sm resize-none"
                   rows={3}
                   placeholder="Tell us about yourself..."
                 />
               ) : (
-                <p className="text-white text-xs">
+                <p className="text-white text-sm">
                   {profileData?.bio || "Not set"}
                 </p>
               )}
             </div>
 
             <div>
-              <label className="block text-gray-300 mb-1 text-[10px] font-medium">
+              <label className="block text-gray-400 mb-1 text-xs font-medium">
                 Certifications
               </label>
               {isEditing ? (
@@ -316,12 +316,12 @@ export default function AccountSection() {
                   onChange={(e) =>
                       setProfileData({ ...profileData, certifications: e.target.value } as TrainerProfile)
                   }
-                  className="w-full p-1.5 rounded-lg bg-gray-900/50 border border-gray-700 focus:outline-none focus:border-blue-500/50 transition-colors text-white text-xs resize-none"
+                  className="w-full p-2 rounded-lg bg-gray-900/50 border border-gray-700 focus:outline-none focus:border-blue-500 transition-colors text-white text-sm resize-none"
                   rows={2}
                   placeholder="List your certifications..."
                 />
               ) : (
-                <p className="text-white text-xs">
+                <p className="text-white text-sm">
                   {profileData?.certifications || "Not set"}
                 </p>
               )}
@@ -330,7 +330,7 @@ export default function AccountSection() {
 
           {/* Right side - Profile Image */}
           <div className="flex flex-col items-center gap-2">
-            <div className="relative w-24 h-24 rounded-full overflow-hidden border-4 border-gray-700 shadow-xl">
+            <div className="relative w-36 h-36 rounded-full overflow-hidden border-4 border-gray-700 shadow-xl">
               <Image
                 src={imagePreview || "/default-avatar.png"}
                 alt="Profile"
@@ -354,11 +354,11 @@ export default function AccountSection() {
         </div>
 
       {/* Social Links Section */}
-      <div className="border-t border-gray-700 pt-4 mt-6">
-        <h2 className="text-md font-semibold mb-3 text-white">Social Links</h2>
+<div className="border-t border-gray-700 pt-4 mt-6">
+        <h2 className="text-lg font-semibold mb-3 text-white">Social Links</h2>
         <div className="grid grid-cols-2 gap-2">
           <div>
-            <label className="block text-gray-300 mb-1 text-[10px] font-medium">
+            <label className="block text-gray-400 mb-1 text-xs font-medium">
               Instagram
             </label>
             {isEditing ? (
@@ -368,17 +368,17 @@ export default function AccountSection() {
                 onChange={(e) =>
                   setProfileData({ ...profileData, instagram_url: e.target.value } as TrainerProfile)
                 }
-                className="w-full p-1.5 rounded-lg bg-gray-900/50 border border-gray-700 focus:outline-none focus:border-blue-500/50 transition-colors text-white text-xs"
+                className="w-full p-2 rounded-lg bg-gray-900/50 border border-gray-700 focus:outline-none focus:border-blue-500 transition-colors text-white text-sm"
                 placeholder="https://instagram.com/..."
               />
             ) : (
-              <p className="text-white text-xs truncate">
+              <p className="text-white text-sm truncate">
                 {profileData?.instagram_url || "Not set"}
               </p>
             )}
           </div>
           <div>
-            <label className="block text-gray-300 mb-1 text-[10px] font-medium">
+            <label className="block text-gray-400 mb-1 text-xs font-medium">
               YouTube
             </label>
             {isEditing ? (
@@ -388,17 +388,17 @@ export default function AccountSection() {
                 onChange={(e) =>
                   setProfileData({ ...profileData, youtube_url: e.target.value } as TrainerProfile)
                 }
-                className="w-full p-1.5 rounded-lg bg-gray-900/50 border border-gray-700 focus:outline-none focus:border-blue-500/50 transition-colors text-white text-xs"
+                className="w-full p-2 rounded-lg bg-gray-900/50 border border-gray-700 focus:outline-none focus:border-blue-500 transition-colors text-white text-sm"
                 placeholder="https://youtube.com/..."
               />
             ) : (
-              <p className="text-white text-xs truncate">
+              <p className="text-white text-sm truncate">
                 {profileData?.youtube_url || "Not set"}
               </p>
             )}
           </div>
           <div>
-            <label className="block text-gray-300 mb-1 text-[10px] font-medium">
+            <label className="block text-gray-400 mb-1 text-xs font-medium">
               Podcast
             </label>
             {isEditing ? (
@@ -408,17 +408,17 @@ export default function AccountSection() {
                 onChange={(e) =>
                   setProfileData({ ...profileData, podcast_url: e.target.value } as TrainerProfile)
                 }
-                className="w-full p-1.5 rounded-lg bg-gray-900/50 border border-gray-700 focus:outline-none focus:border-blue-500/50 transition-colors text-white text-xs"
+                className="w-full p-2 rounded-lg bg-gray-900/50 border border-gray-700 focus:outline-none focus:border-blue-500 transition-colors text-white text-sm"
                 placeholder="https://..."
               />
             ) : (
-              <p className="text-white text-xs truncate">
+              <p className="text-white text-sm truncate">
                 {profileData?.podcast_url || "Not set"}
               </p>
             )}
           </div>
           <div>
-            <label className="block text-gray-300 mb-1 text-[10px] font-medium">
+            <label className="block text-gray-400 mb-1 text-xs font-medium">
               Website
             </label>
             {isEditing ? (
@@ -428,11 +428,11 @@ export default function AccountSection() {
                 onChange={(e) =>
                   setProfileData({ ...profileData, website_url: e.target.value } as TrainerProfile)
                 }
-                className="w-full p-1.5 rounded-lg bg-gray-900/50 border border-gray-700 focus:outline-none focus:border-blue-500/50 transition-colors text-white text-xs"
+                className="w-full p-2 rounded-lg bg-gray-900/50 border border-gray-700 focus:outline-none focus:border-blue-500 transition-colors text-white text-sm"
                 placeholder="https://..."
               />
             ) : (
-              <p className="text-white text-xs truncate">
+              <p className="text-white text-sm truncate">
                 {profileData?.website_url || "Not set"}
               </p>
             )}
@@ -440,34 +440,34 @@ export default function AccountSection() {
         </div>
       </div>
       {/* Profile Action Buttons */}
-      <div className="flex gap-2 pt-3 border-t border-gray-700 mt-4">
-          {!isEditing ? (
-            <button
-              onClick={() => setIsEditing(true)}
-              className="bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-700 hover:to-blue-600 px-3 py-1.5 rounded-lg transition-all shadow-lg shadow-blue-500/20 transform hover:scale-[1.02] font-medium text-[10px]"
-            >
-              Edit Profile
-            </button>
-          ) : (
-            <>
-              <button
-                onClick={handleSave}
-                disabled={isSaving}
-                className="bg-gradient-to-r from-green-600 to-green-500 hover:from-green-700 hover:to-green-600 px-3 py-1.5 rounded-lg transition-all shadow-lg shadow-green-500/20 transform hover:scale-[1.02] font-medium text-[10px] disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {isSaving ? "Saving..." : "Save Changes"}
-              </button>
-              <button
-                onClick={handleCancel}
-                disabled={isSaving}
-                className="bg-gray-700 hover:bg-gray-600 px-3 py-1.5 rounded-lg transition-all font-medium text-[10px] disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                Cancel
-              </button>
-            </>
-          )}
-        </div>
-      </div>
+            <div className="flex gap-2 pt-3 border-t border-gray-700 mt-4">
+                {!isEditing ? (
+                  <button
+                    onClick={() => setIsEditing(true)}
+                    className="bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded-lg transition-colors shadow-md font-medium text-sm"
+                  >
+                    Edit Profile
+                  </button>
+                ) : (
+                  <>
+                    <button
+                      onClick={handleSave}
+                      disabled={isSaving}
+                      className="bg-green-600 hover:bg-green-700 px-4 py-2 rounded-lg transition-colors shadow-md font-medium text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      {isSaving ? "Saving..." : "Save Changes"}
+                    </button>
+                    <button
+                      onClick={handleCancel}
+                      disabled={isSaving}
+                      className="bg-gray-700 hover:bg-gray-600 px-4 py-2 rounded-lg transition-colors font-medium text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      Cancel
+                    </button>
+                  </>
+                )}
+              </div>
+            </div>
 
       {/* Appearance / Dark Mode Section */}
     {/* <div className="border-t border-gray-700 pt-4 mt-4">
@@ -486,13 +486,13 @@ export default function AccountSection() {
 
       {/* Danger Zone */}
       <div className="border-t border-gray-700 pt-4">
-        <h2 className="text-md font-semibold mb-2 text-red-400">Danger Zone</h2>
-        <p className="text-gray-400 text-[10px] mb-3">
+        <h2 className="text-lg font-semibold mb-2 text-red-400">Danger Zone</h2>
+        <p className="text-gray-400 text-xs mb-3">
           Once you log out, you&apos;ll need to sign in again to access your account.
         </p>
         <button
           onClick={handleLogout}
-          className="bg-gradient-to-r from-red-600 to-red-500 hover:from-red-700 hover:to-red-600 px-3 py-1.5 rounded-lg transition-all shadow-lg shadow-red-500/20 transform hover:scale-[1.02] font-medium text-[10px]"
+          className="bg-red-600 hover:bg-red-700 px-4 py-2 rounded-lg transition-colors shadow-md font-medium text-sm"
         >
           Log Out
         </button>

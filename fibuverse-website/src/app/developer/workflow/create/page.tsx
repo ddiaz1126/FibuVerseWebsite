@@ -293,19 +293,19 @@ export default function CreateWorkflowPage() {
       />
 
     {/* Agent Analysis Section */}
-    <div className="flex-1 flex flex-col p-4 border-b border-gray-700">
+<div className="flex-1 flex flex-col p-3 border-b border-gray-700">
       {/* Section Header */}
-      <div className="flex items-center justify-between mb-4">
-        <h2 className="text-2xl font-bold">Agent Analysis</h2>
+      <div className="flex items-center justify-between mb-3">
+        <h2 className="text-lg font-bold">Agent Analysis</h2>
         {selectedAgent && (
           <div className="relative">
             <button
-              className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded transition flex items-center gap-2"
+              className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1.5 rounded-lg transition-all flex items-center gap-1.5 text-xs font-medium shadow-lg shadow-blue-500/20"
               onClick={() => setDropdownOpen((prev) => !prev)}
             >
               Add to Workflow
               <svg
-                className="w-4 h-4"
+                className="w-3.5 h-3.5"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -315,11 +315,11 @@ export default function CreateWorkflowPage() {
             </button>
 
             {dropdownOpen && (
-              <div className="absolute right-0 mt-2 w-48 bg-gray-800 border border-gray-600 rounded shadow-lg z-50">
+              <div className="absolute right-0 mt-2 w-40 bg-gray-800/95 backdrop-blur-sm border border-gray-700 rounded-lg shadow-2xl z-50">
                 {layers.map((layer) => (
                   <button
                     key={layer.id}
-                    className="block w-full text-left px-4 py-2 hover:bg-gray-700 transition"
+                    className="block w-full text-left px-3 py-1.5 hover:bg-gray-700/50 transition-all text-xs"
                     onClick={() => {
                       addNodeToLayer(layer.id, selectedAgent.id);
                       setDropdownOpen(false); // close after adding
@@ -351,239 +351,241 @@ export default function CreateWorkflowPage() {
       </div>
     </div>
 
-      {/* Layer buttons */}
-      <div className="flex justify-end gap-2 mb-2">
-        {layers.length > minLayers && (
-          <button
-            onClick={removeLayer}
-            className="bg-red-600 text-white px-3 py-1 rounded hover:bg-red-700"
-          >
-            - Remove Layer
-          </button>
-        )}
-        {layers.length < maxLayers && (
-          <button
-            onClick={addLayer}
-            className="bg-gray-600 text-white px-3 py-1 rounded hover:bg-gray-500"
-          >
-            + Add Layer
-          </button>
-        )}
-      </div>
+      {/* Workflow Columns */}
+      <div
+        ref={containerRef}
+        className="relative w-full min-h-[400px] mb-4 border-2 border-gray-700 rounded-xl bg-gradient-to-br from-gray-900/50 to-gray-800/50 backdrop-blur-sm flex flex-col"
+      >
+        {/* Layer buttons - Top Right Corner */}
+        <div className="absolute top-3 right-3 flex gap-2 z-30">
+          {layers.length < maxLayers && (
+            <button
+              onClick={addLayer}
+              className="bg-gray-700 hover:bg-gray-600 text-white w-6 h-6 rounded-lg flex items-center justify-center transition-all shadow-lg text-lg font-bold"
+              title="Add Layer"
+            >
+              +
+            </button>
+          )}
+          {layers.length > minLayers && (
+            <button
+              onClick={removeLayer}
+              className="bg-red-600 hover:bg-red-700 text-white w-6 h-6 rounded-lg flex items-center justify-center transition-all shadow-lg text-lg font-bold"
+              title="Remove Layer"
+            >
+              −
+            </button>
+          )}
+        </div>
 
-{/* Workflow Columns */}
-<div
-  ref={containerRef}
-  className="relative w-full min-h-[400px] mb-4 border-2 border-gray-700 rounded-xl bg-gradient-to-br from-gray-900/50 to-gray-800/50 backdrop-blur-sm flex flex-col"
->
-  {/* Background Effects */}
-  <div className="absolute inset-0 opacity-10 pointer-events-none">
-    <div
-      className="absolute inset-0"
-      style={{
-        backgroundImage: `
-          radial-gradient(circle at 20% 20%, #10b981 1px, transparent 1px),
-          radial-gradient(circle at 80% 80%, #3b82f6 1px, transparent 1px)
-        `,
-        backgroundSize: '50px 50px',
-      }}
-    />
-  </div>
+        {/* Background Effects */}
+        <div className="absolute inset-0 opacity-10 pointer-events-none">
+          <div
+            className="absolute inset-0"
+            style={{
+              backgroundImage: `
+                radial-gradient(circle at 20% 20%, #10b981 1px, transparent 1px),
+                radial-gradient(circle at 80% 80%, #3b82f6 1px, transparent 1px)
+              `,
+              backgroundSize: '50px 50px',
+            }}
+          />
+        </div>
 
-  {/* Main Scrollable Layers */}
-  <div className="flex gap-6 overflow-x-auto p-6 flex-1 relative">
-    {/* Arrows SVG */}
-    <svg className="absolute top-0 left-0 w-full h-full pointer-events-none z-20">
-      <defs>
-        <marker
-          id="arrow"
-          markerWidth="12"
-          markerHeight="12"
-          refX="8"
-          refY="4"
-          orient="auto"
-          markerUnits="strokeWidth"
-        >
-          <path d="M0,0 L0,8 L10,4 z" fill="#10b981" />
-        </marker>
-        <filter id="glow">
-          <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
-          <feMerge>
-            <feMergeNode in="coloredBlur"/>
-            <feMergeNode in="SourceGraphic"/>
-          </feMerge>
-        </filter>
-      </defs>
+          {/* Main Scrollable Layers */}
+          <div className="flex gap-6 overflow-x-auto p-6 flex-1 relative">
+            {/* Arrows SVG */}
+            <svg className="absolute top-0 left-0 w-full h-full pointer-events-none z-20">
+              <defs>
+                <marker
+                  id="arrow"
+                  markerWidth="12"
+                  markerHeight="12"
+                  refX="8"
+                  refY="4"
+                  orient="auto"
+                  markerUnits="strokeWidth"
+                >
+                  <path d="M0,0 L0,8 L10,4 z" fill="#10b981" />
+                </marker>
+                <filter id="glow">
+                  <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
+                  <feMerge>
+                    <feMergeNode in="coloredBlur"/>
+                    <feMergeNode in="SourceGraphic"/>
+                  </feMerge>
+                </filter>
+              </defs>
 
-      {layers.map((layer, i) => {
-        if (i === layers.length - 1) return null;
-        const nextLayer = layers[i + 1];
-
-        return (
-          <g key={`g-${i}`}>
-            {layer.nodes.map((agentId, rowIndex) =>
-              nextLayer.nodes.map((nextAgentId, nextRowIndex) => {
-                const aKey = `${i}-${rowIndex}-${agentId}`;
-                const bKey = `${i + 1}-${nextRowIndex}-${nextAgentId}`;
-                const a = positions[aKey];
-                const b = positions[bKey];
-                
-                if (!a || !b) return null;
-
-                const x1 = a.right;
-                const y1 = a.cy;
-                const x2 = b.left;
-                const y2 = b.cy;
-
-                const offset = 8;
-                const sx = x1 + offset;
-                const ex = x2 - offset;
+              {layers.map((layer, i) => {
+                if (i === layers.length - 1) return null;
+                const nextLayer = layers[i + 1];
 
                 return (
-                  <line
-                    key={`${i}-${rowIndex}-${nextRowIndex}-${agentId}-${nextAgentId}`}
-                    x1={sx}
-                    y1={y1}
-                    x2={ex}
-                    y2={y2}
-                    stroke="#10b981"
-                    strokeWidth={2}
-                    markerEnd="url(#arrow)"
-                    filter="url(#glow)"
-                    opacity={0.7}
-                    className="animate-pulse"
-                    style={{
-                      animationDuration: '3s',
-                      animationDelay: `${i * 0.2}s`,
-                    }}
-                  />
+                  <g key={`g-${i}`}>
+                    {layer.nodes.map((agentId, rowIndex) =>
+                      nextLayer.nodes.map((nextAgentId, nextRowIndex) => {
+                        const aKey = `${i}-${rowIndex}-${agentId}`;
+                        const bKey = `${i + 1}-${nextRowIndex}-${nextAgentId}`;
+                        const a = positions[aKey];
+                        const b = positions[bKey];
+                        
+                        if (!a || !b) return null;
+
+                        const x1 = a.right;
+                        const y1 = a.cy;
+                        const x2 = b.left;
+                        const y2 = b.cy;
+
+                        const offset = 8;
+                        const sx = x1 + offset;
+                        const ex = x2 - offset;
+
+                        return (
+                          <line
+                            key={`${i}-${rowIndex}-${nextRowIndex}-${agentId}-${nextAgentId}`}
+                            x1={sx}
+                            y1={y1}
+                            x2={ex}
+                            y2={y2}
+                            stroke="#10b981"
+                            strokeWidth={2}
+                            markerEnd="url(#arrow)"
+                            filter="url(#glow)"
+                            opacity={0.7}
+                            className="animate-pulse"
+                            style={{
+                              animationDuration: '3s',
+                              animationDelay: `${i * 0.2}s`,
+                            }}
+                          />
+                        );
+                      })
+                    )}
+                  </g>
                 );
-              })
-            )}
-          </g>
-        );
-      })}
-    </svg>
+              })}
+            </svg>
 
-    {/* Columns */}
-    {layers.map((layer, colIndex) => (
-      <div
-        key={layer.id}
-        className="flex flex-col gap-3 min-w-[180px] flex-1 p-3 border-l border-gray-700/40 z-10 relative bg-gray-800/20 rounded-lg"
-      >
-        <h3 className="text-gray-300 font-semibold text-center mb-1 pb-1 border-b border-gray-700/40 text-xs uppercase tracking-wider">
-          Layer {colIndex + 1}
-        </h3>
-
-        {layer.nodes.length === 0 && (
-          <div className="flex-1 flex items-center justify-center border border-dashed border-gray-700/40 rounded-lg p-4 text-gray-500 text-xs italic">
-            Empty
-          </div>
-        )}
-
-        {layer.nodes.map((agentId, nodeIndex) => {
-          const agent = findAgent(agentId);
-          const key = `${colIndex}-${nodeIndex}-${agentId}`;
-          const isHovered = hoveredAgent === key;
-
-          return (
-            <div
-              key={key}
-              className="relative group"
-              draggable
-              onDragStart={(e) => handleDragStart(e, layer.id, agentId.toString())}
-              onDragEnd={handleDragEnd}
-            >
-              {/* Node */}
+            {/* Columns */}
+            {layers.map((layer, colIndex) => (
               <div
-                ref={(el) => {
-                  nodeRefs.current[key] = el;
-                }}
-                onMouseEnter={() => setHoveredAgent(key)}
-                onMouseLeave={() => setHoveredAgent(null)}
-                className={`node bg-gradient-to-r from-emerald-600 to-green-600 text-white p-2 rounded-lg border border-white/10 text-xs flex justify-between items-center shadow-md cursor-pointer transition-all duration-300 ${
-                  isHovered ? 'scale-105 border-white/40 shadow-lg' : ''
-                }`}
+                key={layer.id}
+                className="flex flex-col gap-3 min-w-[180px] flex-1 p-3 border-l border-gray-700/40 z-10 relative bg-gray-800/20 rounded-lg"
               >
-                <span className="truncate mr-1 font-medium">
-                  {agent ? agent.name : `Agent ${agentId}`}
-                </span>
+                <h3 className="text-gray-300 font-semibold text-center mb-1 pb-1 border-b border-gray-700/40 text-xs uppercase tracking-wider">
+                  Layer {colIndex + 1}
+                </h3>
+
+                {layer.nodes.length === 0 && (
+                  <div className="flex-1 flex items-center justify-center border border-dashed border-gray-700/40 rounded-lg p-4 text-gray-500 text-xs italic">
+                    Empty
+                  </div>
+                )}
+
+                {layer.nodes.map((agentId, nodeIndex) => {
+                  const agent = findAgent(agentId);
+                  const key = `${colIndex}-${nodeIndex}-${agentId}`;
+                  const isHovered = hoveredAgent === key;
+
+                  return (
+                    <div
+                      key={key}
+                      className="relative group"
+                      draggable
+                      onDragStart={(e) => handleDragStart(e, layer.id, agentId.toString())}
+                      onDragEnd={handleDragEnd}
+                    >
+                      {/* Node */}
+                      <div
+                        ref={(el) => {
+                          nodeRefs.current[key] = el;
+                        }}
+                        onMouseEnter={() => setHoveredAgent(key)}
+                        onMouseLeave={() => setHoveredAgent(null)}
+                        className={`node bg-gradient-to-r from-emerald-600 to-green-600 text-white p-2 rounded-lg border border-white/10 text-xs flex justify-between items-center shadow-md cursor-pointer transition-all duration-300 ${
+                          isHovered ? 'scale-105 border-white/40 shadow-lg' : ''
+                        }`}
+                      >
+                        <span className="truncate mr-1 font-medium">
+                          {agent ? agent.name : `Agent ${agentId}`}
+                        </span>
+                      </div>
+
+                      {/* Hover Pulse */}
+                      {isHovered && (
+                        <>
+                          <div className="absolute inset-0 rounded-lg border border-green-400/40 animate-ping pointer-events-none" />
+                          <div className="absolute -inset-1 rounded-lg border border-green-400/20 animate-ping pointer-events-none" style={{ animationDelay: '0.4s' }} />
+                        </>
+                      )}
+
+                      {/* Hover Tooltip */}
+                      {isHovered && agent && (
+                        <div 
+                          className="absolute left-full ml-3 top-0 z-30 w-64 bg-black/90 border border-green-500 rounded-lg shadow-2xl p-3 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+                        >
+                          <div className="absolute -left-2 top-4 w-3 h-3 bg-black/90 border-l border-t border-green-500 rotate-[-45deg]" />
+                          <div className="font-semibold text-white mb-1">{agent.name}</div>
+                          <div className="text-gray-400 text-xs mb-2 line-clamp-2">{agent.description}</div>
+
+                          <div className="text-xs text-blue-400 mb-1 font-semibold">Inputs</div>
+                          <div className="space-y-0.5 mb-2">
+                            {Object.entries(agent.inputs).map(([key, meta]) => (
+                              <div key={key} className="text-gray-300 bg-gray-800/40 px-2 py-0.5 rounded">
+                                {key} {meta.required && <span className="text-orange-400">(req)</span>}
+                              </div>
+                            ))}
+                          </div>
+
+                          <div className="text-xs text-green-400 mb-1 font-semibold">Outputs</div>
+                          <div className="space-y-0.5">
+                            {Object.entries(agent.outputs).map(([key, meta]) => (
+                              <div key={key} className="text-gray-300 bg-gray-800/40 px-2 py-0.5 rounded">
+                                {key} - <span className="text-gray-500">{meta.type}</span>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
               </div>
+            ))}
+          </div>
 
-              {/* Hover Pulse */}
-              {isHovered && (
-                <>
-                  <div className="absolute inset-0 rounded-lg border border-green-400/40 animate-ping pointer-events-none" />
-                  <div className="absolute -inset-1 rounded-lg border border-green-400/20 animate-ping pointer-events-none" style={{ animationDelay: '0.4s' }} />
-                </>
-              )}
+          {/* Trash Zone */}
+          <div
+            className={`h-20 border-t border-gray-700 flex items-center justify-center text-gray-400 text-sm transition-all duration-300 rounded-b-xl ${
+              draggedNode ? 'bg-red-900/50 text-red-400 border-red-700' : 'bg-gray-900/60'
+            }`}
+            onDragOver={(e) => e.preventDefault()}
+            onDrop={handleDropToTrash}
+          >
+            🗑️ <span className="ml-2">Drag a node here to delete</span>
 
-              {/* Hover Tooltip */}
-              {isHovered && agent && (
-                <div 
-                  className="absolute left-full ml-3 top-0 z-30 w-64 bg-black/90 border border-green-500 rounded-lg shadow-2xl p-3 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
-                >
-                  <div className="absolute -left-2 top-4 w-3 h-3 bg-black/90 border-l border-t border-green-500 rotate-[-45deg]" />
-                  <div className="font-semibold text-white mb-1">{agent.name}</div>
-                  <div className="text-gray-400 text-xs mb-2 line-clamp-2">{agent.description}</div>
-
-                  <div className="text-xs text-blue-400 mb-1 font-semibold">Inputs</div>
-                  <div className="space-y-0.5 mb-2">
-                    {Object.entries(agent.inputs).map(([key, meta]) => (
-                      <div key={key} className="text-gray-300 bg-gray-800/40 px-2 py-0.5 rounded">
-                        {key} {meta.required && <span className="text-orange-400">(req)</span>}
-                      </div>
-                    ))}
-                  </div>
-
-                  <div className="text-xs text-green-400 mb-1 font-semibold">Outputs</div>
-                  <div className="space-y-0.5">
-                    {Object.entries(agent.outputs).map(([key, meta]) => (
-                      <div key={key} className="text-gray-300 bg-gray-800/40 px-2 py-0.5 rounded">
-                        {key} - <span className="text-gray-500">{meta.type}</span>
-                      </div>
-                    ))}
-                  </div>
+            {confirmDelete && (
+              <div className="absolute bottom-24 bg-gray-800 border border-red-500 text-white rounded-lg p-4 flex flex-col items-center shadow-xl z-50">
+                <div className="text-sm mb-2">Remove <b>{pendingDeleteName}</b>?</div>
+                <div className="flex gap-2">
+                  <button
+                    className="bg-red-600 px-3 py-1 rounded text-xs hover:bg-red-700"
+                    onClick={confirmRemove}
+                  >
+                    Yes
+                  </button>
+                  <button
+                    className="bg-gray-700 px-3 py-1 rounded text-xs hover:bg-gray-600"
+                    onClick={() => setConfirmDelete(false)}
+                  >
+                    Cancel
+                  </button>
                 </div>
-              )}
-            </div>
-          );
-        })}
-      </div>
-    ))}
-  </div>
-
-  {/* Trash Zone */}
-  <div
-    className={`h-20 border-t border-gray-700 flex items-center justify-center text-gray-400 text-sm transition-all duration-300 rounded-b-xl ${
-      draggedNode ? 'bg-red-900/50 text-red-400 border-red-700' : 'bg-gray-900/60'
-    }`}
-    onDragOver={(e) => e.preventDefault()}
-    onDrop={handleDropToTrash}
-  >
-    🗑️ <span className="ml-2">Drag a node here to delete</span>
-
-    {confirmDelete && (
-      <div className="absolute bottom-24 bg-gray-800 border border-red-500 text-white rounded-lg p-4 flex flex-col items-center shadow-xl z-50">
-        <div className="text-sm mb-2">Remove <b>{pendingDeleteName}</b>?</div>
-        <div className="flex gap-2">
-          <button
-            className="bg-red-600 px-3 py-1 rounded text-xs hover:bg-red-700"
-            onClick={confirmRemove}
-          >
-            Yes
-          </button>
-          <button
-            className="bg-gray-700 px-3 py-1 rounded text-xs hover:bg-gray-600"
-            onClick={() => setConfirmDelete(false)}
-          >
-            Cancel
-          </button>
+              </div>
+            )}
+          </div>
         </div>
-      </div>
-    )}
-  </div>
-</div>
 
 
       {/* Form */}

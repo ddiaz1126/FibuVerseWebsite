@@ -5,6 +5,7 @@ import Header from "@/components/Header";
 import { fetchPublicCompositeAgents, runPublicCompositeAgent } from "@/api/public";
 import { useSearchParams } from "next/navigation";
 import { AgentOutput } from "@/components/agents/AgentOutput"
+import { Menu, X } from 'lucide-react';
 
 interface SubAgent {
   id: number;
@@ -41,11 +42,12 @@ interface CompositeAgent {
 // Extract the component that uses useSearchParams
 function FibuPageContent() {
   const [agents, setAgents] = useState<CompositeAgent[]>([]);
-  const [loadingAgents, setLoadingAgents] = useState(true);
+  const [, setLoadingAgents] = useState(true);
   const [selectedAgent, setSelectedAgent] = useState<CompositeAgent | null>(null);
   const [inputValues, setInputValues] = useState<Record<string, string | File | null>>({});
   const [output, setOutput] = useState<unknown>(null);
   const [running, setRunning] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   const searchParams = useSearchParams();
   const initialAgentId = searchParams.get("agentId");
@@ -79,9 +81,9 @@ function FibuPageContent() {
   };
 
   // Handle input change
-  const handleInputChange = (key: string, value: string | File | null) => {
-    setInputValues(prev => ({ ...prev, [key]: value }));
-  };
+  // const handleInputChange = (key: string, value: string | File | null) => {
+  //   setInputValues(prev => ({ ...prev, [key]: value }));
+  // };
 
 
   // Run agent
@@ -103,82 +105,119 @@ function FibuPageContent() {
     }
   };
 
-return (
-  <div className="flex flex-col h-screen bg-gray-900 text-white">
-    {/* Header */}
-    <Header logoSrc="/images/logo.png" />
+  return (
+    <div className="flex flex-col h-screen bg-gray-900 text-white">
+      {/* Header */}
+      <Header logoSrc="/images/logo.png" />
 
-    <div className="flex flex-1 overflow-hidden">
-      {/* Sidebar */}
-      <aside className="w-48 bg-gray-900 border-r border-gray-800 p-2 overflow-y-auto">
-        <h2 className="text-gray-400 text-[10px] font-semibold uppercase tracking-wide mb-1">
-          Available Agents
-        </h2>
+      <div className="flex flex-1 overflow-hidden relative">
+        {/* Mobile Menu Button */}
+        <button
+          onClick={() => setSidebarOpen(!sidebarOpen)}
+          className="lg:hidden fixed bottom-6 right-6 z-50 bg-blue-600 hover:bg-blue-700 text-white p-4 rounded-full shadow-lg transition-colors"
+          aria-label="Toggle menu"
+        >
+          {sidebarOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+        </button>
 
-        {loadingAgents ? (
-          <p className="text-gray-500 text-[10px]">Loading agents...</p>
-        ) : (
-          <nav className="flex flex-col gap-1">
-            {agents.map(agent => (
-              <button
-                key={agent.id}
-                onClick={() => handleSelectAgent(agent)}
-                className={`text-left px-2 py-1.5 rounded-md text-[12px] transition-all ${
-                  selectedAgent?.id === agent.id 
-                    ? "bg-blue-600 text-white" 
-                    : "bg-gray-800 hover:bg-gray-750 text-gray-300"
-                }`}
-              >
-                <div className="font-medium truncate">{agent.name}</div>
-              </button>
-            ))}
-          </nav>
+        {/* Overlay for mobile */}
+        {sidebarOpen && (
+          <div
+            className="lg:hidden fixed inset-0 bg-black bg-opacity-50 z-30"
+            onClick={() => setSidebarOpen(false)}
+          />
         )}
-      </aside>
 
-      {/* Main content */}
-      <main className="flex-1 overflow-y-auto p-4">
-        {selectedAgent ? (
-          <div className="max-w-6xl mx-auto space-y-4">
-            {/* Agent Header */}
-            <div>
-              <h1 className="text-2xl font-bold mb-1">{selectedAgent.name}</h1>
-              <p className="text-gray-400 text-[10px] leading-snug mt-1 line-clamp-2">
-                {selectedAgent.description}
-              </p>
-            </div>
+        {/* Sidebar */}
+        <aside
+          className={`
+            fixed lg:relative inset-y-0 left-0 z-40
+            w-64 lg:w-48 xl:w-64
+            bg-gray-900 border-r border-gray-800
+            transform transition-transform duration-300 ease-in-out
+            ${sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
+            overflow-y-auto
+          `}
+          style={{ top: '64px' }} // Account for header height
+        >
+          <div className="p-4">
+            <h2 className="text-gray-400 text-xs font-semibold uppercase tracking-wide mb-3">
+              Available Agents
+            </h2>
 
-            {/* Network Visualization */}
-            <AgentNetworkGraph agent={selectedAgent} />
-
-            {/* Input Form */}
-            <AgentInputForm
-              agent={selectedAgent}
-              inputValues={inputValues}
-              onInputChange={handleInputChange}
-              onSubmit={handleRunAgent}
-              loading={running}
-            />
-
-            {/* Output Section */}
-            <AgentOutput output={output} loading={running} />
+            <nav className="flex flex-col gap-2">
+              {agents.map(agent => (
+                <button
+                  key={agent.id}
+                  onClick={() => handleSelectAgent(agent)}
+                  className={`text-left px-4 py-3 rounded-lg text-sm transition-all ${
+                    selectedAgent?.id === agent.id
+                      ? "bg-blue-600 text-white"
+                      : "bg-gray-800 hover:bg-gray-750 text-gray-300 active:bg-gray-700"
+                  }`}
+                >
+                  <div className="font-medium">{agent.name}</div>
+                  <div className="text-xs text-gray-400 mt-1 line-clamp-1">
+                    {agent.description}
+                  </div>
+                </button>
+              ))}
+            </nav>
           </div>
-        ) : (
-          <div className="flex items-center justify-center h-full">
-            <div className="text-center">
-              <div className="text-gray-500 text-5xl mb-2">🤖</div>
-              <h2 className="text-xl font-semibold mb-1">Select an Agent</h2>
-              <p className="text-gray-400 text-[10px]">
-                Choose an agent from the sidebar to get started
-              </p>
-            </div>
+        </aside>
+
+        {/* Main content */}
+        <main className="flex-1 overflow-y-auto">
+          <div className="p-4 sm:p-6 lg:p-8">
+            {selectedAgent ? (
+              <div className="max-w-6xl mx-auto space-y-6">
+                {/* Agent Header */}
+                <div>
+                  <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold mb-2">
+                    {selectedAgent.name}
+                  </h1>
+                  <p className="text-gray-400 text-sm sm:text-base leading-relaxed">
+                    {selectedAgent.description}
+                  </p>
+                </div>
+
+                {/* Network Visualization */}
+                <AgentNetworkGraph agent={selectedAgent} />
+
+                {/* Input Form */}
+                <AgentInputForm
+                  agent={selectedAgent}
+                  inputValues={inputValues}
+                  onInputChange={() => {}}
+                  onSubmit={handleRunAgent}
+                  loading={running}
+                />
+
+                {/* Output Section */}
+                <AgentOutput output={output} loading={running} />
+              </div>
+            ) : (
+              <div className="flex items-center justify-center h-full px-4">
+                <div className="text-center">
+                  <div className="text-gray-500 text-5xl sm:text-6xl mb-4">🤖</div>
+                  <h2 className="text-lg sm:text-xl font-semibold mb-2">Select an Agent</h2>
+                  <p className="text-gray-400 text-sm sm:text-base max-w-md">
+                    Choose an agent from the sidebar to get started
+                  </p>
+                  <button
+                    onClick={() => setSidebarOpen(true)}
+                    className="lg:hidden mt-6 bg-blue-600 hover:bg-blue-700 text-white py-3 px-6 rounded-lg font-medium transition-colors"
+                  >
+                    Browse Agents
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
-        )}
-      </main>
+        </main>
+      </div>
     </div>
-  </div>
-);
-
+  );
 }
 
 // Main export wrapped in Suspense

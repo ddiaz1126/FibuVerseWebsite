@@ -2,8 +2,7 @@
 
 import Link from "next/link";
 import {
-  ChevronLeftIcon,
-  ChevronRightIcon,
+  Bars3Icon,
   HomeIcon,
   UserGroupIcon,
   CalendarIcon,
@@ -15,12 +14,11 @@ import {
 } from "@heroicons/react/24/outline";
 import { usePathname } from 'next/navigation';
 
-type TrainerSidebarProps = {
-  collapsed: boolean;
-  onToggle?: () => void;
+type TrainerNavbarProps = {
+  onMenuToggle?: () => void;
 };
 
-const items = [
+export const trainerNavItems = [
   { name: "Dashboard", icon: HomeIcon, href: "/trainer/dashboard" },
   { name: "Messages", icon: ClipboardIcon, href: "/trainer/messages" },
   { name: "Clients", icon: UserGroupIcon, href: "/trainer/clients" },
@@ -32,89 +30,57 @@ const items = [
   { name: "Help", icon: QuestionMarkCircleIcon, href: "/trainer/help" },
 ];
 
-
-export default function TrainerSidebar({ collapsed, onToggle }: TrainerSidebarProps) {
+export default function TrainerNavbar({ onMenuToggle }: TrainerNavbarProps) {
   const pathname = usePathname();
 
-return (
-  <aside
-    className={`h-screen bg-gray-900 text-white shadow-lg flex flex-col transition-all duration-300 ease-in-out ${
-      collapsed ? "w-14" : "w-52"
-    }`}
-  >
-  {/* Top: logo + toggle */}
-    <div className="flex items-center px-3 py-2 border-b border-gray-800">
-      {/* Logo + title */}
-      <div className="flex items-center gap-2 overflow-hidden flex-1">
-        <div className="h-6 w-6 rounded-lg bg-gradient-to-br from-yellow-400 to-yellow-500 flex items-center justify-center font-bold text-gray-900 text-xs flex-shrink-0 shadow-md">
-          F
-        </div>
-        {!collapsed && (
-          <span className="font-bold text-xs whitespace-nowrap">
+  return (
+    <nav className="w-full bg-gray-900 text-white shadow-lg">
+      <div className="flex items-center justify-between px-4 py-2 border-b border-gray-800">
+        {/* Left: Logo */}
+        <div className="hidden sm:flex items-center gap-3 group">
+          <div className="h-0.5 w-24 bg-gradient-to-r from-transparent to-yellow-500/50 group-hover:to-yellow-500 transition-all duration-300"></div>
+          <span className="text-sm font-semibold text-gray-400 tracking-wider uppercase group-hover:text-yellow-400 transition-colors duration-300">
             FibuVerse
           </span>
-        )}
-      </div>
-
-          {/* Toggle button */}
-          <button
-            onClick={onToggle}
-            className="p-1.5 rounded-lg hover:bg-gray-800 active:scale-95 flex items-center justify-center transition-all duration-200 flex-shrink-0 group"
-            aria-label="Toggle sidebar"
-          >
-            {collapsed ? (
-              <ChevronRightIcon className="w-4 h-4 text-gray-400 group-hover:text-yellow-400 transition-colors" />
-            ) : (
-              <ChevronLeftIcon className="w-4 h-4 text-gray-400 group-hover:text-yellow-400 transition-colors" />
-            )}
-          </button>
-      </div>
-
-    {/* Navigation */}
-    <nav className="mt-2 flex-1 overflow-y-auto px-2">
-      {items.map((it) => {
-        const Icon = it.icon;
-        const isActive = pathname === it.href;
-        
-        return (
-          <Link
-            key={it.name}
-            href={it.href}
-            title={collapsed ? it.name : undefined}
-            className={`flex items-center gap-2 px-2 py-2 rounded-md mb-1 transition-all ${
-              collapsed ? "justify-center" : ""
-            } ${
-              isActive
-                ? "bg-yellow-400/10 text-yellow-400 border-l-2 border-yellow-400"
-                : "text-gray-300 hover:bg-gray-800"
-            }`}
-          >
-            <Icon 
-              className={`w-4 h-4 flex-shrink-0 ${
-                isActive ? "text-yellow-400" : "text-blue-400"
-              }`}
-            />
-            {!collapsed && (
-              <span className="text-xs font-semibold whitespace-nowrap">
-                {it.name}
-              </span>
-            )}
-          </Link>
-        );
-      })}
-    </nav>
-
-    {/* Footer */}
-    <div className="p-3 border-t border-gray-800 text-center">
-      {!collapsed ? (
-        <div className="text-[10px] text-gray-400">
-          © {new Date().getFullYear()} FibuVerse
+          <div className="h-0.5 w-24 bg-gradient-to-l from-transparent to-yellow-500/50 group-hover:to-yellow-500 transition-all duration-300"></div>
         </div>
-      ) : (
-        <div className="h-4" />
-      )}
-    </div>
-  </aside>
-);
 
+        {/* Center: Navigation Links (hidden on mobile) */}
+        <div className="hidden md:flex items-center gap-1">
+          {trainerNavItems.map((it) => {
+            const Icon = it.icon;
+            const isActive = pathname === it.href;
+            
+            return (
+              <Link
+                key={it.name}
+                href={it.href}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md transition-all ${
+                  isActive
+                    ? "bg-yellow-400/10 text-yellow-400 border-b-2 border-yellow-400"
+                    : "text-gray-300 hover:bg-gray-800"
+                }`}
+              >
+                <Icon
+                  className={`w-4 h-4 ${
+                    isActive ? "text-yellow-400" : "text-blue-400"
+                  }`}
+                />
+                <span className="text-xs font-semibold">{it.name}</span>
+              </Link>
+            );
+          })}
+        </div>
+
+        {/* Right: Mobile menu button */}
+        <button
+          onClick={onMenuToggle}
+          className="md:hidden p-1.5 rounded-lg hover:bg-gray-800 active:scale-95 transition-all group"
+          aria-label="Toggle menu"
+        >
+          <Bars3Icon className="w-5 h-5 text-gray-400 group-hover:text-yellow-400 transition-colors" />
+        </button>
+      </div>
+    </nav>
+  );
 }

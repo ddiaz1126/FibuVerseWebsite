@@ -120,14 +120,17 @@ export default function DeveloperDocsView() {
 
   return (
     <div className="flex h-full">
-      <div className="w-1/4 border-r border-gray-700 bg-gray-800 p-4 flex flex-col gap-4">
-        <div className="flex gap-2 mb-4">
+      <div className="flex-none w-1/4 md:w-1/5 lg:w-1/6 bg-gray-800/50 backdrop-blur-sm border-r border-gray-700 p-3 flex flex-col rounded-xl m-2">
+        {/* Tab Buttons */}
+        <div className="flex gap-2 mb-3">
           {(["Workflows", "Agents"] as const).map((t) => (
             <button
               key={t}
               onClick={() => setTab(t)}
-              className={`px-3 py-1 rounded-t-lg font-semibold transition ${
-                tab === t ? "bg-blue-600 text-white" : "bg-gray-600 text-gray-200 hover:bg-gray-500"
+              className={`px-3 py-1 text-[10px] font-semibold rounded-t-lg transition ${
+                tab === t
+                  ? "bg-blue-600 text-white"
+                  : "bg-gray-600 text-gray-200 hover:bg-gray-500"
               }`}
             >
               {t}
@@ -135,35 +138,60 @@ export default function DeveloperDocsView() {
           ))}
         </div>
 
-        <input
-          type="text"
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          placeholder={`Search ${tab.toLowerCase()}...`}
-          className="mb-2 p-2 rounded bg-gray-700 border border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-100"
-        />
+        {/* Search Input */}
+        <div className="relative mb-3 flex-shrink-0">
+          <input
+            type="text"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder={`Search ${tab.toLowerCase()}...`}
+            className="w-full p-2 pl-8 text-xs rounded-lg bg-gray-900/50 border border-gray-700 placeholder-gray-400 text-white focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 outline-none transition-all"
+          />
+          <svg
+            className="w-4 h-4 text-gray-500 absolute left-2.5 top-2.5"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+            />
+          </svg>
+        </div>
 
-        <div className="flex-1 overflow-y-auto flex flex-col gap-2">
+        {/* Scrollable List */}
+        <div className="flex-1 overflow-y-auto pr-1 min-h-0 flex flex-col gap-2">
           {loadingAgents && tab === "Agents" ? (
-            <div className="text-gray-400 p-2">Loading agents...</div>
+            <div className="text-center text-gray-400 text-xs mt-2 animate-pulse">
+              Loading {tab.toLowerCase()}...
+            </div>
           ) : filteredList.length ? (
-            filteredList.map((agent) => (
-              <button
-                key={`${agent.id}-${agent.name}`}
-                className={`w-full text-left px-3 py-2 rounded hover:bg-gray-700 transition ${
-                  selectedAgent?.id === agent.id ? "bg-gray-700 font-semibold" : ""
-                }`}
-                onClick={() => setSelectedAgent(agent)}
-              >
-                {agent.name}
-              </button>
-            ))
+            <div className="divide-y divide-gray-700/30">
+              {filteredList.map((item) => (
+                <button
+                  key={`${item.id}-${item.name}`}
+                  onClick={() => setSelectedAgent(item)}
+                  className={`w-full text-left px-3 py-2 hover:bg-gray-700/30 transition-all truncate rounded-lg ${
+                    selectedAgent?.id === item.id
+                      ? "bg-gray-700/50 border-l-2 border-l-blue-500 font-semibold"
+                      : ""
+                  }`}
+                >
+                  {item.name}
+                </button>
+              ))}
+            </div>
           ) : (
-            <p className="text-gray-400 mt-2 text-sm">No {tab.toLowerCase()} found</p>
+            <p className="text-gray-400 mt-2 text-xs text-center">
+              No {tab.toLowerCase()} found
+            </p>
           )}
         </div>
       </div>
-
+          
       <div className="flex-1 p-6 overflow-auto">
         <h1 className="text-2xl font-bold mb-4">{selectedAgent?.name || "Select an agent"}</h1>
 

@@ -12,6 +12,7 @@ import { useState } from "react";
 //   isSameDay,
 //   isSameMonth,
 // } from "date-fns";
+import NutritionPlanBuilder from "@/components/nutrition/NutritionPlanBuilder"
 
 interface NutritionPlan {
   id: number;
@@ -75,109 +76,7 @@ export default function NutritionPage() {
         {/* Right section */}
         <div className="flex-1 flex flex-col gap-3">
           {/* Top: Calendar + Plan metadata */}
-          <div className="flex gap-3">
-            {/* Plan metadata */}
-            <div className="flex-1 bg-gray-800/50 backdrop-blur-sm border border-gray-700 rounded-xl p-3 shadow-lg">
-              <div className="text-sm font-bold mb-2 text-white">
-                {selectedPlan?.name || "Select a plan"}
-              </div>
-              <div className="space-y-2">
-                <div>
-                  <label className="block text-gray-300 mb-1 text-[10px] font-medium">
-                    Plan Date
-                  </label>
-                  <input
-                    type="date"
-                    className="w-full p-1.5 rounded-lg bg-gray-900/50 border border-gray-700 focus:outline-none focus:border-blue-500/50 transition-colors text-white text-xs"
-                  />
-                </div>
-                <div>
-                  <label className="block text-gray-300 mb-1 text-[10px] font-medium">
-                    Total Calories
-                  </label>
-                  <input
-                    type="number"
-                    className="w-full p-1.5 rounded-lg bg-gray-900/50 border border-gray-700 focus:outline-none focus:border-blue-500/50 transition-colors text-white text-xs"
-                  />
-                </div>
-                <div>
-                  <label className="block text-gray-300 mb-1 text-[10px] font-medium">
-                    Protein (g)
-                  </label>
-                  <input
-                    type="number"
-                    className="w-full p-1.5 rounded-lg bg-gray-900/50 border border-gray-700 focus:outline-none focus:border-blue-500/50 transition-colors text-white text-xs"
-                  />
-                </div>
-                <div>
-                  <label className="block text-gray-300 mb-1 text-[10px] font-medium">
-                    Carbs (g)
-                  </label>
-                  <input
-                    type="number"
-                    className="w-full p-1.5 rounded-lg bg-gray-900/50 border border-gray-700 focus:outline-none focus:border-blue-500/50 transition-colors text-white text-xs"
-                  />
-                </div>
-                <div>
-                  <label className="block text-gray-300 mb-1 text-[10px] font-medium">
-                    Fat (g)
-                  </label>
-                  <input
-                    type="number"
-                    className="w-full p-1.5 rounded-lg bg-gray-900/50 border border-gray-700 focus:outline-none focus:border-blue-500/50 transition-colors text-white text-xs"
-                  />
-                </div>
-                <div>
-                  <label className="block text-gray-300 mb-1 text-[10px] font-medium">
-                    Notes
-                  </label>
-                  <textarea
-                    className="w-full p-1.5 rounded-lg bg-gray-900/50 border border-gray-700 focus:outline-none focus:border-blue-500/50 transition-colors text-white text-xs resize-none"
-                    rows={3}
-                  />
-                </div>
-              </div>
-            </div>
-
-            {/* Calendar */}
-            <div className="w-1/3 bg-gray-800/50 backdrop-blur-sm border border-gray-700 rounded-xl p-3 shadow-lg">
-              <div className="text-sm font-semibold mb-2">Calendar placeholder</div>
-            </div>
-          </div>
-
-          {/* Bottom: Nutrition Plan Editor */}
-          <div className="flex-1 bg-gray-800/50 backdrop-blur-sm border border-gray-700 rounded-xl p-3 shadow-lg">
-            <div className="text-sm font-bold mb-2 text-white">Plan Editor</div>
-            <div className="space-y-2">
-              <div>
-                <label className="block text-gray-300 mb-1 text-[10px] font-medium">
-                  Meal Name
-                </label>
-                <input
-                  type="text"
-                  className="w-full p-1.5 rounded-lg bg-gray-900/50 border border-gray-700 focus:outline-none focus:border-blue-500/50 transition-colors text-white text-xs"
-                />
-              </div>
-              <div>
-                <label className="block text-gray-300 mb-1 text-[10px] font-medium">
-                  Food Items
-                </label>
-                <textarea
-                  className="w-full p-1.5 rounded-lg bg-gray-900/50 border border-gray-700 focus:outline-none focus:border-blue-500/50 transition-colors text-white text-xs resize-none"
-                  rows={4}
-                />
-              </div>
-              <div>
-                <label className="block text-gray-300 mb-1 text-[10px] font-medium">
-                  Macros per meal
-                </label>
-                <input
-                  type="text"
-                  className="w-full p-1.5 rounded-lg bg-gray-900/50 border border-gray-700 focus:outline-none focus:border-blue-500/50 transition-colors text-white text-xs"
-                />
-              </div>
-            </div>
-          </div>
+          <NutritionPlanBuilder/>
         </div>
       </div>
     </div>

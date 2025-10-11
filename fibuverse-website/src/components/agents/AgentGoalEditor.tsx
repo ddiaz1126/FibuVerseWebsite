@@ -63,47 +63,47 @@ export default function AgentGoalEditor({
   };
 
   return (
-    <div className="bg-gray-800 border border-gray-600 rounded-lg mb-4">
+<div className="bg-gray-800/50 backdrop-blur-sm border border-gray-700 rounded-lg mb-3 shadow-lg">
       {/* Header */}
       <div 
-        className="flex items-center justify-between p-4 cursor-pointer hover:bg-gray-750"
+        className="flex items-center justify-between p-3 cursor-pointer hover:bg-gray-700/50 transition-all"
         onClick={() => setIsExpanded(!isExpanded)}
       >
-        <div className="flex items-center gap-3">
-          <Lightbulb className="w-5 h-5 text-yellow-500" />
-          <h2 className="text-lg font-semibold text-white">1. Agent Goal & Design Document</h2>
+        <div className="flex items-center gap-2">
+          <Lightbulb className="w-4 h-4 text-yellow-500" />
+          <h2 className="text-sm font-semibold text-white">1. Agent Goal & Design Document</h2>
         </div>
         <button type="button" className="text-gray-400 hover:text-white">
-          {isExpanded ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
+          {isExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
         </button>
       </div>
 
       {/* Content */}
       {isExpanded && (
-        <div className="border-t border-gray-600">
+        <div className="border-t border-gray-700">
           {/* Tabs */}
-          <div className="flex border-b border-gray-600">
+          <div className="flex border-b border-gray-700">
             <button
               type="button"
               onClick={() => setActiveTab('edit')}
-              className={`px-4 py-2 font-medium transition-colors ${
+              className={`px-3 py-1.5 text-xs font-medium transition-colors ${
                 activeTab === 'edit'
-                  ? 'bg-gray-700 text-white border-b-2 border-green-500'
-                  : 'text-gray-400 hover:text-white hover:bg-gray-750'
+                  ? 'bg-gray-700 text-white border-b-2 border-blue-500'
+                  : 'text-gray-400 hover:text-white hover:bg-gray-700/50'
               }`}
             >
-              <span className="flex items-center gap-2">
-                <FileText className="w-4 h-4" />
+              <span className="flex items-center gap-1.5">
+                <FileText className="w-3.5 h-3.5" />
                 Edit
               </span>
             </button>
             <button
               type="button"
               onClick={() => setActiveTab('preview')}
-              className={`px-4 py-2 font-medium transition-colors ${
+              className={`px-3 py-1.5 text-xs font-medium transition-colors ${
                 activeTab === 'preview'
-                  ? 'bg-gray-700 text-white border-b-2 border-green-500'
-                  : 'text-gray-400 hover:text-white hover:bg-gray-750'
+                  ? 'bg-gray-700 text-white border-b-2 border-blue-500'
+                  : 'text-gray-400 hover:text-white hover:bg-gray-700/50'
               }`}
             >
               Preview
@@ -111,24 +111,24 @@ export default function AgentGoalEditor({
           </div>
 
           {/* Content Area */}
-          <div className="p-4">
+          <div className="p-3">
             {activeTab === 'edit' ? (
               <div>
-                <div className="mb-2 text-sm text-gray-400">
+                <div className="mb-2 text-[10px] text-gray-400">
                   Use this space to brainstorm and document your agent&apos;s purpose. Supports markdown formatting.
                 </div>
                 <textarea
                   value={currentGoal}
                   onChange={(e) => onGoalChange(e.target.value)}
-                  className="w-full h-96 p-3 rounded bg-gray-900 border border-gray-600 focus:outline-none focus:border-green-500 text-gray-200 font-mono text-sm resize-y"
+                  className="w-full h-64 p-2 rounded-lg bg-gray-900/50 border border-gray-700 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 text-gray-200 font-mono text-xs resize-y"
                   placeholder="Define your agent's goal and purpose..."
                 />
-                <div className="mt-2 text-xs text-gray-500">
+                <div className="mt-2 text-[10px] text-gray-500">
                   💡 Tip: Start with a clear primary task, then expand with specific examples and success criteria.
                 </div>
               </div>
             ) : (
-              <div className="prose prose-invert max-w-none bg-gray-900 p-4 rounded border border-gray-600 h-96 overflow-y-auto">
+              <div className="prose prose-invert max-w-none bg-gray-900/50 p-3 rounded-lg border border-gray-700 h-64 overflow-y-auto text-xs">
                 {renderMarkdown(currentGoal)}
               </div>
             )}

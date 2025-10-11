@@ -381,6 +381,7 @@ export interface ProgramWorkout {
 export interface WorkoutListItem {
   id: number;
   client_id: number | null;
+  client_name?: string; // Add this
   trainer_id: number;
   workout_name: string;
   workout_date: string;
